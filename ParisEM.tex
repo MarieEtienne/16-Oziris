@@ -1,0 +1,601 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amssymb}
+\usepackage{makeidx}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{amsfonts,amsmath,amssymb,amsthm}
+\usepackage{oldgerm}
+\usepackage{mathrsfs}
+\usepackage[active]{srcltx}
+\usepackage{verbatim}
+\usepackage[toc,page]{appendix}
+\usepackage{aliascnt}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage[textwidth=4cm,textsize=footnotesize]{todonotes}
+\usepackage{xargs}
+\usepackage{cellspace}
+\usepackage[Symbolsmallscale]{upgreek}
+\usepackage{geometry}
+\usepackage{array}
+\geometry{top=3.5cm, bottom=3.5cm, left=3.5cm , right=3.5cm}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+
+\usepackage{graphicx}
+\usepackage{enumerate}
+\usepackage{xcolor}
+\usepackage{algorithm,algorithmic}  
+
+\newcommand{\x}[2]{x_{#1}^{(#2)}}
+\newcommand{\w}[2]{w_{#1}^{(#2)}}
+\newcommand{\tw}[2]{\tilde{w}_{#1}^{(#2)}}
+\newcommand{\p}[2]{\xi_{#1}^{(#2)}}
+\newcommand{\tp}[2]{\tilde{\xi}_{#1}^{(#2)}}
+\newcommand{\ta}[2]{\tau_{#1}^{(#2)}}
+\newcommand{\rmd}{\mathrm{d}}
+\newcommand{\eqsp}{\;}
+\newcommand{\1}{\mathrm{1}}
+\newcommand{\com}[1]{{\color{gray} // #1}}
+
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
+
+\newcounter{hypA}
+\newenvironment{hypA}{\refstepcounter{hypA}\begin{itemize}
+\item[{\bf H\arabic{hypA}}]}{\end{itemize}}
+
+\begin{document}
+
+\author{Pierre Gloaguen\footnotemark[1] \and Marie-Pierre Etienne\footnotemark[1] \and Sylvain Le {C}orff\footnotemark[2]}
+ 
+\footnotetext[1]{AgroParistech, UMR MIA 518, F-75231 Paris, France.}
+\footnotetext[2]{Laboratoire de Math\'ematiques d'Orsay, Univ. Paris-Sud, CNRS, Universit\'e Paris-Saclay.}
+
+
+\title{Efficient particle smoother for stochastic differential equations with linear complexity}
+
+\lhead{Gloaguen et al.}
+\rhead{Particle smoother for SDE}
+
+\maketitle
+
+
+\section{Introduction}
+It is assumed that the dynamics of the states $(X_t)_{t\ge 0}$ depends on a parameter $\theta\in \Theta$ where $\Theta$ is a compact subspace of $\mathbb{R}^{\ell}$ and that $(X_t)_{t\ge 0}$ is a weak solution to the following Stochastic Differential Equation (SDE) in $\mathbb{R}^d$:
+\begin{equation}
+\label{eq:target:sde}
+X_0 = x_0\quad\mbox{and}\quad \rmd X_t = \alpha_{\theta}(X_t)\rmd t + \rmd W_t\eqsp,
+\end{equation}
+where $(W_t)_{t\ge 0}$ is a standard Brownian motion. In the following, it is assumed that $\alpha_{\theta}$ is of the form $\alpha_{\theta}(x) = \nabla_x A_{\theta}(x)$ where $A_{\theta}: \mathbb{R}^d \to \mathbb{R}$ is a twice continuously differentiable function. A popular choice of $A_{\theta}$  is $A_{\theta} = \log \pi_{\theta}/2$ leading to a Langevin diffusion which may be used to approximate a given target distribution $\pi_{\theta}$. See for instance \cite{roberts:tweedie:1996} for conditions under which this diffusion converges exponentially quickly to $\pi_{\theta}$. The states $(X_t)_{t\ge 0}$ are only partially observed at discrete times $(t_k)_{0\le k \le n}$, with $t_0=0$, through the sequence $(Y_k)_{0\le k\le n}$ which is such that $(Y_k)_{0\le k\le n}$ are independent conditional on $(X_t)_{t\ge 0}$ and for all $0\le k\le n$, the conditional distribution of $Y_k$ given $(X_t)_{t\ge 0}$ depends only on $X_k = X_{t_k}$. This distribution has a density with respect to a reference measure $\lambda$ on $\mathbb{R}^m$ given by $g_{\theta}(X_k,\cdot)$. For all $1\le k \le n$, the distribution of $X_{k} $ conditional on $X_{k-1}$ has a density $q^{\Delta t_k}_{\theta}(X_k,\cdot)$ with respect to a reference measure $\mu$ on $\mathbb{R}^d$.
+
+
+The aim of this paper is to estimate $\theta$ given the set of observations $(Y_0,\ldots,Y_n)$. The EM algorithm introduced in \cite{dempster:laird:rubin:1977} 
+maximizes the incomplete data log-likelihood $\theta\mapsto \ell_{\theta}^{n}$ defined by
+\begin{equation*}
+\ell_{\theta}^{n}(Y_{0:n}) = \log\left(\int p_{\theta}(x_{0:n},Y_{0:n})\,\rmd x_{0:n}\right)\eqsp,
+\end{equation*}  
+where the complete data likelihood $p_{\theta}$ is given by
+\begin{equation*}
+p_{\theta}(x_{0:n},Y_{0:n}) = \chi_{\theta}(x_0)g_{\theta}(x_0;Y_0)\prod^{n}_{k=1}q^{\Delta t_k}_{\theta}(x_{k-1},x_k)g_{\theta}(x_k,Y_k)\eqsp.
+\end{equation*}
+Denote by $\mathbb{E}_{\theta}\left[\cdot\middle|Y_{0:n}\right]$  the conditional expectation given $Y_{0:n}$ when the parameter value is $\theta$. The EM algorithm iteratively builds a sequence $\{\theta_{p}\}_{p\ge 0}$ of parameter estimates following the two steps:
+\begin{enumerate}
+	\item {\bf E-step}: compute $\theta \mapsto Q(\theta,\theta_{p}) = \mathbb{E}_{\theta_p}\left[\log p_{\theta}(X_{0:n},Y_{0:n})\middle|Y_{0:n}\right]$ ;
+	\item {\bf M-step}: choose $\theta_{p+1}$ as a maximizer of $\theta \mapsto Q(\theta,\theta_{p})$.
+\end{enumerate}
+It can be shown that under weak assumptions on the model, the sequence $\{\theta_{p}\}_{p\ge 0}$ converges to the set of stationary points of $\theta \mapsto \ell_{\theta}^{n}(Y_{0:n})$. However, there are two main difficulties with applying the EM algorithm to partially observed SDE in general cases:
+\begin{enumerate}[-]
+\item The E-step requires to compute $q^{\Delta t_k}_{\theta}$ for which there is no analytic expression.
+\item The computation of $Q(\theta,\theta_{p})$ relies on conditional expectations of additive functionals of the state sequence given the observations which are not available explicitly.
+\end{enumerate}
+To overcome these difficulties, \cite{olsson:strojby:2011} proposed to use General Poisson Estimators (GPE) introduced in \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006,fearnhead:papaspiliopoulos:roberts:2008}  to provide an unbiased estimation of $q^{\Delta t_k}_{\theta}$. These estimators are based on a representation of $q^{\Delta t_k}_{\theta}$ as an expectation under the probability measure of a Brownian bridge. The conditional expectation involved in the computation is approximated in  \cite{olsson:strojby:2011}  using fixed-lag Sequential Monte Carlo methods developed in \cite{olsson:cappe:douc:moulines:2008}. In this paper, we propose to improve this algorithm to obtain faster convergence of the sequence of Monte Carlo EM estimates. First, we introduce a new class off GPE based on the Ozaki discretization of the SDE  \eqref{eq:target:sde}, see \cite{ozaki:1992,shoji:ozaki:1998}. Instead of using fixed-lag techniques which introduce a systematic additional bias  in the approximation of $Q(\theta,\theta_{p})$, we use the new PaRIS algorithm which allows to approximate smoothed expectations of additive functionals online and with a complexity growing only linearly with the number of particles. 
+
+\section{Random weight PaRIS-EM algorithm}
+For a given value $\theta_p$ of the parameter, dropping the initial state, the E-step may be written:
+\[
+Q(\theta,\theta_{p})= \sum_{k=1}^n\mathbb{E}_{\theta_p}\left[\log \left\{q^{\Delta t_k}_{\theta}(X_{k-1},X_k)g_{\theta}(X_k,Y_k)\right\}\middle|Y_{0:n}\right]\eqsp.
+\]
+We first describe the Monte Carlo method used to approximate $Q(\theta,\theta_{p})$ when $q^{\Delta t_k}_{\theta}$ may be computed. Dropping $\theta$ from the notations, the E-step computes an expectation of the form
+\begin{equation}
+\label{def:addfunc}
+\bar{H}_{n} =  \sum_{k=1}^n\mathbb{E}\left[h_k(X_{k-1},X_k)\middle|Y_{0:n}\right]\eqsp.
+\end{equation}
+Thus, for $0 \leq k \leq k' \leq n$ and a given measurable function $h$ on $(\mathbb{R}^d)^{k'-k + 1}$, we need to compute an approximation of the smoothed expectation of the states $(X_k,\ldots,X_{k'})$ defined by:
+\[
+\phi_{k:k'|n}[h] := \mathbb{E}\left[h(X_k,\ldots,X_{k'})\middle|Y_{0:n}\right]\eqsp.
+\]
+The filtering distributions are defined, for $0\le k\le n$ by $\phi_{k} = \phi_{k:k|k}$. In this paper, we are interested in a particular class of Sequential Monte Carlo methods to approximate $\bar{H}_{n}$ known as the PaRIS algorithm introduced in \cite{olsson:westerborn:2016}. 
+
+The PaRIS algorithm is based on the first Sequential Monte Carlo algorithms introduced in  \cite{gordon:salmond:smith:1993} and \cite{kitagawa:1996}. 
+They rely on importance sampling and importance resampling steps to approximate the filtering distribution $\phi_{k}$ (conditional distribution of $X_k$ given $Y_{0:k}$) using  a set of particles $\{\xi^{\ell}_k\}_{\ell=1}^N$ associated with weights $\{\omega^{\ell}_k\}_{\ell=1}^N$. At time $k = 0$, $N$ particles $\{\xi^{\ell}_0\}_{\ell=1}^N$ are initialized by setting $\xi^{\ell}_0=x_0$. Then, $\xi^{\ell}_0$ is associated with the importance weights $\omega_0^{\ell} = g_0 \left(\xi^{\ell}_0\right)$. Then, for any bounded and measurable function $h$ defined on $\mathbb{R}^d$, the expectation $\phi_{0}[h] $ is approximated by
+\[
+\phi^N_{0}[h] = \frac{1}{\Omega_0^N} \sum_{\ell=1}^N \omega_0^{\ell} h \left(\xi^{\ell}_0 \right)\eqsp, \quad \Omega_0^N:= \sum_{\ell=1}^N \omega_0^{\ell}\eqsp.
+\]
+Then, using $\{(\xi^{\ell}_{k-1},\omega^{\ell}_{k-1})\}_{\ell=1}^N$, pairs $\{(I^{\ell}_t,\xi^{\ell}_{t})\}_{\ell=1}^N$ of indices and particles are sampled and weighted using an instrumental transition density $p_k$ on $\mathbb{R}^d\times \mathbb{R}^d$ and an adjustment multiplier function $\vartheta_k$ on $\mathbb{R}^d$. Each new particle $\xi^{\ell}_{k}$ and weight $\omega^{\ell}_k$ at time $k$ are computing following these steps:
+\begin{enumerate}[-]
+\item choose a particle index $I^{\ell}_k$ at time $k-1$ in $\{1,\ldots,N\}$ with probabilities proportional to $\omega_{k-1}^{j} \vartheta_k (\xi^{j}_{k-1})$, for $j$ in $\{1,\ldots,N\}$ ;
+\item sample  $\xi^{\ell}_{k}$ using this chosen particle according to $\xi^{\ell}_{k} \sim p_k(\xi^{I^{\ell}_k}_{k-1},\cdot)$.
+\item $\xi^{\ell}_k$ is associated with:
+\[
+\omega^{\ell}_k := \frac{q^{\Delta t_{k}}(\xi_{k-1}^{I^{\ell}_k},\xi^{\ell}_k)g_k(\xi^{\ell}_k)}{\vartheta_k(\xi^{I^{\ell}_k}_{k-1}) p_k (\xi_{k-1}^{I^{\ell}_k},\xi^{\ell}_k)}\eqsp.
+\]
+\end{enumerate} 
+The expectation $\phi_{k}[h]$ is approximated by
+\[
+\phi^N_{k}[h] := \frac{1}{\Omega_t^N} \sum_{\ell=1}^N \omega_k^{\ell} h \left(\xi^{\ell}_k \right)\eqsp,\quad\Omega_k^N:= \sum_{\ell=1}^N \omega_k^{\ell}\eqsp.
+\]
+The PaRIS algorithm uses the same decomposition as the Forward Filtering Backward Smoothing (FFBS) algorithm introduced in \cite{doucetgodsillandrieu:2000} and the Forward Filtering Backward Simulation (FFBSI) algorithm proposed by \cite{godsill:doucet:west:2004} to approximate smoothing distributions. Both the FFBS and the FFBSi algorithms require first that a forward pass has produced a set of particles and importance weights $\{ (\xi^{\ell}_k, \omega^{\ell}_k)\}$, for $\ell \in \{1, \ldots, N\}$ and  $k \in \{0,\ldots,n\}$ to approximate $\phi_{k}$ for $k=0$ to $k=n$. The FFBS algorithm stores all particles and weights without taking into consideration the genealogy of the particles. Then, a backward pass is performed, keeping all the particles fixed but modifying all importance weights computed during the forward pass. This algorithm has a computational complexity of order $\mathcal{O}(N^{k'-k+1})$ to approximate joint smoothing distributions of the form $\phi_{k:k'|n}$ with $k<k'$ which makes it prohibitive. An important feature of the FFBS algorithm shown in \cite{mongillo:deneve:2008,cappe:2011,delmoral:doucet:singh:2010} is that it can be implemented using only a forward pass when approximating smoothed expectations of additive functions. 
+%In more general case, \cite{dubarry:lecorff:2013} are interested in the FFBS algorithm for an additive function $h$ defined on $\mathsf{X}^{T+1}$,
+%\[
+%h(x_{0:T}) := \sum_{t=1}^{T} h_t (x_{t-1},x_t)
+%\]
+%where $\{h_t\}_{t=1}^{T}$ are bounded on $\mathsf{X}^2$. See \cite{dubarry:lecorff:2013} for their proposed FFBS algorithm in this case. As shown in \cite{delmoral:doucet:singh:2010} when applied to additive functionals, the computational complexity grows quadratically with number of particles. In the backward pass of the FFBS algorithm, the importance weights are updated while the particles are kept fixed. 
+%\subsubsection*{FFBSi algorithm}
+%As for the FFBS algorithm, the FFBSi algorithm uses a forward pass to produce $\{ (\xi^{\ell}_k, \omega^{\ell}_k)\}$, for $\ell \in \{1, \ldots, N\}$ and  $k \in \{0,\ldots,n\}$ to approximate $\phi_{k}$ for $k=0$ to $k=n$ and all these particles and weights are stored  without taking into consideration the genealogy of the particles. 
+Instead of computing new weights in the backward pass, the FFBSi  samples backward new trajectories from time $n$ to time $0$ among all the $N^{n+1}$ trajectories which can be chosen in $\{\xi^{\ell}_k\}$, $1\le \ell\le N$ and $0\le k\le n$. 
+%Each trajectory is sampled according to the following steps.
+%\begin{enumerate}[-]
+%\item At time $k = n$, sample $J_n\in\{1\ldots,N\}$ with probabilities proportional to $\omega^{\ell}_n/\Omega_n^N$, for $\ell\in\{1, \ldots, N\}$.
+%\item For $k = n-1$ to $k=0$, $J_k$ is sampled in $\{1\ldots,N\}$ with probabilities 
+%\[
+%\Lambda_k^N(J_{k+1},i) = \frac{\omega^{i}_k q(\xi^{i}_k,\xi^{J_{k+1}}_{k+1})}{\sum_{\ell=1}^N\omega^{\ell}_k q(\xi^{\ell}_k,\xi^{J_{k+1}}_{k+1})}\eqsp,\quad 1\le i\le N\eqsp.
+%\]
+%\end{enumerate}
+%These sampling steps are repeated $N$ times to produce $\{J_0^\ell,\ldots,J_n^{\ell}\}$, $1\le \ell \le N$. Then, the smoothed expectation of any measurable function $h$ on $(\mathbb{R}^d)^{n+1}$  $\mathbb{E}\left[h(X_{0:n})\middle|Y_{0:n}\right]$ is approximated by $N^{-1} \sum_{\ell = 1}^N  h(\tilde{\xi}^{J_0^{\ell}}_{0},\ldots, \tilde{\xi}^{J_n^{\ell}}_{n})$.
+Contrary to the FFBS algorithm, the FFBSi algorithm samples trajectories and may be used to approximate joint smoothing distributions without increasing its complexity. Nevertheless, the computation of the transition probabilities to select particles in the backward pass makes it a $\mathcal{O}(N^2)$ algorithm. In the case where the transition probability $q$ is upper bounded, \cite{douc:garivier:moulines:olsson:2011} introduced an acceptance rejection mechanism to implement the FFBSi algorithm with a $\mathcal{O}(N)$ complexity, see also \cite{dubarry:lecorff:2011}.
+
+The PaRIS algorithm combines both the forward only version of the FFBS algorithm with the sampling mechanism of the FFBSi algorithm. The algorithm does not produce an approximation of the smoothing distributions but of the smoothed expectation of a fixed additive functional and thus  may be used to approximate \eqref{def:addfunc}. Its crucial property is that it does not require a backward pass, the smoothed expectations is computed on-the-fly with the particle filter and no storage of the particles or weights is needed. The algorithm is based on sufficient statistics $\tau^i_k$, for $1\le i\le N$ and $0\le k \le n$ starting with $\tau^i_0 = 0$ for all $1\le i\le N$. Let $\tilde{N}\ge 1$. Then, at each time step $1\le k \le n$ these statistics are update according to the following steps.
+\begin{enumerate}[(i)]
+\item \label{it:PaRIS:filt} Run one step of a particle filter to produce $\{(\xi^{\ell}_k, \omega^{\ell}_k)\}$ for $1\le \ell \le N$.
+\item \label{it:PaRIS:sampleindex} For all $1\le i \le N$, sample independently $J_k^{i,\ell}$ in $\{1,\ldots,N\}$ for $1\le \ell \le \widetilde N$ with probabilities $\Lambda_{k-1}^N(i,\cdot)$, given by
+\[
+\Lambda_{k-1}^N(i,\ell) = \frac{\omega^{\ell}_{k-1} q^{\Delta t_k}(\xi^{\ell}_{k-1},\xi_k^{i})}{\sum_{\ell=1}^N\omega^{\ell}_{k-1} q^{\Delta t_k}(\xi^{\ell}_{k-1},\xi_k^{i})}\eqsp,\quad 1\le \ell\le N\eqsp.
+\]
+\item \label{it:PaRIS:smooth} Set
+\[
+\tau^{i}_{k} := \frac{1}{\widetilde{N}} \sum^{\widetilde{N}}_{\ell=1} \left\{ \tau^{J_k^{i,\ell}}_{k-1} + h_{k} \left(\xi^{J_k^{i,\ell}}_{k-1}, \xi^{i}_{k}\right)  \right\}\eqsp.
+\]
+\end{enumerate}
+Then, \eqref{def:addfunc} is approximated by
+\[
+H_n^N = \frac{1}{\Omega_n^N}\sum_{i=1}^N \omega^{i}_n \tau_n^i\eqsp.
+\] 
+As proved in \cite{olsson:westerborn:2016}, the algorithm is asymptotically consistent (as $N$ goes to infinity) for any fixed precision parameter $\tilde N$. However, there is a significant qualitative difference between the cases $\tilde{N} = 1$ and $\tilde{N} \geq 2$.
+
+As for the FFBSi algorithm,  when there exists $0<q^{\Delta t_k}<\sigma_+$, the PaRIS algorithm may be implemented with $\mathcal{O}(N)$ complexity using the procedure of \cite{douc:garivier:moulines:olsson:2011}.
+As $q^{\Delta t_k}(\xi^{\ell}_{k-1},\xi_k^{i})$ is not available explicitly for all $1\le i,\ell\le N$, the next section introduces GPE to replace it by $\widehat{q}^{\Delta t_k}(\xi^{\ell}_{k-1},\xi_k^{i};\Lambda)$, where $\Lambda$ is a random variable such that
+\[
+\mathbb{E}\left[\widehat{q}^{\Delta t_k}(\xi^{\ell}_{k-1},\xi_k^{i};\Lambda)\middle| \mathcal{F}_k^N\right] = q^{\Delta t_k}(\xi^{\ell}_{k-1},\xi_k^{i})\eqsp,
+\]
+where 
+\[
+\mathcal{F}_k^N = \sigma\left\{Y_{0:k};(\xi^{\ell}_{u},\omega^{\ell}_{u}), 1\le \ell\le N, 1\le u\le k\right\}\eqsp.
+\]
+In the case where $\widehat{q}^{\Delta t_k}$ may be upper bounded by $\sigma_+$, step~\eqref{it:PaRIS:sampleindex} is replaced by the acceptance-rejection mechanism given in Algorithm~\ref{alg:AR}. It is proved in Lemma~\ref{lem:AR:unbiased} that replacing $\widehat{q}^{\Delta t_k}$ by its unbiased approximation is a valid alternative to step~\eqref{it:PaRIS:sampleindex}.
+
+\begin{algorithm}
+\caption{Random weight Accept-reject-based backward sampling  (\cite{douc:garivier:moulines:olsson:2011})}
+\begin{algorithmic}
+\FORALL{$i \in 1,\dots,\widetilde N$}
+\STATE Set $L =\{1,\ldots,N\}$. 
+\WHILE{$L\neq\emptyset$}
+\STATE $p = \#L$.
+\STATE Sample $I = (I_1,\ldots,I_p)$ independently in $\{1,\ldots,N\}$ with probabilities proportional to $\omega_{k-1}^{\ell}$, $1\le \ell\le N$.
+\STATE Sample $U = (U_1,\ldots,U_p)$ independently and independently of $I$ uniformly in $[0,1]$.
+\STATE Sample $\Lambda = (\Lambda_1,\ldots,\Lambda_p)$ independently and independently of $I$ and $U$.
+\STATE Set $L_p = \emptyset$.
+\FORALL{$\ell \in 1,\dots,p$}
+\IF{$U_\ell<\widehat{q}(\xi_{k-1}^{I_\ell},\xi_k^{L(\ell)};\Lambda_{\ell})/\sigma_+$}
+\STATE $J_k^{L(\ell),i} = I_\ell$.
+\ELSE
+\STATE $L_p = L_p \cup \{L(\ell)\}$.
+\ENDIF
+\ENDFOR
+\STATE $L = L_p$.
+\ENDWHILE
+\ENDFOR
+\end{algorithmic}
+\label{alg:AR}
+\end{algorithm}
+
+\section{Ozaki-PaRIS algorithm}
+\label{sec:PaRIS:SDE}
+In general situations, the PaRIS algorithm cannot be used for stochastic differential equations as $q^{\Delta t_k}_{\theta}$ is unknown. Therefore, the computation of the importance weights $\omega_{k}^{\ell}$ and of the acceptance ratio in Algorithm~\ref{alg:AR} cannot be performed to apply the PaRIS algorithm. Following \cite{olsson:strojby:2011},
+an extension of the PaRIS algorithm may be developed by replacing $q^{\Delta t_k}_{\theta}$  by an unbiased estimator. In \cite{olsson:strojby:2011},  GPE are used to estimate $q^{\Delta t_k}_{\theta}$ which relies on a representation of $q^{\Delta t_k}_{\theta}$ as an expectation under the probability measure of a Brownian bridge. In order to improve the Monte Carlo estimation of $q^{\Delta t_k}_{\theta}$,  other diffusion bridges may be used as long as they can be simulated efficiently. A simple idea is to consider a diffusion obtained as an approximation of the target SDE \eqref{eq:target:sde}. \cite{ozaki:1992,shoji:ozaki:1998} proposed a higher order approximation of the drift term $\alpha_{\theta}$ than the Euler scheme. The authors used a linear approximation of the diffusion drift $\alpha_{\theta}$, together with a constant approximation of the volatility over each time interval $(t_{k-1},t_k)$. Following \cite{ozaki:1992,shoji:ozaki:1998}, for all $1\le k\le n$, let $(Y^{k}_t)_{t\ge 0}$ be governed by the following stochastic differential equation for $t\in(t_{k-1},t_k)$:
+\begin{equation}
+\label{eq:SDE:Ozaki}
+Y^k_{t_{k-1}} = X_{k-1}\quad\mbox{and}\quad\rmd Y^k_t = \widetilde{\alpha}^k_{\theta}(Y^k_t)\rmd t + \rmd W_t\eqsp,
+\end{equation}
+where
+\[
+\widetilde{\alpha}^k_{\theta}(x) = J_{\alpha_{\theta}}(X_{k-1})x + \alpha_{\theta}(X_{k-1}) - J_{\alpha_{\theta}}(X_{k-1})X_{k-1}
+\]
+and $J_{\alpha_{\theta}}$ is the Jacobian of $\alpha_{\theta}$. The probability density function of the transition kernel associated with $Y^k$ is written $\widetilde{q}^{\Delta t}_{\theta}$ and is given in Section~\ref{sec:ornstein:bridge}.
+
+
+Writing $\mathbb{Q}^k_{\theta}$ (resp. $\mathbb{W}^{k}_{\theta}$) the probability measure induced by $(X_s)_{t_{k-1}\le s\le t_k}$  (resp. $(Y_s)_{t_{k-1}\le s\le t_k}$) on $(\mathsf{C},\mathcal{C})$, Girsanov theorem yields:
+\[
+\frac{\rmd \mathbb{Q}^k_{\theta}}{\rmd \mathbb{W}^{k}_{\theta}}(w) = \mathrm{exp}\left\{H_{\theta}(\omega_{t_k}) - H_{\theta}(\omega_{t_{k-1}}) - \frac{1}{2}\int_{t_{k-1}}^{t_k}\left\{\|\alpha_{\theta}(\omega_s)-\widetilde{\alpha}_{\theta}(\omega_s)\|^2+\Delta H_{\theta}(\omega_s)\right\}\rmd s\right\}\eqsp,
+\]
+where 
+\[
+H_{\theta}(x) = A_{\theta}(x) - x'J_{\alpha_{\theta}}(X_{k-1})x/2- (\alpha_{\theta}(X_{k-1}) - J_{\alpha_{\theta}}(X_{k-1})X_{k-1})'x
+\]
+and $\Delta$ is the Laplace operator. Then, the probability measures conditioned on hitting $X_{k}$ at time $t_k$ satisfy:
+\begin{multline}
+\label{eq:Girsanov}
+\frac{\rmd \mathbb{Q}^{k,X_{k}}_{\theta}}{\rmd \mathbb{W}^{k,X_{k}}_{\theta}}(w) = \frac{\widetilde{q}^{\Delta t_k}_{\theta}(X_{k-1},X_{k})}{q^{\Delta t_k}_{\theta}(X_{k-1},X_{k})}\mathrm{exp}\left\{H_{\theta}(X_k) - H_{\theta}(X_{k-1})\right\} \\
+\times \mathrm{exp}\left\{- \frac{1}{2}\int_{t_{k-1}}^{t_k}\left\{\|\alpha_{\theta}(\omega_s)-\widetilde{\alpha}_{\theta}(\omega_s)\|^2+\Delta H_{\theta}(\omega_s)\right\}\rmd s\right\}\eqsp.
+\end{multline}
+Consider the following asumptions on the model:
+\begin{enumerate}[(a)]
+\item For all $\theta\in\Theta$ and all $0\le k \le n-1$, $x\mapsto \alpha_{\theta}(x) - \alpha_{\theta}(X_k) - J_{\alpha_{\theta}}(X_{k})(x-X_k)$ is bounded.
+\item For all $\theta\in\Theta$ and all $0\le k \le n-1$, $x\mapsto \mathrm{Tr}\left(J_{\alpha_{\theta}}(x) - J_{\alpha_{\theta}}(X_k)\right)$ is bounded, where $\mathrm{Tr}$ is the trace operator.
+\end{enumerate}
+Under these two assumptions, for all $\theta$, there exists $\ell(\theta)$ such that:
+\[
+\mathrm{inf}_{u\in \mathbb{R}^d} \left\{\frac{1}{2}\left(\|\alpha_{\theta}(u)-\widetilde{\alpha}_{\theta}(u)\|^2+\Delta H_{\theta}(u)\right)\right\}\ge \ell(\theta)\eqsp.
+\]
+Define
+\[
+\phi_{\theta}(x) = \frac{1}{2}\left\{\|\alpha_{\theta}(x)-\widetilde{\alpha}_{\theta}(x)\|^2+\Delta H_{\theta}(x)\right\}-\ell(\theta)\eqsp.
+\]
+The assumptions on the model also ensure that for all $\theta\in\Theta$, there exists $\Lambda(\theta)$ such that  $\mathrm{sup}_x\eqsp \phi_{\theta}(x)\le \Lambda_{\theta}$. Then,
+\begin{multline*}
+q^{\Delta t_k}_{\theta}(X_{k-1},X_k) = \widetilde{q}^{\Delta t_k}_{\theta}(X_{k-1},X_k) \eqsp\mathrm{exp}\left\{H_{\theta}(X_k) - H_{\theta}(X_{k-1})-\ell(\theta)\Delta t_k\right\}\\
+\times\mathbb{E}_{\mathbb{W}_{\theta}^{k,X_{k}}}\left[\mathrm{exp}\left\{-\int_{0}^{\Delta t_k}\phi_{\theta}(\omega_s)\rmd s\right\}\right]\eqsp,
+\end{multline*}
+where $\mathbb{E}_{\mathbb{W}_{\theta}^{k,X_{k}}}$ is the expectation under the law of the bridge process defined by \eqref{eq:SDE:Ozaki}, starting at $X_{k-1}$ at time $0$ and ending at $X_{k}$ at time $\Delta t_k$.
+An unbiased estimator of $q^{\Delta t_k}_{\theta}(X_{k-1},X_k)$ is then obtained by estimating $\mathbb{E}_{\mathbb{W}_{\theta}^{k,X_{k}}}\left[\mathrm{exp}\left\{-\int_{0}^{\Delta t_k}\phi_{\theta}(\omega_s)\rmd s\right\}\right]$. 
+Following \cite{}, if $\omega \sim\mathbb{W}_{\theta}^{k,X_{k}}$, $\kappa$ is a random variables taking values in $\mathbb{N}$ with distribution $\mu$ and if $(U_j)_{1\le j\le \kappa}$ are independent uniform random variables on $[0,t]$, 
+\begin{align*}
+\mathbb{E}_{\mathbb{W}_{\theta}^{k,X_{k}}}\left[\mathrm{exp}\left\{-\int_{0}^{\Delta t_k}\phi_{\theta}(\omega_s)\rmd s\right\}\right] &= \mathbb{E}_{\mathbb{W}_{\theta}^{k,X_{k}}}\left[\mathrm{exp}\left\{-\int_{0}^{\Delta t_k}\phi_{\theta}(\omega_s)\rmd s\right\}\right]\eqsp,\\
+&= \mathrm{exp}\left\{-\Lambda_{\theta}\Delta t_k\right\}\mathbb{E}_{\mathbb{W}_{\theta}^{k,X_{k}}}\left[\mathrm{exp}\left\{\int_{0}^{\Delta t_k}(\Lambda_{\theta}-\phi_{\theta}(\omega_s))\rmd s\right\}\right]\eqsp,\\
+&=\mathrm{exp}\left\{-\Lambda_{\theta}\Delta t_k\right\}\mathbb{E}_{\mathbb{W}_{\theta}^{k,X_{k}}}\left[\sum_{p\ge 0}\frac{1}{p!}\left(\int_{0}^{\Delta t_k}\Lambda_{\theta}-\phi_{\theta}(\omega_s)\rmd s\right)^p\right]\eqsp,\\
+&=\mathrm{exp}\left\{-\Lambda_{\theta}\Delta t_k\right\}\mathbb{E}_{\mathbb{W}_{\theta}^{k,X_{k}}}\left[\mathbb{E}\left[\sum_{p\ge 0}\frac{(\Delta t_k)^p}{k!}\prod_{j=1}^p\left(\Lambda_{\theta}-\phi_{\theta}(\omega_{U_j})\right)\right]\right]\eqsp,\\
+&=\mathrm{exp}\left\{-\Lambda_{\theta}\Delta t_k\right\}\mathbb{E}_{\mathbb{W}_{\theta}^{k,X_{k}}}\left[\frac{(\Delta t_k)^{\kappa}}{\mu(\kappa)\kappa!}\prod_{j=1}^{\kappa}\left(\Lambda_{\theta}-\phi_{\theta}(\omega_{U_j})\right)\right]\eqsp.
+\end{align*}
+Interesting choices of $\mu$ are discussed in \cite{} and implemented in Section~\ref{sec:exp}. Writing
+\[
+\Lambda_k = \left\{\kappa,\omega,U_1,\ldots,U_\kappa\right\}\eqsp,
+\]
+Algorithm~\ref{alg:AR} is used with 
+\begin{multline*}
+\widehat{q}^{\Delta t_k}_{\theta}(X_{k-1},X_k;\Lambda) = \widetilde{q}^{\Delta t_k}_{\theta}(X_{k-1},X_k) \eqsp\mathrm{exp}\left\{H_{\theta}(X_k) - H_{\theta}(X_{k-1})-\ell(\theta)\Delta t_k\right\}\\ 
+\times\mathrm{exp}\left\{-\Lambda_{\theta}\Delta t_k\right\}\frac{(\Delta t_k)^{\kappa}}{\mu(\kappa)\kappa!}\prod_{j=1}^{\kappa}\left(\Lambda_{\theta}-\phi_{\theta}(\omega_{U_j})\right)\eqsp.
+\end{multline*}
+The choice of $\mu$ is restricted to distributions such that the associated estimator is uper bounded by an eplicit constant $\sigma_+^k(\theta)$. Then, for all $1\le k \le n$, $1\le \ell\le N$, the importance weight $\omega_k^{\ell}$ is replaced by the unbiased estimator:
+\begin{equation}
+\label{eq:random:weight}
+\widetilde{\omega}_k^{\ell} = \frac{M^{-1}\sum_{i=1}^M\widehat{q}_{\theta}^{\Delta t_{k}}(\xi_{k-1}^{I^{\ell}_k},\xi^{\ell}_k;\Lambda_k^i)g_k(\xi^{\ell}_k)}{\vartheta_k(\xi^{I^{\ell}_k}_{k-1}) p_k (\xi_{k-1}^{I^{\ell}_k},\xi^{\ell}_k)}\eqsp,
+\end{equation}
+where $\{\Lambda_k^i\}_{i=1}^M$ are independent copies of $\Lambda_k$. The last step to approximate the intermediate quantity of the EM algorithm is to provide an unbiased estimate of $\log q^{\Delta t_k}_{\theta}(X_{k-1},X_k)$. By Girsanov theorem, this log density can be written as:
+\begin{multline*}
+\log q^{\Delta t_k}_{\theta}(X_{k-1},X_k) = \log \widetilde{q}^{\Delta t_k}_{\theta}(X_{k-1},X_k) + H_{\theta}(X_k) - H_{\theta}(X_{k-1})-\ell(\theta)\Delta t_k \\
+-\mathbb{E}_{\mathbb{Q}_{\theta}^{k,X_{k}}}\left[\int_{0}^{\Delta t_k}\phi_{\theta}(\omega_s)\rmd s\right]\eqsp.
+\end{multline*}
+If $U$ is uniformy distributed on $(0,\Delta t_k)$ and if $w \sim \mathbb{Q}_{\theta}^{k,X_{k}}$, $\log q^{\Delta t_k}_{\theta}(X_{k-1},X_k)$ may then be estimated by:
+\begin{equation} 
+\label{eq:logq}
+\mathsf{q}_{\theta}^{\Delta t_k}(X_{k-1},X_k,\omega_U) = \log \widetilde{q}^{\Delta t_k}_{\theta}(X_{k-1},X_k) + H_{\theta}(X_k) - H_{\theta}(X_{k-1})-\ell(\theta)\Delta t_k - \Delta t_k \phi_{\theta}(\omega_U)\eqsp.
+\end{equation}
+Sampling $w \sim \mathbb{Q}_{\theta}^{k,X_{k}}$ is possible as by \eqref{eq:Girsanov},
+\[
+\frac{\rmd \mathbb{Q}^{k,X_{k}}_{\theta}}{\rmd \mathbb{W}^{k,X_{k}}_{\theta}}(w) \propto 
+\mathrm{exp}\left\{-\int_{t_{k-1}}^{t_k}\phi_{\theta}(\omega_s)\rmd s\right\}\eqsp.
+\]
+As noted by \cite{}, this importance ratio is proportional to the probability that a marked Poisson process on $(0,\Delta t_k)\times (0,1)$ with intensity $\Lambda_{\theta}$ is below the graph $s \mapsto \phi_{\theta}(\omega_s)/\Lambda_{\theta}$. $\omega_U$ in \eqref{eq:logq} is then obtaine by first sampling $\tilde{\omega}\sim \mathbb{W}^{k,X_{k}}$ at times on $(0,\Delta t_k)$ defined by the marked Poison process (which is accepted if is is below $\phi_{\theta}(\omega_s)/\Lambda_{\theta}$) and then by interpolating the bridge at time $U$.
+
+All these steps are summarized in Algorithm~\ref{alg:Ozaki:PaRIS} which provides an approximation of the E step of the EM algorithm.
+\begin{algorithm}
+\caption{Ozaki-PaRIS algorithm}
+\begin{algorithmic}
+\FORALL{$i \in 1,\dots, N$}
+\STATE Set $\xi_0^i = X_0$, $\omega_0^i = 1/N$ and $\tau_0^i = 0$.
+\ENDFOR
+\FORALL{$k \in 1,\dots, n$}
+\FORALL{$\ell \in 1,\dots, N$}
+\STATE Choose $I_k^{\ell}$ in $\{1,\ldots,N\}$ with probabilities propotional to $\widetilde{\omega}_{k-1}^j\vartheta_k(\xi_{k-1}^j)$.
+\STATE Sample $\xi_k^{\ell} \sim p_k(\xi_{k-1}^{I_k^{\ell}},\cdot)$.
+\STATE Sample $\kappa \sim \mu$, $\omega\sim \mathbb{W}_{\theta}^{k,X_{k}}$ and $(U_j)_{1\le j\le \kappa}$ uniformly on $(0,\Delta t_k)$.
+\STATE Compute $\widetilde{\omega}^{\ell}_k$ as in \eqref{eq:random:weight}.
+\ENDFOR
+\FORALL{$i \in 1,\dots,\widetilde N$}
+\STATE Set $L =\{1,\ldots,N\}$. 
+\WHILE{$L\neq\emptyset$}
+\STATE $p = \#L$.
+\STATE Sample $(I_1,\ldots,I_p)$ in $\{1,\ldots,N\}$ with probabilities prop. to $\omega_{k-1}^{\ell}$.
+\STATE Sample $(V_1,\ldots,V_p)$ uniformly in $[0,1]$.
+\STATE $L_p = \emptyset$
+\FORALL{$\ell \in 1,\dots,p$}
+\STATE Sample $\kappa_{\ell}\sim \mu$.
+\STATE Sample $U^{\kappa_{\ell}}_j$, $1\le j\le \kappa_{\ell}$, independently and uniformly on $(0,\Delta t_k)$.
+\STATE Sample $\omega^{\kappa_{\ell}}_{s}$ at times $U^{\kappa_{\ell}}_j$, $1\le j\le \kappa_{\ell}$, where $\omega^{\kappa_{\ell}}\sim \mathbb{W}_{\theta,\xi_{k-1}^{I_\ell}}^{k,\xi_k^{L(\ell)}}$.
+\IF{$V_\ell<\widetilde{q}^{\Delta t_k}_{\theta}(\xi_{k-1}^{I_\ell},\xi_k^{L(\ell)};\kappa_{\ell},\omega^{\kappa_{\ell}},U^{\kappa_{\ell}}_1,\ldots,U^{\kappa_{\ell}}_{\kappa_{\ell}})/\sigma_+^k(\theta)$}
+\STATE $J_k^{L(\ell),i} = I_\ell$.
+\ELSE
+\STATE $L_p = L_p \cup \{L(\ell)\}$.
+\ENDIF
+\ENDFOR
+\STATE $L = L_p$
+\ENDWHILE
+\ENDFOR
+\FORALL{$i \in 1,\dots,N$}
+\STATE Set $\tau_k^i = 0$.
+\FORALL{$\ell \in 1,\dots,\widetilde{N}$}
+\REPEAT
+\STATE $\kappa \sim \mathcal{P}(\Lambda_{\theta}\Delta t_k)$, $(U_{m},\chi_m$) uniformly on $(0,\Delta t_k)\times(0,1)$, $1\le m \le \kappa$.
+\STATE Sample $\widetilde{\omega}_s\sim \mathbb{W}_{\theta}^{k,X_{k}}$ at times $U_{m}$, $1\le m \le \kappa$.
+\UNTIL{$\phi_{\theta}(\widetilde{\omega}_{U_m})/\Lambda_{\theta}<\chi_m$ for all $1\le m \le \kappa$}
+\STATE Sample $U$ uniformly in $(0,\Delta t_k)$.
+\STATE $\tau_k^i = \tau_k^i + \tau^{J_k^{i,\ell}}_{k-1} + \log g_{\theta}(\xi^i_k,Y_k) + \mathsf{q}_{\theta}^{\Delta t_k}(\xi^{J_k^{i,\ell}}_{k-1}, \xi^{i}_{k},\widetilde{\omega}_U)$.
+\ENDFOR
+\STATE Set $\tau^{i}_{k} = \tau^{i}_{k}/\widetilde{N}$.
+\ENDFOR
+\ENDFOR
+\end{algorithmic}
+\label{alg:Ozaki:PaRIS}
+\end{algorithm}
+%\log \left\{q^{\Delta t_k}_{\theta}(X_{k-1},X_k)g_{\theta}(X_k,Y_k)
+
+\section{Convergence results}
+Consider the following assumptions.
+\begin{hypA}
+\label{assum:boundmodel}
+\begin{enumerate}[(i)]
+\item For all $k \geq 0$ and  all $x\in \mathbb{R}^d$, $g_{k}(x) >0$.
+\item $\underset{k\geq 0}{\sup}|g_{k}|_{\infty} < \infty$.
+\end{enumerate}
+\end{hypA}
+
+\begin{hypA}
+\label{assum:boundalgo}
+$\underset{k\geq 1}{\sup}|\vartheta_k|_{\infty} < \infty$, $\underset{k\geq 1}{\sup}|p_k|_{\infty} < \infty$ and $\underset{k\geq 1}{\sup}|\widetilde{\omega}_{k}|_{\infty} < \infty$.
+\end{hypA}
+The following Lemma is proved in \cite[Lemma~11]{olsson:westerborn:2016}.
+\begin{lemma}
+\label{lem:smooth:rec}
+Forward smoothing
+\end{lemma}
+
+\begin{lemma}
+\label{lem:iid}
+For all $0\le k \le n-1$, the random variables $\{\widetilde{\omega}_{k+1}^i\tau_{k+1}^i\}_{i=1}^N$ are independent conditionally on $\mathcal{F}_k^{N}$ and%For all bounded measurable function $h$ on $\mathbb{R}^d$,
+\[
+\mathbb{E}\left[\tilde{\omega}^1_{k+1}\tau^{1}_{k+1}\middle| \mathcal{F}_k^{N}\right] = \left(\phi^N_{k}[\vartheta_{k+1}]\right)^{-1}\phi^N_{k}\left[\int q_{\theta}^{\Delta t_{k+1}}(\cdot,x)g_{k+1}(x)\left\{\tau_k(\cdot) + h_{k+1}(\cdot,x)\right\}\rmd x\right]\eqsp.
+\]
+\end{lemma}
+
+\begin{proof}
+By \eqref{eq:random:weight},
+\[
+\mathbb{E}\left[\tilde{\omega}^1_{k+1}\tau^{1}_{k+1}\middle| \mathcal{F}_k^{N}\right] = \mathbb{E}\left[\frac{M^{-1}\sum_{i=1}^M\widehat{q}_{\theta}^{\Delta t_{k+1}}(\xi_{k}^{I^{1}_{k+1}},\xi^{1}_{k+1};\Lambda^i_{k+1})g_{k+1}(\xi^{1}_{k+1})}{\vartheta_{k+1}(\xi^{I^{1}_{k+1}}_{k}) p_{k+1}(\xi_{k}^{I^{1}_{k+1}},\xi^{\ell}_{k+1})}\tau^{1}_{k+1}\middle| \mathcal{F}_k^{N}\right]\eqsp.
+%&= \mathbb{E}\left[\frac{g_{k+1}(\xi^{1}_{k+1})}{\vartheta_{k+1}(\xi^{I^{1}_{k+1}}_{k}) p_{k+1}(\xi_{k}^{I^{1}_{k+1}},\xi^{\ell}_{k+1})}\tau^{1}_{k+1}\widehat{q}_{\theta}^{\Delta t_{k+1}}(\xi_{k}^{I^{1}_{k+1}},\xi^{1}_{k+1};\Lambda_{k+1})\middle| \mathcal{F}_k^{N}\right]\eqsp,
+\]
+Note that
+\begin{align*}
+&\mathbb{E}\left[\tau^{1}_{k+1}\middle|\sigma\left(\mathcal{F}_k^{N},\{\xi_{k+1}^i,\omega_{k+1}^i\}\right)\right]
+ = \sum_{\ell=1}^N\frac{\omega_k^{\ell}q_{\theta}^{\Delta t_{k+1}}(\xi_{k}^{\ell},\xi^{1}_{k+1})\left(\tau^{\ell}_k + h_{k+1}(\xi_{k}^{\ell},\xi^{1}_{k+1})\right)}{\sum_{\ell'=1}^N\omega_k^{\ell'}q_{\theta}^{\Delta t_{k+1}}(\xi_{k}^{\ell'},\xi^{1}_{k+1})}\eqsp,\\
+&\mathbb{E}\left[M^{-1}\sum_{i=1}^M\widehat{q}_{\theta}^{\Delta t_{k+1}}(\xi_{k}^{I^{1}_{k+1}},\xi^{1}_{k+1};\Lambda^i_{k+1})\middle|\sigma\left(\mathcal{F}_k^{N},\{\xi_{k+1}^i,\omega_{k+1}^i\}\right)\right]
+ = q_{\theta}^{\Delta t_{k+1}}(\xi_{k}^{I^{1}_{k+1}},\xi^{1}_{k+1})\eqsp.
+\end{align*}
+Since $\tau^{1}_{k+1}$ and $\{\Lambda^i_{k+1}\}_{i=1}^M$ are independent conditionally to $\sigma\left(\mathcal{F}_k^{N},\{\xi_{k+1}^j,I_{k+1}^j\}_{j=1}^N\right)$:
+\begin{multline*}
+\mathbb{E}\left[\tau^{1}_{k+1}M^{-1}\sum_{i=1}^M\widehat{q}_{\theta}^{\Delta t_{k+1}}(\xi_{k}^{I^{1}_{k+1}},\xi^{1}_{k+1};\Lambda^i_{k+1})\middle|\sigma\left(\mathcal{F}_k^{N},\{\xi_{k+1}^i,\omega_{k+1}^i\}\right)\right]\\
+ = q_{\theta}^{\Delta t_{k+1}}(\xi_{k}^{I^{1}_{k+1}},\xi^{1}_{k+1})\sum_{\ell=1}^N\frac{\omega_k^{\ell}q_{\theta}^{\Delta t_{k+1}}(\xi_{k}^{\ell},\xi^{1}_{k+1})\left(\tau^{\ell}_k + h_{k+1}(\xi_{k}^{\ell},\xi^{1}_{k+1})\right)}{\sum_{\ell'=1}^N\omega_k^{\ell'}q_{\theta}^{\Delta t_{k+1}}(\xi_{k}^{\ell'},\xi^{1}_{k+1})}\eqsp.
+\end{multline*}
+Using , this yields:
+\begin{align*}
+\mathbb{E}\left[\tilde{\omega}^1_{k+1}\tau^{1}_{k+1}\middle| \mathcal{F}_k^{N}\right]&= \left(\phi^N_{k}[\vartheta_{k+1}]\right)^{-1} \sum_{i=1}^N\frac{\omega_k^i}{\Omega_k}\int\vartheta_{k+1}(\xi^{i}_{k})\frac{q_{\theta}^{\Delta t_{k+1}}(\xi_{k}^{i},x)g_{k+1}(x)}{\vartheta_{k+1}(\xi^{i}_{k}) p_{k+1}(\xi_{k}^{i},x)}\\
+&\hspace{1cm}\times \sum_{\ell=1}^N\frac{\omega_k^{\ell}q_{\theta}^{\Delta t_{k+1}}(\xi_{k}^{\ell},x)\left(\tau^{\ell}_k + h_{k+1}(\xi_{k}^{\ell},x)\right)}{\sum_{\ell'=1}^N\omega_k^{\ell'}q_{\theta}^{\Delta t_{k+1}}(\xi_{k}^{\ell'},x)}p_{k+1}(\xi_{k}^{i},x)\rmd x\eqsp,\\
+& =\left(\phi^N_{k}[\vartheta_{k+1}]\right)^{-1}\phi^N_{k}\left[\int q_{\theta}^{\Delta t_{k+1}}(\cdot,x)g_{k+1}(x)\left\{\tau_k(\cdot) + h_{k+1}(\cdot,x)\right\}\rmd x\right]\eqsp,
+\end{align*}
+which concludes the proof.
+\end{proof}
+
+\begin{proposition}
+Assume that H\ref{assum:boundmodel} and H\ref{assum:boundalgo} hold and that for all $1\le k\le n$, $\mathrm{osc}(h_k)<+\infty$. For all $0\le k\le n$, there exist $b_k,c_k>0$ such that for all $N\ge 1$ and all $\varepsilon\in\mathbb{R}_+^\star$,
+\[
+\mathbb{P}\left(\left|\phi_k^N[\tau_k] - \phi_k\left[T_kh_k\right]\right|\ge \varepsilon\right)\le b_k\exp\left(-c_kN\varepsilon^2\right)\eqsp.
+\]
+\end{proposition}
+
+\begin{proof}
+Write
+\[
+\phi_{k+1}^N[\tau_{k+1}] - \phi_{k+1}\left[T_{k+1}h_{k+1}\right] = \frac{a_N}{b_N}\eqsp,
+\]
+where $a_N = N^{-1}\sum_{i=1}^N \widetilde{\omega}_{k+1}^i \left(\tau_{k+1}^i - \phi_{k+1}\left[T_{k+1}h_{k+1}\right]\right)$ and $b_N =N^{-1}\sum_{i=1}^N \widetilde{\omega}_{k+1}^i$. By Lemma~\ref{lem:iid}, the random variables $\{\widetilde{\omega}_{k+1}^i\tau_{k+1}^i\}_{i=1}^N$ are independent conditionally on $\mathcal{F}_k^{N}$ and by H\ref{assum:boundalgo},
+\[
+\left|\widetilde{\omega}_{k+1}^i \left(\tau_{k+1}^i - \phi_{k+1}\left[T_{k+1}h_{k+1}\right]\right)\right| \le 2|\widetilde{\omega}_{k+1}|_{\infty}|H_{k+1}|_{\infty}\eqsp.
+\]
+Therefore, by Hoeffing inequality,
+\[
+\mathbb{P}\left(\left|a_N - \mathbb{E}\left[a_N\middle|\mathcal{F}_k^{N}\right]\right|\ge \varepsilon\right) = \mathbb{E}\left[\mathbb{P}\left(\left|a_N - \mathbb{E}\left[a_N\middle|\mathcal{F}_k^{N}\right]\right|\ge \varepsilon\middle|\mathcal{F}_k^{N}\right)\right]\le 2\exp\left(-c_kN\varepsilon^2\right)\eqsp.
+\] 
+On the other hand,
+\[
+\mathbb{E}\left[a_N\middle|\mathcal{F}_k^{N}\right] = \left(\phi^N_{k}[\vartheta_{k+1}]\right)^{-1}\phi^N_{k}\left[\Upsilon_k\right] \eqsp,%\left(\phi^N_{k}[\vartheta_{k+1}]\right)^{-1}
+\]
+where
+\[
+\Upsilon_k(x_k) = \int q_{\theta}^{\Delta t_{k+1}}(\cdot,x)g_{k+1}(x)\left(\tau_k(x_k) + h_{k+1}(x_k,x) - \phi_{k+1}\left[T_{k+1}h_{k+1}\right]\right)\rmd x\eqsp.
+\]
+By Lemma~\ref{lem:smooth:rec}, $\phi_{k}\left[\Upsilon_k\right] = 0$ which implies by Proposition~\ref{prop:filter} that 
+\[
+\mathbb{P}\left(\left|\mathbb{E}\left[a_N\middle|\mathcal{F}_k^{N}\right]\right|\ge \varepsilon\right)\le b_k\exp\left(-c_kN\varepsilon^2\right)\eqsp.
+\]
+Then,
+\[
+\mathbb{P}\left(\left|a_N\right|\ge \varepsilon\right) \le b_k\exp\left(-c_kN\varepsilon^2\right)\eqsp.
+\] 
+Similarly, as $b_N \le |\widetilde{\omega}_k|_{\infty}$, by Hoeffding inequality,
+\[
+\mathbb{P}\left(\left|b_N - \mathbb{E}\left[b_N\middle|\mathcal{F}_k^{N}\right]\right|\ge \varepsilon\right) = \mathbb{E}\left[\mathbb{P}\left(\left|b_N - \mathbb{E}\left[b_N\middle|\mathcal{F}_k^{N}\right]\right|\ge \varepsilon\middle|\mathcal{F}_k^{N}\right)\right]\le 2\exp\left(-c_kN\varepsilon^2\right)\eqsp.
+\] 
+Note that
+\[
+\mathbb{E}\left[b_N\middle|\mathcal{F}_k^{N}\right] = \phi^N_{k}\left[\int q_{\theta}^{\Delta t_{k+1}}(\cdot,x)g_{k+1}(x)\rmd x\right]\eqsp.%\left(\phi^N_{k}[\vartheta_{k+1}]\right)^{-1}
+\]
+By Proposition~\ref{prop:filter},
+\[
+\mathbb{P}\left(\left|\mathbb{E}\left[b_N\middle|\mathcal{F}_k^{N}\right]-\phi_k\left[\int q_{\theta}^{\Delta t_{k+1}}(\cdot,x)g_{k+1}(x)\rmd x\right]\right|\ge \varepsilon\right)\le b_k\exp\left(-c_kN\varepsilon^2\right)\eqsp.
+\]
+The proof is completed using Lemma~\ref{lem:hoeffding:ratio}.
+\end{proof}
+
+\begin{lemma}\label{lem:hoeffding:ratio}
+Assume that $a_N$, $b_N$, and $b$ are random variables defined on the same probability space such that there exist positive constants $\beta$, $B$, $C$, and $M$ satisfying
+\begin{enumerate}[(i)]
+    \item $|a_N/b_N|\leq M$, $\mathbb{P}$-a.s.\ and  $b \geq \beta$, $\mathbb{P}$-a.s.,
+    \item For all $\epsilon>0$ and all $N\geq1$, $\mathbb{P}\left[|b_N-b|>\epsilon \right]\leq B \exp\left(-C N \epsilon^2\right)$,
+    \item For all $\epsilon>0$ and all $N\geq1$, $\mathbb{P} \left[ |a_N|>\epsilon \right]\leq B \exp\left(-C N \left(\epsilon/M\right)^2\right)$.
+\end{enumerate}
+Then,
+$$
+    \mathbb{P}\left\{ \left| \frac{a_N}{b_N} \right| > \epsilon \right\} \leq B \exp{\left(-C N \left(\frac{\epsilon \beta}{2M} \right)^2 \right)} \eqsp.
+$$
+\end{lemma}
+\begin{proof}
+See \cite{}.
+\end{proof}
+
+\section{Numerical experiments}
+\label{sec:exp}
+This section investigates the performance of the proposed Ozaki-PaRIS EM algorithm. The different tuning parameters are:
+\begin{enumerate}[i)]
+\item the number of particles $N$ and the precision parameter $\widetilde{N}$;
+\item the proposal transition density $p_k$ and the adjustment multiplier $\vartheta_k$ used to propagate and weight particles;
+\item the discrete distribution $\mu$ used to define $\widetilde{q}_{\theta}^{\Delta t_k}$.
+\end{enumerate}
+The algorithm is compared to the fixed-lag particle smoother of \cite{}. To complete the numerical analysis, the impact of the bridge process used to estimate $q_{\theta}^{\Delta t_k}$ is also illustrated. Instead of the Ozaki discretization, the following bridges process are considered:
+\begin{enumerate}[i)]
+\item a bridge with constant drift as proposed in \cite{}.
+\item a guided bridge process, see \cite{}.
+\end{enumerate}
+\paragraph{Choice of $\mu$}
+A simple choice is to set $\mu$ as a Poisson distribution with mean $\Lambda_{\theta}t$ leading to the first estimator GPE-1:
+\begin{multline*}
+q^{t}_{\mathrm{GPE-1},\theta}(\kappa,\omega,(U_j)_{1\le j\le \kappa},x,y) =  \widetilde{q}^{t}_{\theta}(x,y)\eqsp\mathrm{exp}\left\{H_{\theta}(y) - H_{\theta}(x)+\ell(\theta)t\right\}\Lambda_{\theta}^{-\kappa}\\
+\times \prod_{j=1}^{\kappa}\left(\Lambda_{\theta}-\phi_{\theta}(\omega_{U_j})\right)\eqsp.
+\end{multline*}
+% An important feature of this estimator is that under the assumptions of this section it may be bounded uniformly in $x,y$, $\sup_{x,y\in\mathbb{R}^d}  q^{t}_{\mathrm{GPE-1},\theta}(\kappa,\omega,(U_j)_{1\le j\le \kappa},x,y) \le M_\theta$ where:
+% \[
+% M_{\theta} = \sup_{x,y\in\mathbb{R}^d} \left(\widetilde{q}^{t}_{\theta}(x,y)\mathrm{exp}\left\{ H_{\theta}(y) - H_{\theta}(x)\right\}\right)\mathrm{exp}\left\{\ell(\theta)t\right\}\eqsp.
+% \]
+\paragraph{Choice of bridge process}
+The approximation of $q_{\theta}^{\Delta t_k}$ described in the paper may be compared to the approximation provided by other bridges with affine drift functions. Following \cite{}, let $(Y^{\beta}_t)_{t_{k-1}\le t\le t_k}$ be governed by the following stochastic differential equation for $t_{k-1}\le t\le t_k$:
+\[
+Y^{\beta}_{t_{k-1}} = X_{k-1}\quad\mbox{and}\quad\rmd Y^{\beta}_t = \beta\rmd t + \rmd W_t\eqsp.
+\]
+As suggestd by \cite{}, a guided process between $t_{k-1}$ and $t_k$ may alo be used:
+\[
+Y^{\mathsf{guid}}_{t_{k-1}} = X_{k-1}\quad\mbox{and}\quad\rmd Y^{\mathsf{guid}}_t = \frac{X_k - Y^{\mathsf{guid}}_t}{t_k-t}\rmd t + \rmd W_t\eqsp.
+\]
+Both processes lead to estimators of $q_{\theta}^{\Delta t_k}$ following the same steps as in Section~\ref{}.
+% where $\beta\in\mathbb{R}^d$ is chosen by the user. Assume that $\alpha_{\theta}$ is of the form $\alpha_{\theta}(x) = \nabla_x A_{\theta}(x)$ where $A_{\theta}: \mathbb{R}^d \to \mathbb{R}$. Writing $\mathbb{Q}_{\theta}$ (resp. $\mathbb{W}^{\beta}_{\theta}$) the probability measure induced by $(X_s)_{0\le s\le t}$  (resp. $(Y_s)_{0\le s\le t}$) on $(\mathsf{C},\mathcal{C})$, Girsanov theorem yields:
+% \[
+% \frac{\rmd \mathbb{Q}_{\theta}}{\rmd \mathbb{W}^{\beta}_{\theta}}(w) = \mathrm{exp}\left\{H_{\theta}(\omega_t) - H_{\theta}(\omega_0) - \frac{1}{2}\int_{0}^{t}\left\{\|\alpha_{\theta}(\omega_s)-\beta\|^2+\Delta H_{\theta}(\omega_s)\right\}\rmd s\right\}\eqsp,
+% \]
+% where $H_{\theta}(x) = A_{\theta}(x) -\beta'x$. Then, the probability measures conditioned on hitting $y$ at time $t$ satisfy:
+% \[
+% \frac{\rmd \mathbb{Q}^{y}_{\theta}}{\rmd \mathbb{W}^{\beta,y}_{\theta}}(w) = \frac{\varphi_t(y-x-t\beta)}{q^{t}_{\theta}(x,y)} \mathrm{exp}\left\{H_{\theta}(y) - H_{\theta}(x) - \frac{1}{2}\int_{0}^{t}\left\{\|\alpha_{\theta}(\omega_s)-\beta\|^2+\Delta H_{\theta}(\omega_s)\right\}\rmd s\right\}\eqsp.
+% \]
+% Assume also that for all $\theta$, there exists $\ell(\theta)$ such that:
+% \[
+% \mathrm{inf}_{u\in \mathbb{R}^d} \left\{\frac{1}{2}\left(\|\alpha_{\theta}(u)-\beta\|^2+\Delta H_{\theta}(u)\right)\right\}\ge \ell(\theta)\eqsp.
+% \]
+% Then
+% \[
+% q^{t}_{\theta}(x,y) = \varphi_t(y-x-t\beta)\eqsp\mathrm{exp}\left\{H_{\theta}(y) - H_{\theta}(x)+\ell(\theta)t\right\}\mathbb{E}_{\mathbb{W}^{\beta,y}}\left[\mathrm{exp}\left\{-\int_{0}^{t}\phi_{\theta}(\omega_s)\rmd s\right\}\right]\eqsp,
+% \]
+% where 
+% \[
+% \phi_{\theta}(x) = \frac{1}{2}\left\{\|\alpha_{\theta}(x)-\beta\|^2+\Delta H_{\theta}(x)\right\}-\ell(\theta)\eqsp.
+% \]
+% An unbiased estimator of $q^{t}_{\theta}(x,y)$ is then obtained by estimating $\mathbb{E}_{\mathbb{W}^{\beta,y}}\left[\mathrm{exp}\left\{-\int_{0}^{t}\phi_{\theta}(\omega_s)\rmd s\right\}\right]$.
+
+
+% Let $h$ be a function defined on $\{1,\ldots,N\}$,
+% \begin{align*}
+% \mathbb{E}\left[h(I_{\tau})\right] & = \sum_{m\ge 0}\mathbb{E}\left[h(I_m)\1_{\tau=m}\right]\eqsp,\\
+% & = \sum_{m\ge 0}h(m)\left(\prod_{\ell=0}^{m-1}\mathbb{E}\left[\1_{(\mathcal{A}^k_{\ell})^c}\right]\right)\mathbb{E}\left[h(I_m)\1_{\mathcal{A}^k_{m}}\right]\eqsp,\\
+% & = \sum_{m\ge}\left(\prod_{\ell=0}^{m-1}\mathbb{E}\left[1-\frac{q^{\Delta t_k}_{\mathrm{GPE-1},\theta}(\kappa_{\ell},\omega^{\kappa_{\ell}},(U^{\kappa_{\ell}}_j)_{1\le j\le \kappa_{\ell}},\xi_{k-1}^{I_\ell},\xi_k^{1})}{M_{\theta}}\right]\right)\\
+% &\hspace{5cm}\times\mathbb{E}\left[h(I_m)\frac{q^{\Delta t_k}_{\mathrm{GPE-1},\theta}(\kappa_{m},\omega^{\kappa_{m}},(U^{\kappa_{m}}_j)_{1\le j\le \kappa_{m}},\xi_{k-1}^{I_m},\xi_k^{1})}{M_{\theta}}\right]\eqsp,\\
+% & = \sum_{m\ge 0}\left(\mathbb{E}\left[1-\frac{q^{\Delta t_k}_{\theta}(\xi_{k-1}^{I_1},\xi_k^{1})}{M_{\theta}}\right]\right)^m\mathbb{E}\left[h(I_m)\frac{q^{\Delta t_k}_{\theta}(\xi_{k-1}^{I_m},\xi_k^{1})}{M_{\theta}}\right]\eqsp,\\
+% & = \mathbb{E}\left[h(I_1)q^{\Delta t_k}_{\theta}(\xi_{k-1}^{I_1},\xi_k^{1})\right]/\mathbb{E}\left[q^{\Delta t_k}_{\theta}(\xi_{k-1}^{I_m},\xi_k^{1})\right]\eqsp,\\
+% & = \sum_{\ell=1}^N \frac{h(\ell)\omega_{k-1}^{\ell}q^{\Delta t_k}_{\theta}(\xi_{k-1}^{\ell},\xi_k^{1})}{\sum_{m=1}^N\omega_{k-1}^{m}q^{\Delta t_k}_{\theta}(\xi_{k-1}^{m},\xi_k^{1})}\eqsp,
+% \end{align*}
+% which concludes the proof.
+
+
+\appendix
+
+\section{Proofs}
+
+\begin{lemma}
+\label{lem:AR:unbiased}
+Let $1\le k\le n$.  For all $1\le i \le N$ and all $1\le j \le \widetilde{N}$, the conditional probability distribution given $\mathcal{F}_k^N$ of the random variable $J_k^{i,j}$ produced by Algorithm~\ref{alg:AR} is  $\Lambda_{k-1}^N(i,\cdot)$. 
+\end{lemma}
+
+\begin{proof}
+Let $\tau$ be the first time  draws are accepted in the accept-reject mechanism. For all $\ell\ge 1$, write
+\[
+\mathcal{A}^k_{\ell} = \left\{U_\ell<\widehat{q}^{\Delta t_k}(\xi_{k-1}^{I_\ell},\xi_k^{i},\Lambda_{\ell})/\sigma_+\right\}\eqsp.
+\]
+
+Let $h$ be a function defined on $\{1,\ldots,N\}$,
+\begin{align*}
+\mathbb{E}\left[h(J^{i,j}_k)\middle| \mathcal{F}_k^N\right] & = \sum_{m\ge 1}\mathbb{E}\left[h(I_m)\1_{\tau=m}\middle| \mathcal{F}_k^N\right]\eqsp,\\
+& = \sum_{m\ge 1}h(m)\left(\prod_{\ell=1}^{m-1}\mathbb{E}\left[\1_{(\mathcal{A}^k_{\ell})^c}\middle| \mathcal{F}_k^N\right]\right)\mathbb{E}\left[h(I_m)\1_{\mathcal{A}^k_{m}}\middle| \mathcal{F}_k^N\right]\eqsp,\\
+& = \sum_{m\ge 1}\left(\prod_{\ell=1}^{m-1}\mathbb{E}\left[1-\frac{\widehat{q}^{\Delta t_k}(\xi_{k-1}^{I_\ell},\xi_k^{i},\Lambda_{\ell})}{\sigma_{+}}\middle| \mathcal{F}_k^N\right]\right)\\
+&\hspace{5cm}\times\mathbb{E}\left[h(I_m)\frac{\widehat{q}^{\Delta t_k}(\xi_{k-1}^{I_m},\xi_k^{i},\Lambda_{\ell})}{\sigma_{+}}\middle| \mathcal{F}_k^N\right]\eqsp,\\
+& = \sum_{m\ge 1}\left(\mathbb{E}\left[1-\frac{q^{\Delta t_k}_{\theta}(\xi_{k-1}^{I_1},\xi_k^{1})}{\sigma_{+}}\middle| \mathcal{F}_k^N\right]\right)^{m-1}\mathbb{E}\left[h(I_m)\frac{q^{\Delta t_k}_{\theta}(\xi_{k-1}^{I_m},\xi_k^{1})}{\sigma_{+}}\middle| \mathcal{F}_k^N\right]\eqsp,\\
+& = \mathbb{E}\left[h(I_1)q^{\Delta t_k}_{\theta}(\xi_{k-1}^{I_1},\xi_k^{i})\middle| \mathcal{F}_k^N\right]/\mathbb{E}\left[q^{\Delta t_k}_{\theta}(\xi_{k-1}^{I_m},\xi_k^{i})\middle| \mathcal{F}_k^N\right]\eqsp,\\
+& = \sum_{\ell=1}^N \frac{h(\ell)\omega_{k-1}^{\ell}q^{\Delta t_k}_{\theta}(\xi_{k-1}^{\ell},\xi_k^{i})}{\sum_{m=1}^N\omega_{k-1}^{m}q^{\Delta t_k}_{\theta}(\xi_{k-1}^{m},\xi_k^{i})}\eqsp,\\
+&= \sum_{\ell=1}^N \Lambda_{k-1}^N(i,\ell)h(\ell) \eqsp,
+\end{align*}
+which concludes the proof.
+\end{proof}
+
+
+\section{Multidimensional Ornstein Uhlenbeck bridge}
+\label{sec:ornstein:bridge}
+The GPE introduced in this paper requires to sample finite dimensional distributions of Ornstein Uhlenbeck bridges. These results may be found in \cite{} and are given here for completeness. Consider the following $d$-dimensional SDE:
+\begin{equation}
+\label{eq:sde:ornstein}
+Z_0 = z_0\quad\mbox{and}\quad \rmd Z_t = (\Upsilon Z_t + \vartheta)\rmd t + \rmd W_t\eqsp,
+\end{equation}
+where $W$ is a standard Brownian motion on $\mathbb{R}^d$, $A$ is a $d\times d$ matrix and $b$ a $d$ dimensional vector. In the case of Section~\ref{sec:PaRIS:SDE}, for all $1\le k \le n$, the proposal stochastic differential equation governing $Y_t^k$, $t\in(t_{k-1},t_k)$, is of the form \eqref{eq:sde:ornstein} with
+\[
+\Upsilon = J_{\alpha_{\theta}}(X_{k-1})\;\;\mbox{and}\;\; \vartheta =\alpha_{\theta}(X_{k-1}) - J_{\alpha_{\theta}}(X_{k-1})X_{k-1}\eqsp,
+\]
+$J_{\alpha_{\theta}}$ being the Jacobian of $\alpha_{\theta}$. In this case, as $\alpha_{\theta}(x) = \nabla_x A_{\theta}(x)$, $A$ is symetric and \textcolor{red}{nonsingular, Syl : a voir}. By \cite[Section~5.6]{karatzas:shreve:1991}, the unique strong solution of \eqref{eq:sde:ornstein} is:
+\[
+Z_t = \mathrm{e}^{t\Upsilon}z_0 + \int_0^t\mathrm{e}^{(t-s)\Upsilon}\vartheta \rmd s + \int_0^t\mathrm{e}^{(t-s)\Upsilon} \rmd W_s\eqsp.
+\]
+Therefore, the probability density of the conditional distribution of $Z_t$ given $Z_0 = z_0$ is Gaussian with mean $\mu_t(z_0)$ and variance $\Sigma_{t}$ given by:
+\begin{align*}
+\Sigma_{t} &= \int_0^{t} \mathrm{e}^{(t -s)\Upsilon}\mathrm{e}^{(t -s)\Upsilon'}\rmd s\eqsp,\\
+\mu_{t}(z) &= \mathrm{e}^{t \Upsilon}z_0 + \left(\int_0^t\mathrm{e}^{(t-s)\Upsilon} \rmd s\right)\vartheta\eqsp.
+\end{align*}
+As $\Upsilon$ is symetric and nonsingular,
+\begin{align*}
+\Sigma_{t} &= \int_0^{t} \mathrm{e}^{2(t -s)\Upsilon}\rmd s = \Upsilon^{-1}(\mathrm{e}^{2t\Upsilon}-I_d)/2\eqsp,\\
+\mu_{t}(z) &= \mathrm{e}^{t \Upsilon}z + \left(\int_0^t\mathrm{e}^{(t-s)\Upsilon} \rmd s\right)\vartheta = \mathrm{e}^{t \Upsilon}z + \Upsilon^{-1}(\mathrm{e}^{t\Upsilon}-I_d)\vartheta \eqsp.
+\end{align*}
+For each interval $(t_{k-1},t_k)$, $1\le k \le n$, the GPE requires to sample a Ornstein-Uhlenbeck bridge at some ramdom time steps between $X_{k-1}$ at time $t_{k-1}$ and $X_k$ at time $t_k$. Conditional on $Z_s = x$ and $Z_T = y$, the probability density of $Z_t$ is Gaussian with mean $\mu$ and variance $\Sigma_t^{s,T}$ given by: 
+\begin{align*}
+\mu &=\Gamma(t,T)\Gamma(s,T)^{-1}\mu_- + \Gamma(s,t)'(\Gamma(s,T)')^{-1}\mu_+\eqsp,\\
+\Sigma_t^{s,T} &=\Gamma(t,T)\Gamma(s,T)^{-1}\Gamma(s,t)\eqsp,\\
+\Gamma(s,t)&=\int_s^{t} \mathrm{e}^{(s -u)\Upsilon}\mathrm{e}^{(t -u)\Upsilon'}\rmd u\eqsp = \Upsilon^{-1}\left(\mathrm{e}^{(t -s)\Upsilon}-\mathrm{e}^{(s -t)\Upsilon}\right)/2\eqsp,\\
+\mu_- &= x - \Upsilon^{-1}(\mathrm{e}^{(s -t)\Upsilon}-I_d)\vartheta\eqsp,\\
+\mu_+ &= y-\Upsilon^{-1}(\mathrm{e}^{(T -t)\Upsilon}-I_d)\vartheta\eqsp.
+\end{align*}
+
+
+\bibliographystyle{plain}
+\bibliography{./ParisEM_bib}
+\end{document}
