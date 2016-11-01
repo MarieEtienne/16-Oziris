@@ -54,7 +54,7 @@
 \footnotetext[2]{Laboratoire de Math\'ematiques d'Orsay, Univ. Paris-Sud, CNRS, Universit\'e Paris-Saclay.}
 
 
-\title{Efficient online Sequential Monte Carlo smoother for partially observed stochastic differential equations}
+\title{Efficient online Sequential Monte Carlo smoother for partially observed stochastic differential equations: the Oziris algorithm}
 
 \lhead{Gloaguen et al.}
 \rhead{Particle smoother for SDE}
@@ -63,7 +63,7 @@
 
 
 \section{Introduction}
-It is assumed that the dynamics of the states $(X_t)_{t\ge 0}$ depends on a parameter $\theta\in \Theta$ where $\Theta$ is a compact subspace of $\mathbb{R}^{\ell}$ and that $(X_t)_{t\ge 0}$ is a weak solution to the following Stochastic Differential Equation (SDE) in $\mathbb{R}^d$:
+The dynamics of the states $(X_t)_{t\ge 0}$ depends on a parameter $\theta\in \Theta$ where $\Theta$ is a compact subspace of $\mathbb{R}^{\ell}$ and that $(X_t)_{t\ge 0}$ is a weak solution to the following Stochastic Differential Equation (SDE) in $\mathbb{R}^d$:
 \begin{equation}
 \label{eq:target:sde}
 X_0 = x_0\quad\mbox{and}\quad \rmd X_t = \alpha_{\theta}(X_t)\rmd t + \rmd W_t\eqsp,
@@ -74,7 +74,7 @@ Statistical inference for partially observed stochastic differential equations u
 \begin{equation*}
 \ell_{\theta}^{n}(Y_{0:n}) = \log\left(\int p_{\theta}(x_{0:n},Y_{0:n})\,\rmd x_{0:n}\right)\eqsp,
 \end{equation*}  
-where the complete data likelihood $p_{\theta}$ is given by
+where $p_{\theta}$ is the complete data likelihood:
 \begin{equation*}
 p_{\theta}(x_{0:n},Y_{0:n}) = \chi_{\theta}(x_0)g_{\theta}(x_0;Y_0)\prod^{n}_{k=1}q^{\Delta t_k}_{\theta}(x_{k-1},x_k)g_{\theta}(x_k,Y_k)\eqsp.
 \end{equation*}
@@ -110,16 +110,16 @@ These new GPE estimators use a an order one Taylor expansion or the drift of \eq
 %Q(\theta,\theta_{p})= \sum_{k=1}^n\mathbb{E}_{\theta_p}\left[\log \left\{q^{\Delta t_k}_{\theta}(X_{k-1},X_k)g_{\theta}(X_k,Y_k)\right\}\middle|Y_{0:n}\right]\eqsp.
 %\]
 %We first describe the Monte Carlo method used to approximate $Q(\theta,\theta_{p})$ when $q^{\Delta t_k}_{\theta}$ may be computed. Dropping $\theta$ from the notations, the E-step computes an expectation of the form
-The aim of this Section is to detail the extension of PaRIS algorithm to approximate expectations of the form
+Let $0 \leq k \leq k' \leq n$. The joint smoothing distributions of the hidden states are defined, for all measurable function $h$ on $(\mathbb{R}^d)^{k'-k + 1}$, by:
+\[
+\phi_{k:k'|n}[h] := \mathbb{E}\left[h(X_k,\ldots,X_{k'})\middle|Y_{0:n}\right]\eqsp.
+\]
+For all $0\le k\le n$, $\phi_{k} = \phi_{k:k|k}$ denotes the filtering distributions. The aim of this section is to detail the extension of PaRIS algorithm to approximate expectations of the form
 \begin{equation}
 \label{def:addfunc}
 H_{n} =  \sum_{k=1}^n\mathbb{E}\left[h_k(X_{k-1},X_k)\middle|Y_{0:n}\right]\eqsp,
 \end{equation}
-when the transition density of the hidden states is not available explicitly where $\{h_k\}_{k=1}^n$ are given functions on $\mathbb{R}^d\times \mathbb{R}^d$. Thus, for $0 \leq k \leq k' \leq n$ and a given measurable function $h$ on $(\mathbb{R}^d)^{k'-k + 1}$, we need to compute an approximation of the smoothed expectation of the states $(X_k,\ldots,X_{k'})$ defined by:
-\[
-\phi_{k:k'|n}[h] := \mathbb{E}\left[h(X_k,\ldots,X_{k'})\middle|Y_{0:n}\right]\eqsp.
-\]
-The filtering distributions are defined, for $0\le k\le n$ by $\phi_{k} = \phi_{k:k|k}$. %In this paper, we are interested in a particular class of Sequential Monte Carlo methods to approximate $\bar{H}_{n}$ known as the PaRIS algorithm introduced in \cite{olsson:westerborn:2016}. 
+when the transition density of the hidden states is not available explicitly and where $\{h_k\}_{k=1}^n$ are given functions on $\mathbb{R}^d\times \mathbb{R}^d$.  %In this paper, we are interested in a particular class of Sequential Monte Carlo methods to approximate $\bar{H}_{n}$ known as the PaRIS algorithm introduced in \cite{olsson:westerborn:2016}. 
 
 %The PaRIS algorithm is based on the first Sequential Monte Carlo algorithms introduced in  \cite{gordon:salmond:smith:1993} and \cite{kitagawa:1996}. 
 Sequential Monte Carlo algorithms introduced in  \cite{gordon:salmond:smith:1993} and \cite{kitagawa:1996} rely on importance sampling and importance resampling steps to approximate the filtering distribution $\phi_{k}$ (conditional distribution of $X_k$ given $Y_{0:k}$) using  a set of particles $\{\xi^{\ell}_k\}_{\ell=1}^N$ associated with weights $\{\omega^{\ell}_k\}_{\ell=1}^N$. At time $k = 0$, $N$ particles $\{\xi^{\ell}_0\}_{\ell=1}^N$ are initialized by setting $\xi^{\ell}_0=x_0$. Then, $\xi^{\ell}_0$ is associated with the importance weights $\omega_0^{\ell} = g_0 \left(\xi^{\ell}_0\right)$. Then, for any bounded and measurable function $h$ defined on $\mathbb{R}^d$, the expectation $\phi_{0}[h] $ is approximated by
