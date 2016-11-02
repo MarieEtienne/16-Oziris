@@ -37,3 +37,7 @@
 *.pdf
 *.bbl
 *.synctex
+*.aux
+*.out
+*.blg
+.gitignore~
