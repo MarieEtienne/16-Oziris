@@ -38,7 +38,8 @@
 \newcommand{\eqsp}{\;}
 \newcommand{\1}{\mathrm{1}}
 \newcommand{\com}[1]{{\color{gray} // #1}}
-
+\newcommand{\mP}{\mathbb{P}}
+\newcommand{\E}{\mathbb{E}}
 \newtheorem{lemma}{Lemma}
 \newtheorem{proposition}{Proposition}
 
@@ -555,23 +556,56 @@ Both processes lead to estimators of $q_{\theta}^{\Delta t_k}$ following the sam
 
 \section{Proofs}
 \begin{proof}[Proof of Lemma~\ref{lem:AR:unbiased}]
-Let $\tau$ be the first time  draws are accepted in the accept-reject mechanism. For all $\ell\ge 1$, write
-\[
-\mathcal{A}^k_{\ell} = \left\{U_\ell<\widehat{q}^{\Delta t_k}(\xi_{k-1}^{I_\ell},\xi_k^{i},\Lambda_{\ell})/\sigma_+\right\}\eqsp.
-\]
-
-Let $h$ be a function defined on $\{1,\ldots,N\}$,
+%Let $\tau$ be the first time  draws are accepted in the accept-reject mechanism. For all $\ell\ge 1$, write
+%\[
+%\mathcal{A}^k_{\ell} = \left\{U_\ell<\widehat{q}^{\Delta t_k}(\xi_{k-1}^{I_\ell},\xi_k^{i},\Lambda_{\ell})/\sigma_+\right\}\eqsp.
+%\]
+%
+%Let $h$ be a function defined on $\{1,\ldots,N\}$,
+%\begin{align*}
+%\mathbb{E}\left[h(J^{i,j}_k)\middle| \mathcal{F}_k^N\right] & = \sum_{m\ge 1}\mathbb{E}\left[h(I_m)\1_{\tau=m}\middle| \mathcal{F}_k^N\right]\eqsp,\\
+%& = \sum_{m\ge 1}h(m)\left(\prod_{\ell=1}^{m-1}\mathbb{E}\left[\1_{(\mathcal{A}^k_{\ell})^c}\middle| \mathcal{F}_k^N\right]\right)\mathbb{E}\left[h(I_m)\1_{\mathcal{A}^k_{m}}\middle| \mathcal{F}_k^N\right]\eqsp,\\
+%& = \sum_{m\ge 1}\left(\prod_{\ell=1}^{m-1}\mathbb{E}\left[1-\frac{\widehat{q}^{\Delta t_k}(\xi_{k-1}^{I_\ell},\xi_k^{i},\Lambda_{\ell})}{\sigma_{+}}\middle| \mathcal{F}_k^N\right]\right)\\
+%&\hspace{5cm}\times\mathbb{E}\left[h(I_m)\frac{\widehat{q}^{\Delta t_k}(\xi_{k-1}^{I_m},\xi_k^{i},\Lambda_{\ell})}{\sigma_{+}}\middle| \mathcal{F}_k^N\right]\eqsp,\\
+%& = \sum_{m\ge 1}\left(\mathbb{E}\left[1-\frac{q^{\Delta t_k}_{\theta}(\xi_{k-1}^{I_1},\xi_k^{1})}{\sigma_{+}}\middle| \mathcal{F}_k^N\right]\right)^{m-1}\mathbb{E}\left[h(I_m)\frac{q^{\Delta t_k}_{\theta}(\xi_{k-1}^{I_m},\xi_k^{1})}{\sigma_{+}}\middle| \mathcal{F}_k^N\right]\eqsp,\\
+%& = \mathbb{E}\left[h(I_1)q^{\Delta t_k}_{\theta}(\xi_{k-1}^{I_1},\xi_k^{i})\middle| \mathcal{F}_k^N\right]/\mathbb{E}\left[q^{\Delta t_k}_{\theta}(\xi_{k-1}^{I_m},\xi_k^{i})\middle| \mathcal{F}_k^N\right]\eqsp,\\
+%& = \sum_{\ell=1}^N \frac{h(\ell)\omega_{k-1}^{\ell}q^{\Delta t_k}_{\theta}(\xi_{k-1}^{\ell},\xi_k^{i})}{\sum_{m=1}^N\omega_{k-1}^{m}q^{\Delta t_k}_{\theta}(\xi_{k-1}^{m},\xi_k^{i})}\eqsp,\\
+%&= \sum_{\ell=1}^N \Lambda_{k-1}^N(i,\ell)h(\ell) \eqsp,
+%\end{align*}
+%which concludes the proof.
+The goal is to simulate realisations of  a discrete random variable $X$ having the following target distribution:
+\begin{equation}
+\mP(X=l)= p_X(l)=\frac{\omega_k^l q_k(\xi_k^l,\xi_{k+1})}{\sum_{l=1}^N\omega_k^l q_k(\xi_k^l,\xi_{k+1})},~~l\in \{1,\dots,N\}
+\end{equation}
+for some $\xi_{k+1}$ that has no importance in this result. We assume $\omega_k$ are normalized weights, i.e. $\sum_l \omega_k^l=1$. The candidate will therefore be sampled from $Y$, a r.v. with the following distribution:
+\begin{equation}
+\mP(Y=l)=p_Y(l)= \omega_k^l,~~l\in \{1,\dots,N\}
+\end{equation}
+Unfortunately, the $q_k$ function is unknown. Howevere, we let's suppose we can define an unbiased estimator $\hat{q}_k(\xi_k^l,\xi_{k+1},\zeta)$, where $\zeta$ is a random variable having th p.d.f. $p_\zeta$.  We have therefore:
+$$\E_{p_\zeta}\left[\hat{q}_k(\xi_k^l,\xi_{k+1},\zeta)\right]=q(\xi_k^l,\xi_{k+1})$$
+Moreover, we impose the following property over this estimator, we want that:
+$$\exists \sigma_+\in \mathbb{R}\text{ such that }\forall x,y,~~\hat{q}_k(x,y,\zeta)\leq \sigma_+$$
+To simulate a random variable $X\sim p_X$, we propose the following algorithm:
+\begin{enumerate}
+\item Sample independantly $y\sim p_Y$, $z\sim p_\zeta$ and $u \sim \mathcal{U}[0,1]$
+\item \textbf{If} 
+$$u \leq \frac{\hat{q}_k(\xi_k^l,\xi_{k+1},z)}{\sigma_+},$$
+set $x=y$. \textbf{Else}, return to 1).
+\end{enumerate}
+The lemma \ref{lem:AR:unbiased} states that $x$ is a realisation of a random variable $X\sim p_X$. Indeed
 \begin{align*}
-\mathbb{E}\left[h(J^{i,j}_k)\middle| \mathcal{F}_k^N\right] & = \sum_{m\ge 1}\mathbb{E}\left[h(I_m)\1_{\tau=m}\middle| \mathcal{F}_k^N\right]\eqsp,\\
-& = \sum_{m\ge 1}h(m)\left(\prod_{\ell=1}^{m-1}\mathbb{E}\left[\1_{(\mathcal{A}^k_{\ell})^c}\middle| \mathcal{F}_k^N\right]\right)\mathbb{E}\left[h(I_m)\1_{\mathcal{A}^k_{m}}\middle| \mathcal{F}_k^N\right]\eqsp,\\
-& = \sum_{m\ge 1}\left(\prod_{\ell=1}^{m-1}\mathbb{E}\left[1-\frac{\widehat{q}^{\Delta t_k}(\xi_{k-1}^{I_\ell},\xi_k^{i},\Lambda_{\ell})}{\sigma_{+}}\middle| \mathcal{F}_k^N\right]\right)\\
-&\hspace{5cm}\times\mathbb{E}\left[h(I_m)\frac{\widehat{q}^{\Delta t_k}(\xi_{k-1}^{I_m},\xi_k^{i},\Lambda_{\ell})}{\sigma_{+}}\middle| \mathcal{F}_k^N\right]\eqsp,\\
-& = \sum_{m\ge 1}\left(\mathbb{E}\left[1-\frac{q^{\Delta t_k}_{\theta}(\xi_{k-1}^{I_1},\xi_k^{1})}{\sigma_{+}}\middle| \mathcal{F}_k^N\right]\right)^{m-1}\mathbb{E}\left[h(I_m)\frac{q^{\Delta t_k}_{\theta}(\xi_{k-1}^{I_m},\xi_k^{1})}{\sigma_{+}}\middle| \mathcal{F}_k^N\right]\eqsp,\\
-& = \mathbb{E}\left[h(I_1)q^{\Delta t_k}_{\theta}(\xi_{k-1}^{I_1},\xi_k^{i})\middle| \mathcal{F}_k^N\right]/\mathbb{E}\left[q^{\Delta t_k}_{\theta}(\xi_{k-1}^{I_m},\xi_k^{i})\middle| \mathcal{F}_k^N\right]\eqsp,\\
-& = \sum_{\ell=1}^N \frac{h(\ell)\omega_{k-1}^{\ell}q^{\Delta t_k}_{\theta}(\xi_{k-1}^{\ell},\xi_k^{i})}{\sum_{m=1}^N\omega_{k-1}^{m}q^{\Delta t_k}_{\theta}(\xi_{k-1}^{m},\xi_k^{i})}\eqsp,\\
-&= \sum_{\ell=1}^N \Lambda_{k-1}^N(i,\ell)h(\ell) \eqsp,
+\mP\left(Y=l\vert U\leq \frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\right)&=\frac{\mP\left(U\leq \frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\vert Y=l \right) \mathbb{P}(Y=l)}{\mP\left(U\leq \frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\right)}\\
+&=\frac{\mP\left(U\leq \frac{\hat{q}_k(\xi_k^l,\xi_{k+1},\zeta)}{\sigma_+} \right) \omega_k^l}{\mP\left(U\leq \frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\right)}
+\intertext{We now note that}
+\mP\left(U\leq \frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\right)&=\E_{p_\zeta}\left[\E\left[\E_{p_Y}\left[\E\left[\mP\left(U\leq \frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\right) \vert Y\right] \right] \vert \zeta\right]\right]\\
+&=\E_{p_\zeta}\left[\sum_{l=1}^N w_k^l\frac{\hat{q}_k(\xi_k^l,\xi_{k+1},\zeta)}{\sigma_+} \right]~~(\text{As }\frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\leq 1)\\
+&=\frac{1}{\sigma_+}\sum_{l=1}^N w_k^l q_k(\xi_k^l,\xi_{k+1},\zeta)
+\intertext{In the same way, we have:}
+\mP\left(U\leq \frac{\hat{q}_k(\xi_k^l,\xi_{k+1},\zeta)}{\sigma_+}\right)&=\frac{1}{\sigma_+} q_k(\xi_k^l,\xi_{k+1},\zeta)
+\intertext{Which gives overall the wanted result}
+\mP\left(Y=l\vert U\leq \frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\right)&=\frac{\omega_k^l q_k(\xi_k^l,\xi_{k+1},\zeta)}{\sum_{l=1}^N w_k^l q_k(\xi_k^l,\xi_{k+1},\zeta)}=p_X(l),~~l\in \{1,\dots,N\}
 \end{align*}
-which concludes the proof.
+%\end{proof}
 \end{proof}
 
 
