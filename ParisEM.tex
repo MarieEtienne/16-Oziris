@@ -244,7 +244,8 @@ Let $1\le k\le n$.  For all $1\le i \le N$ and all $1\le j \le \widetilde{N}$, t
 \section{Ozaki-PaRIS algorithm}
 \label{sec:PaRIS:SDE}
 In general situations, the PaRIS algorithm cannot be used for stochastic differential equations as $q^{\Delta t_k}_{\theta}$ is unknown. Therefore, the computation of the importance weights $\omega_{k}^{\ell}$ and of the acceptance ratio in Algorithm~\ref{alg:AR} cannot be performed to apply the PaRIS algorithm. Following \cite{olsson:strojby:2011},
-an extension of the PaRIS algorithm may be developed by replacing $q^{\Delta t_k}_{\theta}$  by an unbiased estimator. In \cite{olsson:strojby:2011},  GPE are used to estimate $q^{\Delta t_k}_{\theta}$ which relies on a representation of $q^{\Delta t_k}_{\theta}$ as an expectation under the probability measure of a Brownian bridge. In order to improve the Monte Carlo estimation of $q^{\Delta t_k}_{\theta}$,  other diffusion bridges may be used as long as they can be simulated efficiently. A simple idea is to consider a diffusion obtained as an approximation of the target SDE \eqref{eq:target:sde}. \cite{ozaki:1992,shoji:ozaki:1998} proposed a higher order approximation of the drift term $\alpha_{\theta}$ than the Euler scheme. The authors used a linear approximation of the diffusion drift $\alpha_{\theta}$, together with a constant approximation of the volatility over each time interval $(t_{k-1},t_k)$. Following \cite{ozaki:1992,shoji:ozaki:1998}, for all $1\le k\le n$, let $(Y^{k}_t)_{t\ge 0}$ be governed by the following stochastic differential equation for $t\in(t_{k-1},t_k)$:
+an extension of the PaRIS algorithm may be developed by replacing $q^{\Delta t_k}_{\theta}$  by an unbiased estimator. In \cite{olsson:strojby:2011},  GPE are used to estimate $q^{\Delta t_k}_{\theta}$ which relies on a representation of $q^{\Delta t_k}_{\theta}$ as an expectation under the probability measure of a Brownian bridge. 
+In order to improve the Monte Carlo estimation of $q^{\Delta t_k}_{\theta}$,  other diffusion bridges may be used as long as they can be simulated efficiently. A simple idea is to consider a diffusion obtained as an approximation of the target SDE \eqref{eq:target:sde}. \cite{ozaki:1992,shoji:ozaki:1998} proposed a higher order approximation of the drift term $\alpha_{\theta}$ than the Euler scheme. The authors used a linear approximation of the diffusion drift $\alpha_{\theta}$, together with a constant approximation of the volatility over each time interval $(t_{k-1},t_k)$. Following \cite{ozaki:1992,shoji:ozaki:1998}, for all $1\le k\le n$, let $(Y^{k}_t)_{t\ge 0}$ be governed by the following stochastic differential equation for $t\in(t_{k-1},t_k)$:
 \begin{equation}
 \label{eq:SDE:Ozaki}
 Y^k_{t_{k-1}} = X_{k-1}\quad\mbox{and}\quad\rmd Y^k_t = \widetilde{\alpha}^k_{\theta}(Y^k_t)\rmd t + \rmd W_t\eqsp,
@@ -619,11 +620,11 @@ The lemma \ref{lem:AR:unbiased} states that $x$ is a realisation of a random var
 \intertext{We now note that}
 \mP\left(U\leq \frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\right)&=\E_{p_\zeta}\left[\E\left[\E_{p_Y}\left[\E\left[\mP\left(U\leq \frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\right) \vert Y\right] \right] \vert \zeta\right]\right]\\
 &=\E_{p_\zeta}\left[\sum_{l=1}^N w_k^l\frac{\hat{q}_k(\xi_k^l,\xi_{k+1},\zeta)}{\sigma_+} \right]~~(\text{As }\frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\leq 1)\\
-&=\frac{1}{\sigma_+}\sum_{l=1}^N w_k^l q_k(\xi_k^l,\xi_{k+1},\zeta)
+&=\frac{1}{\sigma_+}\sum_{l=1}^N w_k^l q_k(\xi_k^l,\xi_{k+1})
 \intertext{In the same way, we have:}
-\mP\left(U\leq \frac{\hat{q}_k(\xi_k^l,\xi_{k+1},\zeta)}{\sigma_+}\right)&=\frac{1}{\sigma_+} q_k(\xi_k^l,\xi_{k+1},\zeta)
+\mP\left(U\leq \frac{\hat{q}_k(\xi_k^l,\xi_{k+1},\zeta)}{\sigma_+}\right)&=\frac{1}{\sigma_+} q_k(\xi_k^l,\xi_{k+1})
 \intertext{Which gives overall the wanted result}
-\mP\left(Y=l\vert U\leq \frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\right)&=\frac{\omega_k^l q_k(\xi_k^l,\xi_{k+1},\zeta)}{\sum_{l=1}^N w_k^l q_k(\xi_k^l,\xi_{k+1},\zeta)}=p_X(l),~~l\in \{1,\dots,N\}
+\mP\left(Y=l\vert U\leq \frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\right)&=\frac{\omega_k^l q_k(\xi_k^l,\xi_{k+1})}{\sum_{l=1}^N w_k^l q_k(\xi_k^l,\xi_{k+1})}=p_X(l),~~l\in \{1,\dots,N\}
 \end{align*}
 %\end{proof}
 \end{proof}
