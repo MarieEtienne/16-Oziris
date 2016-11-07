@@ -353,7 +353,7 @@ Algorithm~\ref{alg:AR:unknownq} is used with
 The choice of $\mu$ is restricted to distributions such that the associated estimator is upper bounded by an explicit constant $\hat{\sigma}_+^k(\theta)$. Then, for all $0\le k \le n-1$, $1\le i\le N$, the importance weight $\omega_k^{\ell}$ is replaced by the unbiased estimator:
 \begin{equation}
 \label{eq:random:weight}
-\widetilde{\omega}_{k+1}^{i} = \frac{M^{-1}\sum_{m=1}^M \widehat{\qk}(\xi_{k}^{I^{i}_{k+1}},\xi^{i}_{k+1};\zeta_k^m)g_{k+1}(\xi^{i}_{k+1})}{\vartheta_{k+1}(\xi^{I^{i}_{k+1}}_{k}) p_{k} (\xi_{k}^{I^{i}_{k+1}},\xi^{i}_{k+1})}\eqsp,
+\widehat{\omega}_{k+1}^{i} = \frac{M^{-1}\sum_{m=1}^M \widehat{\qk}(\xi_{k}^{I^{i}_{k+1}},\xi^{i}_{k+1};\zeta_k^m)g_{k+1}(\xi^{i}_{k+1})}{\vartheta_{k+1}(\xi^{I^{i}_{k+1}}_{k}) p_{k} (\xi_{k}^{I^{i}_{k+1}},\xi^{i}_{k+1})}\eqsp,
 \end{equation}
 where $\{\zeta_k^i\}_{i=1}^M$ are independent copies of $\zeta_k$.\\
 %The last step to approximate the intermediate quantity of the EM algorithm is to provide an unbiased estimate of $\log q^{\Delta t_k}_{\theta}(X_{k-1},X_k)$. By Girsanov theorem, this log density can be written as:
@@ -382,12 +382,12 @@ The resulting Ozaki In PaRIS (OzIRis) algortihm, which provides an approximation
 \FOR{$k \in 0,\dots, n-1$}
 \FORALL{$i \in 1,\dots, N$}
 \STATE Set $\tau_{k+1}^i=0$;
-\STATE Choose $I_{k+1}^{i}$ in $\{1,\ldots,N\}$ with probs $\propto \{\widetilde{\omega}_{k}^1\vartheta_{k+1}(\xi_{k}^1),\dots,\widetilde{\omega}_{k}^N\vartheta_{k+1}(\xi_{k}^N)\}$;
+\STATE Choose $I_{k+1}^{i}$ in $\{1,\ldots,N\}$ with probs $\propto \{\widehat{\omega}_{k}^1\vartheta_{k+1}(\xi_{k}^1),\dots,\widehat{\omega}_{k}^N\vartheta_{k+1}(\xi_{k}^N)\}$;
 \STATE Sample $\xi_{k+1}^{i} \sim p_k(\xi_{k}^{I_{k+1}^{i}},\cdot)$.
 \STATE Sample  $\{z_k^m=(\kappa_m, \mw_m, (U_j^m)_{1\leq j\leq \kappa_m})\}_{m=1}^M\overset{i.i.d}{\sim}  (\mu, \mathbb{W}_\theta^{k,X_{k+1}},\mathcal{U}[0,\Delta_k]^{\otimes \kappa_m})$.
-\STATE Compute $\widetilde{\omega}^{i}_{k+1}$ using equation \eqref{eq:random:weight}.
+\STATE Compute $\widehat{\omega}^{i}_{k+1}$ using equation \eqref{eq:random:weight}.
 \FORALL{$\ell \in 1,\dots, \widetilde N$} 
-\STATE \textbf{\sc Sampling Step} Sample independently\\ $j\sim \{\omega_{k}^1,\dots,\omega_{k}^N\}$, $z\sim\zeta_k$, $u\sim \mathcal{U}[0,1]$
+\STATE \textbf{\sc Sampling Step} Sample independently\\ $j\sim  \{\widehat{\omega}_{k}^1,\dots,\widehat{\omega}_{k}^N\}$, $z\sim\zeta_k$, $u\sim \mathcal{U}[0,1]$
 \IF{ $$u \leq \frac{\widehat{\qk}(\xi_{k}^j,\xi_{k+1}^i,z)}{\hat{\sigma}_+},$$}
 \STATE Set $J_k^{i,\ell} = j$.
 \STATE Update $\tau_{k+1}^i = \tau_{k+1}^i + \left(\tau^{J_k^{i,\ell}}_{k} + h_k(\xi^{J_k^{i,\ell}}_{k},\xi^i_{k+1})\right)/\tilde{N}$;
