@@ -301,7 +301,7 @@ where
 and $\Jk$ is the Jacobian of $\alpha_{\theta}$ evaluated in $X_k$. The probability density function of the transition kernel associated with $\Oz^k$ is written $\widetilde{q}_k$ and is given in Section~\ref{sec:ornstein:bridge}.
 Writing $\mathbb{Q}^k_{\theta}$ (resp. $\mathbb{W}^{k}_{\theta}$) the probability measure induced by $(X_s)_{t_{k}\le s\le t_{k+1}}$  (resp. $(\Oz_s)_{t_{k}\le s\le t_{k+1}}$) on $(\mathsf{C},\mathcal{C})$, Girsanov theorem yields:
 \[
-\frac{\rmd \mathbb{Q}^k_{\theta}}{\rmd \mathbb{W}^{k}_{\theta}}(w) = \mathrm{exp}\left\{H_{\theta}(\omega_{t_{k+1}}) - H_{\theta}(\omega_{t_{k}}) - \frac{1}{2}\int_{t_{k}}^{t_{k+1}}\left\{\|\alpha_{\theta}(\mw_s)-\widetilde{\alpha}_{\theta}(\mw_s)\|^2+\Delta H_{\theta}(\mw_s)\right\}\rmd s\right\}\eqsp,
+\frac{\rmd \mathbb{Q}^k_{\theta}}{\rmd \mathbb{W}^{k}_{\theta}}(w) = \mathrm{exp}\left\{H_{\theta}(\mw_{t_{k+1}}) - H_{\theta}(\mw_{t_{k}}) - \frac{1}{2}\int_{t_{k}}^{t_{k+1}}\left\{\| \alpha_{\theta}(\mw_s)\|^2-\|\widetilde{\alpha}_{\theta}(\mw_s)\|^2+\Delta H_{\theta}(\mw_s)\right\}\rmd s\right\}\eqsp,
 \]
 where 
 \[
@@ -311,7 +311,7 @@ and $\Delta$ is the Laplace operator. Then, the probability measures conditioned
 \begin{multline}
 \label{eq:Girsanov}
 \frac{\rmd \mathbb{Q}^{k,X_{k+1}}_{\theta}}{\rmd \mathbb{W}^{k,X_{k+1}}_{\theta}}(\mw) = \frac{\widetilde{\qk}(X_{k},X_{k+1})}{\qk (X_{k},X_{k+1}) }\mathrm{exp}\left\{H_{\theta}(X_{k+1}) - H_{\theta}(X_{k})\right\} \\
-\times \mathrm{exp}\left\{- \frac{1}{2}\int_{t_{k}}^{t_{k+1}}\left\{\|\alpha_{\theta}(\mw_s)-\widetilde{\alpha}_{\theta}(\mw_s)\|^2+\Delta H_{\theta}(\mw_s)\right\}\rmd s\right\}\eqsp.
+\times \mathrm{exp}\left\{- \frac{1}{2}\int_{t_{k}}^{t_{k+1}}\left\{\|\alpha_{\theta}(\mw_s)\|^2-\|\widetilde{\alpha}_{\theta}(\mw_s)\|^2+\Delta H_{\theta}(\mw_s)\right\}\rmd s\right\}\eqsp.
 \end{multline}
 Consider the following asumptions on the model:
 \begin{enumerate}[(a)]
@@ -320,11 +320,11 @@ Consider the following asumptions on the model:
 \end{enumerate}
 Under these two assumptions, for all $\theta$, there exists $\ell(\theta)$ such that:
 \[
-\mathrm{inf}_{u\in \mathbb{R}^d} \left\{\frac{1}{2}\left(\|\alpha_{\theta}(u)-\widetilde{\alpha}_{\theta}(u)\|^2+\Delta H_{\theta}(u)\right)\right\}\ge \ell(\theta)\eqsp.
+\mathrm{inf}_{u\in \mathbb{R}^d} \left\{\frac{1}{2}\left(\| \alpha_{\theta}(u)\|^2-\|\widetilde{\alpha}_{\theta}(u)\|^2+\Delta H_{\theta}(u)\right)\right\}\ge \ell(\theta)\eqsp.
 \]
 Define
 \[
-\phi_{\theta}(x) = \frac{1}{2}\left\{\|\alpha_{\theta}(x)-\widetilde{\alpha}_{\theta}(x)\|^2+\Delta H_{\theta}(x)\right\}-\ell(\theta)\eqsp.
+\phi_{\theta}(x) = \frac{1}{2}\left\{\|\alpha_{\theta}(x)\|^2-\|\widetilde{\alpha}_{\theta}(x)\|^2+\Delta H_{\theta}(x)\right\}-\ell(\theta)\eqsp.
 \]
 The assumptions on the model also ensure that for all $\theta\in\Theta$, there exists $\Lambda(\theta)$ such that  $\mathrm{sup}_x\eqsp \phi_{\theta}(x)\le \Lambda_{\theta}$. Then,
 \begin{multline*}
