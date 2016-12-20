@@ -43,7 +43,7 @@
 \newcommand{\qk}{q_{k}}
 \newcommand{\acom}[1]{\textit{\color{gray} //#1}}
 \newcommand{\Oz}{Z}%Letter for the Ozaki approximation
-\newcommand{\Jk}{J_{\alpha_\theta}^k}%Command for Jacobian of alpha
+\newcommand{\Jk}{J_{\alpha}^k}%Command for Jacobian of alpha
 \newcommand{\mw}{\mathsf{w}}%For bridge realisations
 %\newcommand{\qk}{q^{\Delta t_k}_{\theta}}
 \newtheorem{lemma}{Lemma}
@@ -61,7 +61,7 @@
 \footnotetext[2]{Laboratoire de Math\'ematiques d'Orsay, Univ. Paris-Sud, CNRS, Universit\'e Paris-Saclay.}
 
 
-\title{Efficient online Sequential Monte Carlo smoother for partially observed stochastic differential equations: the Oziris algorithm}
+\title{Efficient online Sequential Monte Carlo smoother for partially observed stochastic differential equations}
 
 \lhead{Gloaguen et al.}
 \rhead{Particle smoother for SDE}
@@ -70,91 +70,78 @@
 
 
 \section{Introduction}
-In this paper, we propose a new algorithm to approximate expectations of additive functionals with respect to the joint smoothing distribution, in the Hidden Markov Model (HMM) framework.\\
-The dynamics of the states $(X_t)_{t\ge 0}$ depends on a parameter $\theta\in \Theta$ where $\Theta$ is a compact subspace of $\mathbb{R}^{\ell}$ and that $(X_t)_{t\ge 0}$ is a weak solution to the following Stochastic Differential Equation (SDE) in $\mathbb{R}^d$:
+This paper introduces a new algorithm to solve the smoothing problem for partially observed continuous time stochastic processes. In this setting, the hidden state process $(X_t)_{t\ge 0}$ is assumed to be a solution to a stochastic differential equation (SDE) and the only information available is given by noisy observations $(Y_{k})_{0\le k\le n}$ of the states $(X_k)_{0\le k\le  n}$ at some discrete time points $(t_k)_{0\le k\le n}$. The bivariate stochastic process $\{(X_{k},Y_{k})\}_{0\le k\le n}$ is a state space model such that conditional on the state sequence $(X_{k})_{0\le k\le n}$ the observations $(Y_{k})_{0\le k\le n}$ are independent and for all $0\le \ell\le n$ the conditional distribution of $Y_{\ell}$ given $\{X_{k}\}_{0\le k\le n}$ depends on $X_{\ell}$ only.
+
+%Statistical inference for partially observed stochastic differential equations is a challenging task since some elementary quantities, such as transition probabilities, are not available explicitly.
+Statistical inference for partially observed stochastic differential equations requires to solve bayesian filtering and smoothing problems, i.e. the computation of the posterior distributions of a sequence of hidden states given observations. Filtering refers to the estimation of the distributions of the hidden state $X_k$ given the observations $(Y_0,\ldots,Y_k)$ up to time $k$, while fixed-interval smoothing stands for the estimation of the distribution of sequence of states $(Z_{k},\ldots,Z_{p})$ given observations $(Y_{0},\ldots,Y_{\ell})$ with $0\le k\le p<\ell \le n$. 
+These posterior distributions are crucial to compute maximum likelihood estimators of the unknown parameters defining the model using the observations $(Y_0,\ldots,Y_n)$ only.
+% $\theta\mapsto \ell_{\theta}^{n}$ given by
+%\begin{equation*}
+%\ell_{\theta}^{n}(Y_{0:n}) = \log\left(\int p_{\theta}(x_{0:n},Y_{0:n})\,\rmd x_{0:n}\right)\eqsp,
+%\end{equation*}  
+%where $p_{\theta}$ is the complete data likelihood:
+%\begin{equation*}
+%p_{\theta}(x_{0:n},Y_{0:n}) = \chi(x_0)g_{0}(x_0)\prod^{n-1}_{k=0}\qk(x_{k},x_{k+1})g_{k+1}(x_{k+1})\eqsp.
+%\end{equation*}
+For instance, the E-step of the EM algorithm introduced in \cite{dempster:laird:rubin:1977} %iteratively builds a sequence of parameter estimates following two steps.
+%following the two steps:
+%\begin{enumerate}
+%	\item {\bf E-step}: compute $\theta \mapsto Q(\theta,\theta_{p}) = \mathbb{E}_{\theta_p}\left[\log p_{\theta}(X_{0:n},Y_{0:n})\middle|Y_{0:n}\right]$, where $\mathbb{E}_{\theta}\left[\cdot\middle|Y_{0:n}\right]$ is the conditional expectation given $Y_{0:n}$ when the parameter value is $\theta$.
+%	\item {\bf M-step}: choose $\theta_{p+1}$ as a maximizer of $\theta \mapsto Q(\theta,\theta_{p})$.
+%\end{enumerate}
+%step 
+boils down to the computation of a conditional expectation of an additive functional of the hidden states given all the observations up to time $n$. 
+%\begin{multline*}
+%Q(\theta,\theta_{p}) = \mathbb{E}_{\theta_p}\left[\log \left(\chi(X_0)g_{0}(X_0)\right)\middle|Y_{0:n}\right] \\
+%+ \sum_{k=0}^{n-1}\mathbb{E}_{\theta_p}\left[\log \left(\qk(X_{k},X_{k+1})g_{k+1}(X_{k+1})\right)\middle|Y_{0:n}\right] \eqsp.
+%\end{multline*}
+Similarly, by Fisher's identity, recursive maximum likelihood estimates may be computed using the gradient of the loglikelihood which can be written as the conditional expectation of an additive functional of the hidden states.
+ See \cite[Chapter $10$ and $11$]{cappe:moulines:ryden:2005}, \cite{kantas:doucet:signh:2015,doucet:poyiadjis:singh:2011,lecorff:fort:2013a,lecorff:fort:2013b}
+for further references on the use of these smoothed expectations of additive functionals  applied to maximum likelihood parameter inference in latent data models.
+
+The exact computation of these expectations is usually not possible for general partially observed diffusions. In this paper, we propose to use Sequential Monte Carlo methods to approximate smoothing distributions with random particles associated with importance weights.
+ \cite{gordon:salmond:smith:1993,kitagawa:1996} introduced the first particle filters and smoothers by combining importance sampling steps to propagate particles with importance resampling steps to duplicate or discard particles according to their importance weights. Unfortunately, these methods cannot be applied directly to partially observed stochastic differential equations since some elementary quantities, such as transition densities of the hidden states, are not available explicitly. The transition density may be approximated using discretization procedures such as the Euler-Maruyama method, the Ozaki discretization which proposes a linear approximation of the drift coefficient between two observations \cite{ozaki:1992,shoji:1998} or a Gaussian based approximation using Taylor expansions of the posterior mean and variance of an observation given the observation at the previous time step, \cite{kessler:1997,kessler:lindner:sorensen:2012,uchida:yoshida:2012}. Other approaches based on Hermite polynomials expansion were also introduced by \cite{ait-sahalia:1999,ait-sahalia:2002,ait-sahalia:2008} and extended in several directions recently, see \cite{li:2013} and all the references on the approximation of transition densities therein. However, even the most recent discretization based approximations of the transition densities induce a systematic bias of particle based approximations of posterior distributions, see \cite{delmoral:jacod:protter:2001}. To overcome this difficulty, \cite{fearnhead:papaspiliopoulos:roberts:2008} proposed to solve the filtering problem by combining SMC methods with an unbiased estimate of transition densities based on the generalized Poisson estimator (GPE) introduced in \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006}.  
+ 
+The only solution to solve the smoothing problem for partially observed SDE using SMC methods has been proposed in \cite{olsson:strojby:2011} and extends the fixed-lag smoother of \cite{olsson:cappe:douc:moulines:2008}. Using forgetting properties of the hidden chain, the algorithm improves the performance of \cite{fearnhead:papaspiliopoulos:roberts:2008} to approximate smoothing distributions but at the cost of a bias that does not vanish as the number of particles grows to infinity.
+Approximations of the smoothing distributions may also be obtained using the Forward Filtering Backward Smoothing algorithm (FFBS) and  the Forward Filtering Backward Simulation algorithm (FFBSi) developed respectively in \cite{kitagawa:1996,huerzeler:kunsch:1998,doucet:godsill:andrieu:2000} and \cite{godsill:doucet:west:2004}. Both algorithms require first a forward pass which produces a set of particles and weights approximating the sequence of filtering distributions up to time $n$. In the case of partially observed SDE, this forward pass may be performed with the SMC steps combined with the GPE of \cite{fearnhead:papaspiliopoulos:roberts:2008}. Then, the backward pass of the FFBS algorithm keeps all the particles sampled during the forward pass and computes new weights to take into account the information brought by all the observations from time $n$ to time $0$. Instead of computing new weights, the FFBSi  algorithm samples independently backward in time particle trajectories using the particles and weights produced by the forward pass. Recently, \cite{olsson:westerborn:2016} proposed a new SMC algorithm, the particle-based rapid incremental smoother (PaRIS), to approximate on-the-fly (i.e. using the observations as they are received) smoothed expectations of additive functionals. Unlike the FFBS algorithm, the complexity of this algorithm grows only linearly with the number of particles $N$ and contrary to the FFBSi algorithm, no backward pass is required. 
+
+In this paper, instead of using fixed-lag techniques which introduce a systematic additional bias in the approximation of conditional expectations, we extend the use of  PaRIS algorithm to partially observed SDE. The proposed algorithm allows to approximate smoothed expectations of additive functionals online and with a complexity growing only linearly with the number of particles. The crucial result of the application of PaRIS algorithm to SDE is that the accept reject mechanism ensuring the linear complexity of the procedure is still correct when the transition densities are replaced by bounded unbiased estimates. We also propose to improve this algorithm to obtain faster convergence of the sequence of Monte Carlo EM estimates, and to extend the range of diffusion processes for which SMC methods can be applied.To do so, we introduce a new class of GPE based on the Ozaki discretization of the target SDE, see \cite{ozaki:1992,shoji:ozaki:1998}. These new GPE estimators use a an order one Taylor expansion of the drift of the SDE to obtain more efficient estimates than Brownian Bridge based GPE. 
+
+\section{Random weight PaRIS algorithm}
+In this paper, $(X_t)_{t\ge 0}$ is a weak solution to the following SDE in $\mathbb{R}^d$:
 \begin{equation}
 \label{eq:target:sde}
-X_0 = x_0\quad\mbox{and}\quad \rmd X_t = \alpha_{\theta}(X_t)\rmd t + \rmd W_t\eqsp,
+X_0 = x_0\quad\mbox{and}\quad \rmd X_t = \alpha(X_t)\rmd t + \rmd W_t\eqsp,
 \end{equation}
-where $(W_t)_{t\ge 0}$ is a standard Brownian motion. In the following, it is assumed that $\alpha_{\theta}$ is of the form $\alpha_{\theta}(x) = \nabla_x A_{\theta}(x)$ where $A_{\theta}: \mathbb{R}^d \to \mathbb{R}$ is a twice continuously differentiable function. 
-A popular choice of $A_{\theta}$  is $A_{\theta} = \log \pi_{\theta}/2$ leading to a Langevin diffusion which may be used to approximate a given target distribution $\pi_{\theta}$. See for instance \cite{roberts:tweedie:1996} for conditions under which this diffusion converges exponentially quickly to $\pi_{\theta}$. 
-The states $(X_t)_{t\ge 0}$ are only partially observed at discrete times $(t_k)_{0\le k \le n}$, with $t_0=0$, through the sequence $(Y_k)_{0\le k\le n}$ which is such that $(Y_k)_{0\le k\le n}$ are independent conditional on $(X_t)_{t\ge 0}$ and for all $0\le k\le n$, the conditional distribution of $Y_k$ given $(X_t)_{t\ge 0}$ depends only on $X_k = X_{t_k}$. 
-This distribution has a density with respect to a reference measure $\lambda$ on $\mathbb{R}^m$ given by $g_k(X_k) = g(\theta,X_k,\cdot)$. 
-The distribution of $X_0$ has a density with respect to a reference measure $\mu_0$ on $\mathbb{R}^d$ given by $\chi(\cdot):=\chi(\theta,\cdot)$.
-For all $1\le k \le n$, the distribution of $X_{k+1} $ conditional on $X_{k}$ has a density $\qk(X_{k},\cdot) :=q(\theta,\Delta_k,X_{k-1},\cdot),~\Delta_k:=t_{k+1}-t_{k}$ with respect to a reference measure $\mu$ on $\mathbb{R}^d$.\\
-\\
-Statistical inference for partially observed stochastic differential equations usually involves the computation of conditional distributions of some unobserved states given the observations $(Y_0,\ldots,Y_n)$. 
-These posterior distributions are crucial to compute maximum likelihood estimators defined as maximizers of the incomplete data log-likelihood $\theta\mapsto \ell_{\theta}^{n}$ given by
-\begin{equation*}
-\ell_{\theta}^{n}(Y_{0:n}) = \log\left(\int p_{\theta}(x_{0:n},Y_{0:n})\,\rmd x_{0:n}\right)\eqsp,
-\end{equation*}  
-where $p_{\theta}$ is the complete data likelihood:
-\begin{equation*}
-p_{\theta}(x_{0:n},Y_{0:n}) = \chi(x_0)g_{0}(x_0)\prod^{n-1}_{k=0}\qk(x_{k},x_{k+1})g_{k+1}(x_{k+1})\eqsp.
-\end{equation*}
-For instance, the EM algorithm introduced in \cite{dempster:laird:rubin:1977} iteratively builds a sequence $\{\theta_{p}\}_{p\ge 0}$ of parameter estimates following the two steps:
-\begin{enumerate}
-	\item {\bf E-step}: compute $\theta \mapsto Q(\theta,\theta_{p}) = \mathbb{E}_{\theta_p}\left[\log p_{\theta}(X_{0:n},Y_{0:n})\middle|Y_{0:n}\right]$, where $\mathbb{E}_{\theta}\left[\cdot\middle|Y_{0:n}\right]$ is the conditional expectation given $Y_{0:n}$ when the parameter value is $\theta$.
-	\item {\bf M-step}: choose $\theta_{p+1}$ as a maximizer of $\theta \mapsto Q(\theta,\theta_{p})$.
-\end{enumerate}
-The E-step boils down to the computation of the smoothed additive function: 
-\begin{multline*}
-Q(\theta,\theta_{p}) = \mathbb{E}_{\theta_p}\left[\log \left(\chi(X_0)g_{0}(X_0)\right)\middle|Y_{0:n}\right] \\
-+ \sum_{k=0}^{n-1}\mathbb{E}_{\theta_p}\left[\log \left(\qk(X_{k},X_{k+1})g_{k+1}(X_{k+1})\right)\middle|Y_{0:n}\right] \eqsp.
-\end{multline*}
-Similarly, by Fisher's identity, recursive maximum likelihood estimates may be computed using the gradient of the loglikelihood which can be written as the conditional expectation of an additive functional of the hidden states given all the observations.
- See \cite[Chapter $10$ and $11$]{cappe:moulines:ryden:2005}, \cite{kantas:doucet:signh:2015,doucet:poyiadjis:singh:2011,lecorff:fort:2013a,lecorff:fort:2013b}
-for further references on the use of these smoothed expectations of additive functionals  applied to maximum likelihood parameter inference in latent data models.\\
-\\
-The exact computation of these expectations is usually not possible for partially observed diffusions such as \eqref{eq:target:sde}. 
-In this paper, we propose to use Sequential Monte Carlo methods to approximate smoothing distributions with random particles associated with importance weights.
- \cite{gordon:salmond:smith:1993,kitagawa:1996} introduced the first particle filters and smoothers by combining importance sampling steps to propagate particles with importance resampling steps to duplicate or discard particles according to their importance weights.  
- Approximations of the smoothing distributions may be obtained using the Forward Filtering Backward Smoothing algorithm (FFBS) and  the Forward Filtering Backward Simulation algorithm (FFBSi) developed respectively in \cite{kitagawa:1996,huerzeler:kunsch:1998,doucet:godsill:andrieu:2000} and \cite{godsill:doucet:west:2004}. 
- Both algorithms require first a forward pass which produces a set of particles and weights approximating the sequence of filtering distributions up to time $n$. 
- Then, the backward pass of the FFBS algorithm keeps all the particles sampled during the forward pass and computes new weights to take into account the information brought by all the observations from time $n$ to time $0$. 
- Instead of computing new weights, the FFBSi  algorithm samples independently backward in time particle trajectories using the particles and weights produced by the forward pass.\\ 
-\\
-Recently, \cite{olsson:westerborn:2016} proposed a new SMC algorithm, the particle-based rapid incremental smoother (PaRIS), to approximate on-the-fly (i.e. using the observations as they are received) smoothed expectations of additive functionals.
- Unlike the FFBS algorithm, the complexity of this algorithm grows only linearly with the number of particles $N$ and contrary to the FFBSi algorithm, no backward pass is required. 
- However, there is a major difficulty to apply SMC methods to partially observed SDE as the computation of the importance weights requires to evaluate $q^{\Delta t_k}_{\theta}$ for which there is no analytic expression in general case.
-%the EM algorithm to partially observed SDE in general cases:
-%\begin{enumerate}[-]
-%\item The E-step requires to compute $q^{\Delta t_k}_{\theta}$ for which there is no analytic expression.
-%\item The computation of $Q(\theta,\theta_{p})$ relies on conditional expectations of additive functionals of the state sequence given the observations which are not available explicitly.
-%\end{enumerate}
-To overcome these difficulties, \cite{olsson:strojby:2011} proposed to use General Poisson Estimators (GPE) introduced in \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006,fearnhead:papaspiliopoulos:roberts:2008}  to provide an unbiased estimation of $\qk$. 
-These estimators are based on a representation of $\qk$ as an expectation under the probability measure of a Brownian bridge (the conditional expectation involved in the computation is approximated in  \cite{olsson:strojby:2011}  using fixed-lag Sequential Monte Carlo methods developed in \cite{olsson:cappe:douc:moulines:2008}).\\ 
-\\
-In this paper, we propose to improve this algorithm to obtain faster convergence of the sequence of Monte Carlo EM estimates, and to extend the range of diffusion processes for which SMC methods can be applied.\\ 
-First, we introduce a new class off GPE based on the Ozaki discretization of the SDE  \eqref{eq:target:sde}, see \cite{ozaki:1992,shoji:ozaki:1998}. 
-These new GPE estimators use a an order one Taylor expansion of the drift of \eqref{eq:target:sde} to obtain more efficient estimates than Brownian Bridge based GPE.\\ 
-Instead of using fixed-lag techniques which introduce a systematic additional bias  in the approximation of the conditional expectations, we use the new PaRIS algorithm which allows to approximate smoothed expectations of additive functionals online and with a complexity growing only linearly with the number of particles. 
-The striking result of the application of PaRIS algorithm to SDE is that the accept reject mechanism underlying the linear complexity of the procedure is still correct when the transition densities are replaced by unbiased estimates.
-\section{Random weight PaRIS algorithm}
+where $(W_t)_{t\ge 0}$ is a standard Brownian motion. It is assumed that $\alpha$ is of the form $\alpha(x) = \nabla_x A(x)$ where $A: \mathbb{R}^d \to \mathbb{R}$ is a twice continuously differentiable function. 
+A popular choice of $A$  is $A = \log \pi/2$ leading to a Langevin diffusion which may be used to approximate a given target distribution $\pi$ on $\mathbb{R}^d$. See for instance \cite{roberts:tweedie:1996} for conditions under which this diffusion converges exponentially quickly to $\pi$. SDE where the drift is given by the gradient of a potential function have been widely used in ecology for instance, see \cite{brillinger:et:al:2011,harris:blackwell:2013,preisler:et:al:2013} and the references therein.
+
+For all $0\le k \le n$, the distribution of $Y_k$ given $X_k$ has a density with respect to a reference measure $\lambda$ on $\mathbb{R}^m$ given by $g(X_k,Y_k) = g_k(X_k)$. 
+The distribution of $X_0$ has a density with respect to $\lambda$ given by $\chi$.
+For all $1\le k \le n$, the distribution of $X_{k+1} $ conditional on $X_{k}$ has a density $\qk(X_{k},\cdot)$ with respect to a reference measure $\mu$ on $\mathbb{R}^d$. 
 Let $0 \leq k \leq k' \leq n$. The joint smoothing distributions of the hidden states are defined, for all measurable function $h$ on $(\mathbb{R}^d)^{k'-k + 1}$, by:
 \[
-\phi_{k:k'|n}[h] := \mathbb{E}\left[h(X_k,\ldots,X_{k'})\middle|Y_{0:n}\right]\eqsp.
+\phi_{k:k'|n}[h] = \mathbb{E}\left[h(X_k,\ldots,X_{k'})\middle|Y_{0:n}\right]\eqsp.
 \]
 For all $0\le k\le n$, $\phi_{k} = \phi_{k:k|k}$ denote the filtering distributions. The aim of this section is to detail the extension of PaRIS algorithm to approximate expectations of the form
 \begin{equation}
 \label{def:addfunc}
 H_{n} =  \sum_{k=0}^{n-1}\mathbb{E}\left[h_k(X_{k},X_{k+1})\middle|Y_{0:n}\right]\eqsp,
 \end{equation}
-when the transition density of the hidden states is not available explicitly and where $\{h_k\}_{k=0}^{n-1}$ are given functions on $\mathbb{R}^d\times \mathbb{R}^d$. The algorithm is based on the following link between the filtering and smoothing distributions:
+when the transition density of the hidden states is not available explicitly and where $\{h_k\}_{k=0}^{n-1}$ are given functions on $\mathbb{R}^d\times \mathbb{R}^d$. The algorithm is based on the following link between the filtering and smoothing distributions for additive functionals, see \cite{olsson:westerborn:2016}:
 \begin{equation}
-\phi_{0:n|n}[h] = \phi_n[\E\left[h(X_{0:n})\vert X_n,~Y_{0:n}]\right]:= \phi_n[T_n(h)] \eqsp.\label{eq:FFbsm:equality}
+\phi_{0:n|n}[h] = \phi_n[T_n[h]]\eqsp,\;\mbox{where}\; T_n[h](X_n) = \E\left[h(X_{0:n})\vert X_n,~Y_{0:n}\right]\eqsp.\label{eq:FFbsm:equality}
 \end{equation}
-Therefore, using the additive property and the usual filtering recursion applied on the right hand side of equation \eqref{eq:FFbsm:equality}, an approximation of \eqref{def:addfunc} can be computed using Sequential Monte Carlo techniques.\\ 
-Sequential Monte Carlo algorithms introduced in  \cite{gordon:salmond:smith:1993} and \cite{kitagawa:1996} rely on importance sampling and importance resampling steps to approximate the filtering distribution $\phi_{k}$ (conditional distribution of $X_k$ given $Y_{0:k}$) using  a set of particles $\{\xi^{\ell}_k\}_{\ell=1}^N$ associated with weights $\{\omega^{\ell}_k\}_{\ell=1}^N$.\\
-At time $k = 0$, $N$ particles $\{\xi^{\ell}_0\}_{\ell=1}^N$ are initialized by setting $\xi^{\ell}_0=x_0$. Then, $\xi^{\ell}_0$ is associated with the importance weights $\omega_0^{\ell} = g_0 \left(\xi^{\ell}_0\right)$. 
-Then, for any bounded and measurable function $h$ defined on $\mathbb{R}^d$, the expectation $\phi_{0}[h] $ is approximated by
+The approximation of \eqref{eq:FFbsm:equality} requires first to approximate the sequence of filtering distributions. Sequential Monte Carlo methods provide an efficient and simple solution to obtain these approximations using sets of particles $\{\xi^{\ell}_k\}_{\ell=1}^N$ associated with weights $\{\omega^{\ell}_k\}_{\ell=1}^N$, $0\le k \le n$.
+At time $k = 0$, $N$ particles $\{\xi^{\ell}_0\}_{\ell=1}^N$ are initialized by setting $\xi^{\ell}_0=x_0$. Then, $\xi^{\ell}_0$ is associated with the importance weights $\omega_0^{\ell} = g_0 (\xi^{\ell}_0)$. 
+For any bounded and measurable function $h$ defined on $\mathbb{R}^d$, the expectation $\phi_{0}[h] $ is approximated by
 \[
 \phi^N_{0}[h] = \frac{1}{\Omega_0^N} \sum_{\ell=1}^N \omega_0^{\ell} h \left(\xi^{\ell}_0 \right)\eqsp, \quad \Omega_0^N:= \sum_{\ell=1}^N \omega_0^{\ell}\eqsp.
 \]
-Then, using $\{(\xi^{\ell}_{k-1},\omega^{\ell}_{k-1})\}_{\ell=1}^N$, pairs $\{(I^{\ell}_k,\xi^{\ell}_{k})\}_{\ell=1}^N$ of indices and particles are sampled and weighted using an instrumental transition density $p_k$ on $\mathbb{R}^d\times \mathbb{R}^d$ and an adjustment multiplier function $\vartheta_k$ on $\mathbb{R}^d$. Each new particle $\xi^{\ell}_{k}$ and weight $\omega^{\ell}_k$ at time $k$ are computing following these steps:
-\begin{enumerate}
+Then, for $1\le k \le n$, using $\{(\xi^{\ell}_{k-1},\omega^{\ell}_{k-1})\}_{\ell=1}^N$, the auxiliary particle filter of \cite{pitt:shephard:1999} samples pairs $\{(I^{\ell}_k,\xi^{\ell}_{k})\}_{\ell=1}^N$ of indices and particles using an instrumental transition density $p_k$ on $\mathbb{R}^d\times \mathbb{R}^d$ and an adjustment multiplier function $\vartheta_k$ on $\mathbb{R}^d$. Each new particle $\xi^{\ell}_{k}$ and weight $\omega^{\ell}_k$ at time $k$ are computing following these steps:
+\begin{enumerate}[-]
 \item choose a particle index $I^{\ell}_k$ at time $k-1$ in $\{1,\ldots,N\}$ with probabilities proportional to $\omega_{k-1}^{j} \vartheta_k (\xi^{j}_{k-1})$, for $j$ in $\{1,\ldots,N\}$ ;
-\item sample  $\xi^{\ell}_{k}$ using this chosen particle according to $\xi^{\ell}_{k} \sim p_k(\xi^{I^{\ell}_k}_{k-1},\cdot)$.
+\item sample  $\xi^{\ell}_{k}$ using this chosen particle according to $\xi^{\ell}_{k} \sim p_k(\xi^{I^{\ell}_k}_{k-1},\cdot)$ ; 
 \item $\xi^{\ell}_k$ is associated with:
 \[
 \omega^{\ell}_k := \frac{\qk(\xi_{k-1}^{I^{\ell}_k},\xi^{\ell}_k)g_k(\xi^{\ell}_k)}{\vartheta_k(\xi^{I^{\ell}_k}_{k-1}) p_k (\xi_{k-1}^{I^{\ell}_k},\xi^{\ell}_k)}\eqsp.
@@ -164,33 +151,12 @@ The expectation $\phi_{k}[h]$ is approximated by
 \[
 \phi^N_{k}[h] := \frac{1}{\Omega_t^N} \sum_{\ell=1}^N \omega_k^{\ell} h \left(\xi^{\ell}_k \right)\eqsp,\quad\Omega_k^N:= \sum_{\ell=1}^N \omega_k^{\ell}\eqsp.
 \]
-The PaRIS algorithm uses the same decomposition as the FFBS algorithm introduced in \cite{doucetgodsillandrieu:2000} and the FFBSi algorithm proposed by \cite{godsill:doucet:west:2004} to approximate smoothing distributions. 
-%Both the FFBS and the FFBSi algorithms require first that a forward pass has produced a set of particles and importance weights $\{ (\xi^{\ell}_k, \omega^{\ell}_k)\}$, for $\ell \in \{1, \ldots, N\}$ and  $k \in \{0,\ldots,n\}$ to approximate $\phi_{k}$ for $k=0$ to $k=n$. The FFBS algorithm stores all particles and weights without taking into consideration the genealogy of the particles. Then, a backward pass is performed, keeping all the particles fixed but modifying all importance weights computed during the forward pass. 
-The FFBS algorithm has a computational complexity of order $\mathcal{O}(N^{k'-k+1})$ to approximate joint smoothing distributions of the form $\phi_{k:k'|n}$ with $k<k'$ which makes it prohibitive. An important feature of the FFBS algorithm shown in \cite{mongillo:deneve:2008,cappe:2011,delmoral:doucet:singh:2010} is that it can be implemented using only a forward pass when approximating smoothed expectations of additive functions. 
-%In more general case, \cite{dubarry:lecorff:2013} are interested in the FFBS algorithm for an additive function $h$ defined on $\mathsf{X}^{T+1}$,
-%\[
-%h(x_{0:T}) := \sum_{t=1}^{T} h_t (x_{t-1},x_t)
-%\]
-%where $\{h_t\}_{t=1}^{T}$ are bounded on $\mathsf{X}^2$. See \cite{dubarry:lecorff:2013} for their proposed FFBS algorithm in this case. As shown in \cite{delmoral:doucet:singh:2010} when applied to additive functionals, the computational complexity grows quadratically with number of particles. In the backward pass of the FFBS algorithm, the importance weights are updated while the particles are kept fixed. 
-%\subsubsection*{FFBSi algorithm}
-%As for the FFBS algorithm, the FFBSi algorithm uses a forward pass to produce $\{ (\xi^{\ell}_k, \omega^{\ell}_k)\}$, for $\ell \in \{1, \ldots, N\}$ and  $k \in \{0,\ldots,n\}$ to approximate $\phi_{k}$ for $k=0$ to $k=n$ and all these particles and weights are stored  without taking into consideration the genealogy of the particles. 
-Instead of computing new weights in the backward pass, the FFBSi  samples backward new trajectories from time $n$ to time $0$ among all the $N^{n+1}$ trajectories which can be chosen in $\{\xi^{\ell}_k\}$, $1\le \ell\le N$ and $0\le k\le n$. 
-%Each trajectory is sampled according to the following steps.
-%\begin{enumerate}[-]
-%\item At time $k = n$, sample $J_n\in\{1\ldots,N\}$ with probabilities proportional to $\omega^{\ell}_n/\Omega_n^N$, for $\ell\in\{1, \ldots, N\}$.
-%\item For $k = n-1$ to $k=0$, $J_k$ is sampled in $\{1\ldots,N\}$ with probabilities 
-%\[
-%\Lambda_k^N(J_{k+1},i) = \frac{\omega^{i}_k q(\xi^{i}_k,\xi^{J_{k+1}}_{k+1})}{\sum_{\ell=1}^N\omega^{\ell}_k q(\xi^{\ell}_k,\xi^{J_{k+1}}_{k+1})}\eqsp,\quad 1\le i\le N\eqsp.
-%\]
-%\end{enumerate}
-%These sampling steps are repeated $N$ times to produce $\{J_0^\ell,\ldots,J_n^{\ell}\}$, $1\le \ell \le N$. Then, the smoothed expectation of any measurable function $h$ on $(\mathbb{R}^d)^{n+1}$  $\mathbb{E}\left[h(X_{0:n})\middle|Y_{0:n}\right]$ is approximated by $N^{-1} \sum_{\ell = 1}^N  h(\tilde{\xi}^{J_0^{\ell}}_{0},\ldots, \tilde{\xi}^{J_n^{\ell}}_{n})$.
-Contrary to the FFBS algorithm, the FFBSi algorithm samples trajectories and may be used to approximate joint smoothing distributions without increasing its complexity.
- Nevertheless, the computation of the transition probabilities to select particles in the backward pass makes it a $\mathcal{O}(N^2)$ algorithm. In the case where the transition probability $q_k$ is upper bounded, \cite{douc:garivier:moulines:olsson:2011} introduced an acceptance rejection mechanism to implement the FFBSi algorithm with a $\mathcal{O}(N)$ complexity, see also \cite{dubarry:lecorff:2011}.\\
- \\
+The PaRIS algorithm uses the same decomposition as the FFBS algorithm introduced in \cite{doucetgodsillandrieu:2000} and the FFBSi algorithm proposed by \cite{godsill:doucet:west:2004} to approximate smoothing distributions. The FFBS algorithm has a computational complexity of order $\mathcal{O}(N^{k'-k+1})$ to approximate joint smoothing distributions of the form $\phi_{k:k'|n}$ with $k<k'$ which makes it prohibitive. An important feature of the FFBS algorithm shown in \cite{mongillo:deneve:2008,cappe:2011,delmoral:doucet:singh:2010} is that it can be implemented using only a forward pass when approximating smoothed expectations of additive functions.  Instead of computing new weights in the backward pass, the FFBSi  samples backward new trajectories from time $n$ to time $0$ among all the $N^{n+1}$ trajectories which can be chosen in $\{\xi^{\ell}_k\}$, $1\le \ell\le N$ and $0\le k\le n$. Contrary to the FFBS algorithm, the FFBSi algorithm samples trajectories and may be used to approximate joint smoothing distributions without increasing its complexity.
+ Nevertheless, the computation of the transition probabilities to select particles in the backward pass makes it a $\mathcal{O}(N^2)$ algorithm. In the case where the transition probability $q_k$ is upper bounded, \cite{douc:garivier:moulines:olsson:2011} introduced an acceptance rejection mechanism to implement the FFBSi algorithm with a $\mathcal{O}(N)$ complexity, see also \cite{dubarry:lecorff:2011}.
+ 
 The PaRIS algorithm combines both the forward only version of the FFBS algorithm with the sampling mechanism of the FFBSi algorithm. 
 The algorithm does not produce an approximation of the smoothing distributions but of the smoothed expectation of a fixed additive functional and thus  may be used to approximate \eqref{def:addfunc}. 
-Its crucial property is that it does not require a backward pass, the smoothed expectations is computed on-the-fly with the particle filter and no storage of the particles or weights is needed.\\ 
-The focus is based sufficient statistics $\tau^i_k$, approximations of $T_k(h)$, for $1\le i\le N$ and $0\le k \le n$ starting with $\tau^i_0 = 0$ for all $1\le i\le N$. Let $\tilde{N}\ge 1$. Then, at each time step $0\le k \le {n-1}$ these statistics are updated according to the following steps.
+Its crucial property is that it does not require a backward pass, the smoothed expectations is computed on-the-fly with the particle filter and no storage of the particles or weights is needed. The focus is based sufficient statistics $\tau^i_k$, approximations of $T_k[h](\xi^i_k)$, for $1\le i\le N$ and $0\le k \le n$ starting with $\tau^i_0 = 0$ for all $1\le i\le N$. Let $\tilde{N}\ge 1$. Then, at each time step $0\le k \le {n-1}$ these statistics are updated according to the following steps.
 \begin{enumerate}[(i)]
 \item \label{it:PaRIS:filt} Run one step of a particle filter to produce $\{(\xi^{\ell}_k, \omega^{\ell}_k)\}$ for $1\le \ell \le N$.
 \item \label{it:PaRIS:sampleindex} For all $1\le i \le N$, sample independently $J_{k}^{i,\ell}$ in $\{1,\ldots,N\}$ for $1\le \ell \le \widetilde N$ with probabilities $\Lambda_{k}^N(i,\cdot)$, given by
@@ -206,52 +172,9 @@ Then, \eqref{def:addfunc} is approximated by
 \[
 H_n^N = \frac{1}{\Omega_n^N}\sum_{i=1}^N \omega^{i}_n \tau_n^i\eqsp.
 \] 
-As proved in \cite{olsson:westerborn:2016}, the algorithm is asymptotically consistent (as $N$ goes to infinity) for any fixed precision parameter $\tilde N$. However, there is a significant qualitative difference between the cases $\tilde{N} = 1$ and $\tilde{N} \geq 2$.\\
-As for the FFBSi algorithm,  when there exists $\sigma_+$ such that $0<\qk <\sigma_+$, the PaRIS algorithm may be implemented with $\mathcal{O}(N)$ complexity using the procedure of \cite{douc:garivier:moulines:olsson:2011} recalled in algorithm \ref{alg:AR:knownq}.
-\begin{algorithm}[hb]
-\caption{Random weight Accept-reject-based backward sampling  (\cite{douc:garivier:moulines:olsson:2011})}
-\begin{algorithmic}
-\FORALL{$i \in 1,\dots, N$}
-\FORALL{$\ell \in 1,\dots, \widetilde N$} 
-\STATE \textbf{\sc Sampling Step} Sample independently\\ $j\sim \{\omega_{k}^1,\dots,\omega_{k}^N\}$, $u\sim \mathcal{U}[0,1]$
-\IF{ $$u \leq \frac{\qk(\xi_{k}^j,\xi_{k+1}^i,z)}{\sigma_+},$$}
-\STATE Set $J_k^{i,\ell} = j$.
-\ELSE 
-\STATE Return to \textbf{\sc Sampling Step}
-\ENDIF
-\ENDFOR
-\ENDFOR
-\end{algorithmic}
-\label{alg:AR:knownq}
-\end{algorithm}
+As proved in \cite{olsson:westerborn:2016}, the algorithm is asymptotically consistent (as $N$ goes to infinity) for any fixed precision parameter $\tilde N$. However, there is a significant qualitative difference between the cases $\tilde{N} = 1$ and $\tilde{N} \geq 2$. As for the FFBSi algorithm,  when there exists $\sigma_+$ such that $0<\qk <\sigma_+$, the PaRIS algorithm may be implemented with $\mathcal{O}(N)$ complexity using the accept reject mechanism of \cite{douc:garivier:moulines:olsson:2011}.
 
-%\begin{algorithm}
-%\caption{Random weight Accept-reject-based backward sampling  (\cite{douc:garivier:moulines:olsson:2011})}
-%\begin{algorithmic}
-%\FORALL{$i \in 1,\dots,\widetilde N$}
-%\STATE Set $L =\{1,\ldots,N\}$. 
-%\WHILE{$L\neq\emptyset$}
-%\STATE $p = \#L$.
-%\STATE Sample $I = (I_1,\ldots,I_p)$ independently in $\{1,\ldots,N\}$ with probabilities proportional to $\omega_{k-1}^{\ell}$, $1\le \ell\le N$.
-%\STATE Sample $U = (U_1,\ldots,U_p)$ independently and independently of $I$ uniformly in $[0,1]$.
-%\STATE Sample $\Lambda = (\Lambda_1,\ldots,\Lambda_p)$ independently and independently of $I$ and $U$.
-%\STATE Set $L_p = \emptyset$.
-%\FORALL{$\ell \in 1,\dots,p$}
-%\IF{$U_\ell<\widehat{q}(\xi_{k-1}^{I_\ell},\xi_k^{L(\ell)};\Lambda_{\ell})/\sigma_+$}
-%\STATE $J_k^{L(\ell),i} = I_\ell$.
-%\ELSE
-%\STATE $L_p = L_p \cup \{L(\ell)\}$.
-%\ENDIF
-%\ENDFOR
-%\STATE $L = L_p$.
-%\ENDWHILE
-%\ENDFOR
-%\end{algorithmic}
-%\label{alg:AR}
-%\end{algorithm}
-\section{The OzIRis algorithm}
-\label{sec:PaRIS:SDE}
-In general situations, the PaRIS algorithm cannot be used for stochastic differential equations as $\qk$ is unknown. Therefore, the computation of the importance weights $\omega_{k}^{\ell}$ and of the acceptance ratio in Algorithm~\ref{alg:AR:knownq} cannot be performed to apply the PaRIS algorithm. Following \cite{olsson:strojby:2011},
+In general situations, the PaRIS algorithm cannot be used for stochastic differential equations as $\qk$ is unknown. Therefore, the computation of the importance weights $\omega_{k}^{\ell}$ and of the acceptance ratio of \cite{douc:garivier:moulines:olsson:2011} is not tractable. Following \cite{fearnhead:papaspiliopoulos:roberts:2008,olsson:strojby:2011},
 an extension of the PaRIS algorithm may be developed by replacing $\qk$  by an  estimator $\widehat{q}_k(\xi^{\ell}_{k},\xi_{k+1}^{i};\zeta_k)$, where $\zeta_k$ is a random variable such that:
 \[
 \mathbb{E}\left[\widehat{q}_k(\xi^{\ell}_{k},\xi_{k+1}^{i};\zeta)\middle| \mathcal{F}_{k+1}^N\right] = \qk(\xi^{\ell}_{k},\xi_{k+1}^{i})\eqsp,
@@ -260,7 +183,7 @@ where
 \[
 \mathcal{F}_{k+1}^N = \sigma\left\{Y_{0:k+1};(\xi^{\ell}_{u},\omega^{\ell}_{u},\tau^{\ell}_{u}),~1\le \ell\le N,~0\le u\le k+1\right\}\eqsp.
 \]
-In the case where $\widehat{q}_k$ may be upper bounded by a constant $\hat{\sigma}_+$, step~\eqref{it:PaRIS:sampleindex} is replaced by the acceptance-rejection mechanism given in Algorithm~\ref{alg:AR:unknownq}. The Lemma~\ref{lem:AR:unbiased} states that replacing  $\qk$ by its unbiased approximation is a valid alternative to step~\eqref{it:PaRIS:sampleindex}.
+In the case where $\widehat{q}_k$ may be upper bounded by a constant $\hat{\sigma}_+$, step~\eqref{it:PaRIS:sampleindex} is replaced by the acceptance-rejection mechanism given in Algorithm~\ref{alg:AR:unknownq}. Lemma~\ref{lem:AR:unbiased} states that replacing  $\qk$ by its unbiased approximation is a valid alternative to step~\eqref{it:PaRIS:sampleindex}.
 \begin{lemma}
 \label{lem:AR:unbiased}
 Let $0\le k\le n-1$.  For all $1\le i \le N$ and all $1\le \ell \le \widetilde{N}$, the conditional probability distribution given $\mathcal{F}_{k+1}^N$ of the random variable $J_{k}^{i,\ell}$ produced by Algorithm~\ref{alg:AR:unknownq} is  $\Lambda_{k}^N(i,\cdot)$. 
@@ -268,14 +191,16 @@ Let $0\le k\le n-1$.  For all $1\le i \le N$ and all $1\le \ell \le \widetilde{N
 \begin{proof}
 See Appendix \ref{sec:append:proofs}.
 \end{proof}
-\begin{algorithm}[hb]
+\begin{algorithm}[H]
 \caption{Double random weight Accept-reject-based backward sampling}
 \begin{algorithmic}
 \FORALL{$i \in 1,\dots, N$}
 \FORALL{$\ell \in 1,\dots, \widetilde N$} 
-\STATE \textbf{\sc Sampling Step} Sample independently\\ $j\sim \{\omega_{k}^1,\dots,\omega_{k}^N\}$, $z\sim\zeta_k$, $u\sim \mathcal{U}[0,1]$
-\IF{ $$u \leq \frac{\widehat{\qk}(\xi_{k}^j,\xi_{k+1}^i,z)}{\hat{\sigma}_+},$$}
-\STATE Set $J_k^{i,\ell} = j$.
+\STATE \textbf{\sc Sampling Step} \\
+Sample independently $
+\zeta_k$, $U\sim \mathcal{U}[0,1]$ and $J\in\{1,\ldots,N\}$ with probabilities proportional to $\{\omega_{k}^1,\dots,\omega_{k}^N\}$.
+\IF{ $$U \leq \frac{\widehat{\qk}(\xi_{k}^J,\xi_{k+1}^i,\zeta_k)}{\hat{\sigma}_+},$$}
+\STATE Set $J_k^{i,\ell} = J$.
 \ELSE 
 \STATE Return to \textbf{\sc Sampling Step}
 \ENDIF
@@ -284,62 +209,68 @@ See Appendix \ref{sec:append:proofs}.
 \end{algorithmic}
 \label{alg:AR:unknownq}
 \end{algorithm}
-In \cite{olsson:strojby:2011},  Global Poisson Estimator (GPE) are used to estimate $\qk$ which relies on a representation of $\qk$ as an expectation under the probability measure of a Brownian bridge. 
-In order to improve the Monte Carlo estimation of $\qk$,  other diffusion bridges may be used as long as they can be simulated efficiently.\\ 
-A simple idea is to consider a diffusion obtained as an approximation of the target SDE \eqref{eq:target:sde}. 
-\cite{ozaki:1992,shoji:ozaki:1998} proposed a higher order approximation of the drift term $\alpha_{\theta}$ than the Euler scheme. 
-The authors used a linear approximation of the diffusion drift $\alpha_{\theta}$, together with a constant approximation of the volatility over each time interval $(t_{k},t_{k+1})$.\\ 
-Formally, for all $0\le k\le n-1$, let $(Z^{k}_t)_{t\ge 0}$ be governed by the following stochastic differential equation for $t\in(t_{k},t_{k+1})$:
+
+\section{The OzIRis algorithm}
+\label{sec:PaRIS:SDE}
+In \cite{olsson:strojby:2011}, $\qk$ is estimated using GPE based on a representation of $\qk$ as an expectation under the probability measure of a Brownian bridge. 
+In order to improve the Monte Carlo estimation of $\qk$,  other diffusion bridges may be used as long as they can be simulated efficiently. A simple idea is to consider a diffusion obtained as an approximation of the target SDE \eqref{eq:target:sde}. In \cite{giesecke:schwenkler:2016}, the authors proposed to replace the Brownian bridge by a Brownian motion with constant drift between two consecutive observations.
+As an alternative, is is also possible to follow \cite{ozaki:1992,shoji:ozaki:1998} to propose a higher order approximation of the drift term $\alpha$.  The authors used a linear approximation of the diffusion drift $\alpha$, together with a constant approximation of the volatility over each time interval $(t_{k},t_{k+1})$. 
+
+For all $0\le k\le n-1$, let $(Z^{k}_t)_{t\ge 0}$ be governed by the following stochastic differential equation for $t\in(t_{k},t_{k+1})$:
 \begin{equation}
 \label{eq:SDE:Ozaki}
-\Oz^k_{t_{k}} = X_{k}\quad\mbox{and}\quad\rmd \Oz^k_t = \widetilde{\alpha}^k_{\theta}(\Oz^k_t)\rmd t + \rmd W_t\eqsp,
+\Oz^k_{t_{k}} = X_{k}\quad\mbox{and}\quad\rmd \Oz^k_t = \widetilde{\alpha}_k(\Oz^k_t)\rmd t + \rmd W_t\eqsp,
 \end{equation}
-where
-\[
-\widetilde{\alpha}^k_{\theta}(x) = \Jk x + \alpha_{\theta}(X_{k}) - \Jk X_{k}
-\]
-and $\Jk$ is the Jacobian of $\alpha_{\theta}$ evaluated in $X_k$. The probability density function of the transition kernel associated with $\Oz^k$ is written $\widetilde{q}_k$ and is given in Section~\ref{sec:ornstein:bridge}.
-Writing $\mathbb{Q}^k_{\theta}$ (resp. $\mathbb{W}^{k}_{\theta}$) the probability measure induced by $(X_s)_{t_{k}\le s\le t_{k+1}}$  (resp. $(\Oz_s)_{t_{k}\le s\le t_{k+1}}$) on $(\mathsf{C},\mathcal{C})$, Girsanov theorem yields:
-\[
-\frac{\rmd \mathbb{Q}^k_{\theta}}{\rmd \mathbb{W}^{k}_{\theta}}(w) = \mathrm{exp}\left\{H_{\theta}(\mw_{t_{k+1}}) - H_{\theta}(\mw_{t_{k}}) - \frac{1}{2}\int_{t_{k}}^{t_{k+1}}\left\{\| \alpha_{\theta}(\mw_s)\|^2-\|\widetilde{\alpha}_{\theta}(\mw_s)\|^2+\Delta H_{\theta}(\mw_s)\right\}\rmd s\right\}\eqsp,
-\]
-where 
-\[
-H_{\theta}(x) = A_{\theta}(x) - \frac{1}{2}x'\Jk x- (\alpha_{\theta}(X_{k}) - \Jk X_{k-1})'x
-\]
-and $\Delta$ is the Laplace operator. Then, the probability measures conditioned on hitting $X_{k+1}$ at time $t_{k+1}$ satisfy:
+where $\widetilde{\alpha}_k$ is an instrumental drift. The probability density function of the transition kernel associated with $\Oz^k$ is written $\widetilde{q}_k$.
+Writing $\mathbb{Q}_k$ (resp. $\mathbb{W}_{k}$) the probability measure induced by $(X_s)_{t_{k}\le s\le t_{k+1}}$  (resp. $(\Oz_s)_{t_{k}\le s\le t_{k+1}}$) on $(\mathsf{C},\mathcal{C})$, Girsanov theorem yields:
+\begin{multline*}
+\frac{\rmd \mathbb{Q}_k}{\rmd \mathbb{W}_{k}}(w) = \mathrm{exp}\left\{H_{k}(\mw_{t_{k+1}}) - H_{k}(\mw_{t_{k}})\right\}\\
+\times \exp\left\{- \frac{1}{2}\int_{t_{k}}^{t_{k+1}}\left\{\| \alpha_{}(\mw_s)\|^2-\|\widetilde{\alpha}_k(\mw_s)\|^2+\Delta H_k(\mw_s)\right\}\rmd s\right\}\eqsp,
+\end{multline*}
+where $\nabla H_k = \alpha -\widetilde{\alpha}_k$ and $\Delta$ is the Laplace operator. Then, the probability measures conditioned on hitting $X_{k+1}$ at time $t_{k+1}$ satisfy:
 \begin{multline}
 \label{eq:Girsanov}
-\frac{\rmd \mathbb{Q}^{k,X_{k+1}}_{\theta}}{\rmd \mathbb{W}^{k,X_{k+1}}_{\theta}}(\mw) = \frac{\widetilde{\qk}(X_{k},X_{k+1})}{\qk (X_{k},X_{k+1}) }\mathrm{exp}\left\{H_{\theta}(X_{k+1}) - H_{\theta}(X_{k})\right\} \\
-\times \mathrm{exp}\left\{- \frac{1}{2}\int_{t_{k}}^{t_{k+1}}\left\{\|\alpha_{\theta}(\mw_s)\|^2-\|\widetilde{\alpha}_{\theta}(\mw_s)\|^2+\Delta H_{\theta}(\mw_s)\right\}\rmd s\right\}\eqsp.
+\frac{\rmd \mathbb{Q}_k^{X_{k+1}}}{\rmd \mathbb{W}_k^{X_{k+1}}}(\mw) = \frac{\widetilde{\qk}(X_{k},X_{k+1})}{\qk (X_{k},X_{k+1}) }\mathrm{exp}\left\{H_{k}(X_{k+1}) - H_{k}(X_{k})\right\} \\
+\times \mathrm{exp}\left\{- \frac{1}{2}\int_{t_{k}}^{t_{k+1}}\left\{\|\alpha_{}(\mw_s)\|^2-\|\widetilde{\alpha}_{k}(\mw_s)\|^2+\Delta H_{k}(\mw_s)\right\}\rmd s\right\}\eqsp.
 \end{multline}
-Consider the following asumptions on the model:
-\begin{enumerate}[(a)]
-\item For all $\theta\in\Theta$ and all $0\le k \le n-1$, $x\mapsto \alpha_{\theta}(x) - \alpha_{\theta}(X_k) - \Jk(x-X_k)$ is bounded.
-\item For all $\theta\in\Theta$ and all $0\le k \le n-1$, $x\mapsto \mathrm{Tr}\left(J_{\alpha_{\theta}}(x) - \Jk\right)$ is bounded, where $\mathrm{Tr}$ is the trace operator.
-\end{enumerate}
-Under these two assumptions, for all $\theta$, there exists $\ell(\theta)$ such that:
+\subsection{Linear approximation of the drift}
+In order to improve the performance of the GPE introduced in \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006,giesecke:schwenkler:2016}, the instrumental drift is chosen as the Ozaki  \cite{ozaki:1992,shoji:ozaki:1998} linear approximation of the target drift:
+\begin{equation}
+\label{eq:alpha:linear}
+\widetilde{\alpha}_k: x\mapsto \Jk x + \alpha(X_{k}) - \Jk X_{k}\eqsp,
+\end{equation}
+where $\Jk$ is the Jacobian of $\alpha$ evaluated at $X_k$. In this case, the transition kernel associated with $\Oz^k$ is given in Section~\ref{sec:ornstein:bridge} and the function $H_k$ may be chosen as 
 \[
-\mathrm{inf}_{u\in \mathbb{R}^d} \left\{\frac{1}{2}\left(\| \alpha_{\theta}(u)\|^2-\|\widetilde{\alpha}_{\theta}(u)\|^2+\Delta H_{\theta}(u)\right)\right\}\ge \ell(\theta)\eqsp.
+H_{k}: x \mapsto A_{}(x) - \frac{1}{2}x'\Jk x- (\alpha(X_{k}) - \Jk X_{k-1})'x\eqsp.
+\]
+%Consider the following assumptions on the model:
+%\begin{enumerate}[(a)]
+%\item For all $0\le k \le n-1$, $x\mapsto \alpha_{}(x) - \alpha_{}(X_k) - \Jk(x-X_k)$ is bounded.
+%\item For all $0\le k \le n-1$, $x\mapsto \mathrm{Tr}\left(J_{\alpha_{}}(x) - \Jk\right)$ is bounded, where $\mathrm{Tr}$ is the trace operator.
+%\end{enumerate}
+Assume that there exists $\ell_k$ such that:
+\[
+\mathrm{inf}_{u\in \mathbb{R}^d} \left\{\| \alpha_{}(u)\|^2-\|\widetilde{\alpha}_{k}(u)\|^2+\Delta H_{k}(u)\right\}/2\ge \ell_k\eqsp.
 \]
 Define
 \[
-\phi_{\theta}(x) = \frac{1}{2}\left\{\|\alpha_{\theta}(x)\|^2-\|\widetilde{\alpha}_{\theta}(x)\|^2+\Delta H_{\theta}(x)\right\}-\ell(\theta)\eqsp.
+\phi_{k}: x\mapsto \left\{\|\alpha_{}(x)\|^2-\|\widetilde{\alpha}_{k}(x)\|^2+\Delta H_{k}(x)\right\}/2-\ell_k\eqsp.
 \]
-The assumptions on the model also ensure that for all $\theta\in\Theta$, there exists $\Lambda(\theta)$ such that  $\mathrm{sup}_x\eqsp \phi_{\theta}(x)\le \Lambda_{\theta}$. Then,
+Assume also that the model is such that there exists $\Lambda_k$ satisfying  $\mathrm{sup}_x\eqsp \phi_{k}(x)\le \Lambda_{k}$. These assumptions might seem somehow restrictive but are necessary to define the transition density estimator in the linear case. The alternative given by \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006,giesecke:schwenkler:2016} when the instrumental drift is constant does not assume any upper bound for $\phi_{k}$ but requires to sample skeletons of a Brownian bridge given its minimum/maximum between $t_k$ and $t_{k+1}$. To the best of our knowledge, there is no closed from formula to sample skeletons of an Ornstein-Uhlenbeck bridges given its extremal values on an interval. Then,
 \begin{multline*}
-\qk(X_{k},X_{k+1}) = \widetilde{\qk}(X_{k},X_{k+1}) \eqsp\mathrm{exp}\left\{H_{\theta}(X_{k+1}) - H_{\theta}(X_{k})-\ell(\theta)\Delta_k\right\}\\
-\times\mathbb{E}_{\mathbb{W}_{\theta}^{k,X_{k+1}}}\left[\mathrm{exp}\left\{-\int_{0}^{ \Delta_k}\phi_{\theta}(\mw_s)\rmd s\right\}\right]\eqsp,
+\qk(X_{k},X_{k+1}) = \widetilde{\qk}(X_{k},X_{k+1}) \eqsp\mathrm{exp}\left\{H_{k}(X_{k+1}) - H_{k}(X_{k})-\ell\Delta_k\right\}\\
+\times\mathbb{E}_{\mathbb{W}_{k}^{X_{k+1}}}\left[\mathrm{exp}\left\{-\int_{0}^{ \Delta_k}\phi_{k}(\mw_s)\rmd s\right\}\right]\eqsp,
 \end{multline*}
-where $\mathbb{E}_{\mathbb{W}_{\theta}^{k,X_{k+1}}}$ is the expectation under the law of the bridge process defined by \eqref{eq:SDE:Ozaki}, starting at $X_{k}$ at time $0$ and ending at $X_{k+1}$ at time $\Delta_k$.
-An unbiased estimator of $\qk(X_{k},X_{k+1})$ is then obtained by estimating $\mathbb{E}_{\mathbb{W}_{\theta}^{k,X_{k+1}}}\left[\mathrm{exp}\left\{-\int_{0}^{ \Delta_k}\phi_{\theta}(\mw_s)\rmd s\right\}\right]$. 
-Following \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006}, if $\omega \sim\mathbb{W}_{\theta}^{k,X_{k}}$, $\kappa$ is a random variable taking values in $\mathbb{N}$ with distribution $\mu$ and if $(U_j)_{1\le j\le \kappa}$ are independent uniform random variables on $[0,t]$, 
+where $\mathbb{E}_{\mathbb{W}_{k}^{X_{k+1}}}$ is the expectation under the law of the bridge process defined by \eqref{eq:SDE:Ozaki} and \eqref{eq:alpha:linear}, starting at $X_{k}$ at time $0$ and ending at $X_{k+1}$ at time $\Delta_k$.
+An unbiased estimator of $\qk(X_{k},X_{k+1})$ is then obtained by estimating $\mathbb{E}_{\mathbb{W}_{k}^{X_{k+1}}}\left[\mathrm{exp}\left\{-\int_{0}^{ \Delta_k}\phi_{k}(\mw_s)\rmd s\right\}\right]$. 
+Following \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006}, if $\omega \sim\mathbb{W}_{k}^{X_{k}}$, $\kappa$ is a random variable taking values in $\mathbb{N}$ with distribution $\mu$ and if $(U_j)_{1\le j\le \kappa}$ are independent uniform random variables on $[0,t]$, 
 \begin{align*}
-\mathbb{E}_{\mathbb{W}_{\theta}^{k,X_{k+1}}}\left[\mathrm{exp}\left\{-\int_{0}^{\Delta_k}\phi_{\theta}(\mw_s)\rmd s\right\}\right] &= \mathbb{E}_{\mathbb{W}_{\theta}^{k,X_{k+1}}} \left[\mathrm{exp}\left\{-\int_{0}^{\Delta_k}\phi_{\theta}(\mw_s)\rmd s\right\}\right]\eqsp,\\
-&= \mathrm{exp}\left\{-\Lambda_{\theta} \Delta_k\right\} \mathbb{E}_{\mathbb{W}_{\theta}^{k,X_{k+1}}} \left[\mathrm{exp}\left\{ \int_{0}^{\Delta_k}(\Lambda_{\theta}-\phi_{\theta}(\mw_s))\rmd s\right\}\right]\eqsp,\\
-&=\mathrm{exp}\left\{-\Lambda_{\theta}\Delta_k\right\} \mathbb{E}_{\mathbb{W}_{\theta}^{k,X_{k+1}}}\left[\sum_{p\ge 0}\frac{1}{p!}\left(\int_{0}^{\Delta_k}\Lambda_{\theta}-\phi_{\theta}(\mw_s)\rmd s\right)^p\right]\eqsp,\\
-&=\mathrm{exp}\left\{-\Lambda_{\theta}\Delta_k \right\} \mathbb{E}_{\mathbb{W}_{\theta}^{k,X_{k+1}}} \left[\mathbb{E}\left[\sum_{p\ge 0}\frac{( \Delta_k)^p}{k!} \prod_{j=1}^p\left(\Lambda_{\theta}-\phi_{\theta}(\mw_{U_j})\right)\right]\right]\eqsp,\\
-&=\mathrm{exp}\left\{-\Lambda_{\theta} \Delta_k\right\} \mathbb{E}_{\mathbb{W}_{\theta}^{k,X_{k+1}}}\left[ \frac{(\Delta_k)^{\kappa}}{\mu(\kappa)\kappa!}\prod_{j=1}^{\kappa}\left(\Lambda_{\theta}-\phi_{\theta}(\mw_{U_j})\right)\right]\eqsp.
+\mathbb{E}_{\mathbb{W}_{k}^{X_{k+1}}}\left[\mathrm{exp}\left\{-\int_{0}^{\Delta_k}\phi_{k}(\mw_s)\rmd s\right\}\right] &\\
+&\hspace{-3cm}= \mathbb{E}_{\mathbb{W}_{k}^{X_{k+1}}} \left[\mathrm{exp}\left\{-\int_{0}^{\Delta_k}\phi_{k}(\mw_s)\rmd s\right\}\right]\eqsp,\\
+&\hspace{-3cm}= \mathrm{exp}\left\{-\Lambda_{k} \Delta_k\right\} \mathbb{E}_{\mathbb{W}_{k}^{X_{k+1}}} \left[\mathrm{exp}\left\{ \int_{0}^{\Delta_k}(\Lambda_{k}-\phi_{k}(\mw_s))\rmd s\right\}\right]\eqsp,\\
+&\hspace{-3cm}=\mathrm{exp}\left\{-\Lambda_{k}\Delta_k\right\} \mathbb{E}_{\mathbb{W}_{k}^{X_{k+1}}}\left[\sum_{p\ge 0}\frac{1}{p!}\left(\int_{0}^{\Delta_k}\Lambda_{k}-\phi_{k}(\mw_s)\rmd s\right)^p\right]\eqsp,\\
+&\hspace{-3cm}=\mathrm{exp}\left\{-\Lambda_{k}\Delta_k \right\} \mathbb{E}_{\mathbb{W}_{k}^{X_{k+1}}} \left[\mathbb{E}\left[\sum_{p\ge 0}\frac{( \Delta_k)^p}{k!} \prod_{j=1}^p\left(\Lambda_{k}-\phi_{k}(\mw_{U_j})\right)\right]\right]\eqsp,\\
+&\hspace{-3cm}=\mathrm{exp}\left\{-\Lambda_{k} \Delta_k\right\} \mathbb{E}_{\mathbb{W}_{k}^{X_{k+1}}}\left[ \frac{(\Delta_k)^{\kappa}}{\mu(\kappa)\kappa!}\prod_{j=1}^{\kappa}\left(\Lambda_{k}-\phi_{k}(\mw_{U_j})\right)\right]\eqsp.
 \end{align*}
 Interesting choices of $\mu$ are discussed in \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006} and implemented in Section~\ref{sec:exp}. Writing
 \[
@@ -347,32 +278,15 @@ Interesting choices of $\mu$ are discussed in \cite{beskos:papaspiliopoulos:robe
 \]
 Algorithm~\ref{alg:AR:unknownq} is used with 
 \begin{multline}
-\widehat{\qk}(X_{k},X_{k+1};\zeta_k) = \widetilde{\qk}(X_{k},X_{k+1}) \eqsp\mathrm{exp}\left\{H_{\theta}(X_{k+1}) - H_{\theta}(X_{k})-\ell(\theta) \Delta_k\right\}\\ 
-\times\mathrm{exp}\left\{-\Lambda_{\theta}\Delta_k\right\}\frac{( \Delta_k)^{\kappa}}{\mu(\kappa)\kappa!}\prod_{j=1}^{\kappa}\left(\Lambda_{\theta}-\phi_{\theta}(\mw_{U_j})\right)\eqsp.\label{eq:unbiased:q}
+\widehat{\qk}(X_{k},X_{k+1};\zeta_k) = \widetilde{\qk}(X_{k},X_{k+1}) \eqsp\mathrm{exp}\left\{H_{k}(X_{k+1}) - H_{k}(X_{k})-\ell_k \Delta_k\right\}\\ 
+\times\mathrm{exp}\left\{-\Lambda_{k}\Delta_k\right\}\frac{( \Delta_k)^{\kappa}}{\mu(\kappa)\kappa!}\prod_{j=1}^{\kappa}\left(\Lambda_{k}-\phi_{k}(\mw_{U_j})\right)\eqsp.\label{eq:unbiased:q}
 \end{multline}
-The choice of $\mu$ is restricted to distributions such that the associated estimator is upper bounded by an explicit constant $\hat{\sigma}_+^k(\theta)$. Then, for all $0\le k \le n-1$, $1\le i\le N$, the importance weight $\omega_k^{\ell}$ is replaced by the unbiased estimator:
+The choice of $\mu$ is restricted to distributions such that the associated estimator is upper bounded by an explicit constant $\hat{\sigma}_+^k$. Then, for all $0\le k \le n-1$, $1\le i\le N$, the importance weight $\omega_k^{\ell}$ is replaced by the unbiased estimator:
 \begin{equation}
 \label{eq:random:weight}
 \widehat{\omega}_{k+1}^{i} = \frac{M^{-1}\sum_{m=1}^M \widehat{\qk}(\xi_{k}^{I^{i}_{k+1}},\xi^{i}_{k+1};\zeta_k^m)g_{k+1}(\xi^{i}_{k+1})}{\vartheta_{k+1}(\xi^{I^{i}_{k+1}}_{k}) p_{k} (\xi_{k}^{I^{i}_{k+1}},\xi^{i}_{k+1})}\eqsp,
 \end{equation}
-where $\{\zeta_k^i\}_{i=1}^M$ are independent copies of $\zeta_k$.\\
-%The last step to approximate the intermediate quantity of the EM algorithm is to provide an unbiased estimate of $\log q^{\Delta t_k}_{\theta}(X_{k-1},X_k)$. By Girsanov theorem, this log density can be written as:
-%\begin{multline*}
-%\log q^{\Delta t_k}_{\theta}(X_{k-1},X_k) = \log \widetilde{q}^{\Delta t_k}_{\theta}(X_{k-1},X_k) + H_{\theta}(X_k) - H_{\theta}(X_{k-1})-\ell(\theta)\Delta t_k \\
-%-\mathbb{E}_{\mathbb{Q}_{\theta}^{k,X_{k}}}\left[\int_{0}^{\Delta t_k}\phi_{\theta}(\mw_s)\rmd s\right]\eqsp.
-%\end{multline*}
-%If $U$ is uniformy distributed on $(0,\Delta t_k)$ and if $w \sim \mathbb{Q}_{\theta}^{k,X_{k}}$, $\log q^{\Delta t_k}_{\theta}(X_{k-1},X_k)$ may then be estimated by:
-%\begin{equation} 
-%\label{eq:logq}
-%\mathsf{q}_{\theta}^{\Delta t_k}(X_{k-1},X_k,\omega_U) = \log \widetilde{q}^{\Delta t_k}_{\theta}(X_{k-1},X_k) + H_{\theta}(X_k) - H_{\theta}(X_{k-1})-\ell(\theta)\Delta t_k - \Delta t_k \phi_{\theta}(\omega_U)\eqsp.
-%\end{equation}
-%Sampling $w \sim \mathbb{Q}_{\theta}^{k,X_{k}}$ is possible as by \eqref{eq:Girsanov},
-%\[
-%\frac{\rmd \mathbb{Q}^{k,X_{k}}_{\theta}}{\rmd \mathbb{W}^{k,X_{k}}_{\theta}}(w) \propto 
-%\mathrm{exp}\left\{-\int_{t_{k-1}}^{t_k}\phi_{\theta}(\mw_s)\rmd s\right\}\eqsp.
-%\]
-%As noted by \cite{}, this importance ratio is proportional to the probability that a marked Poisson process on $(0,\Delta t_k)\times (0,1)$ with intensity $\Lambda_{\theta}$ is below the graph $s \mapsto \phi_{\theta}(\mw_s)/\Lambda_{\theta}$. $\omega_U$ in \eqref{eq:logq} is then obtaine by first sampling $\tilde{\omega}\sim \mathbb{W}^{k,X_{k}}$ at times on $(0,\Delta t_k)$ defined by the marked Poison process (which is accepted if is is below $\phi_{\theta}(\mw_s)/\Lambda_{\theta}$) and then by interpolating the bridge at time $U$.
-The resulting Ozaki In PaRIS (OzIRis) algortihm, which provides an approximation of \eqref{def:addfunc}, is summarized in Algorithm~\ref{alg:Ozaki:PaRIS}.%the E step of the EM algorithm.
+where $\{\zeta_k^i\}_{i=1}^M$ are independent copies of $\zeta_k$. The resulting Ozaki In PaRIS (OzIRis) algortihm, which provides an approximation of \eqref{def:addfunc}, is summarized in Algorithm~\ref{alg:Ozaki:PaRIS}.
 \begin{algorithm}
 \caption{OzIRis algorithm}
 \begin{algorithmic}
@@ -382,13 +296,14 @@ The resulting Ozaki In PaRIS (OzIRis) algortihm, which provides an approximation
 \FOR{$k \in 0,\dots, n-1$}
 \FORALL{$i \in 1,\dots, N$}
 \STATE Set $\tau_{k+1}^i=0$;
-\STATE Choose $I_{k+1}^{i}$ in $\{1,\ldots,N\}$ with probs $\propto \{\widehat{\omega}_{k}^1\vartheta_{k+1}(\xi_{k}^1),\dots,\widehat{\omega}_{k}^N\vartheta_{k+1}(\xi_{k}^N)\}$;
+\STATE Sample $I_{k+1}^{i}$ in $\{1,\ldots,N\}$ with probabilities proportional to $\{\widehat{\omega}_{k}^1\vartheta_{k+1}(\xi_{k}^1),\dots,\widehat{\omega}_{k}^N\vartheta_{k+1}(\xi_{k}^N)\}$.
 \STATE Sample $\xi_{k+1}^{i} \sim p_k(\xi_{k}^{I_{k+1}^{i}},\cdot)$.
-\STATE Sample  $\{z_k^m=(\kappa_m, \mw_m, (U_j^m)_{1\leq j\leq \kappa_m})\}_{m=1}^M\overset{i.i.d}{\sim}  (\mu, \mathbb{W}_\theta^{k,X_{k+1}},\mathcal{U}[0,\Delta_k]^{\otimes \kappa_m})$.
+\STATE For all $1\le m\le M$, sample independently $\zeta_k^m=(\kappa_m,\mw_m, (U_j^m)_{1\leq j\leq \kappa_m})$ with $\kappa_m\sim \mu$, $\mw_m\sim \mathbb{W}_k^{X_{k+1}}$ and $(U_j^m)_{1\leq j\leq \kappa_m}\sim \mathcal{U}[0,\Delta_k]^{\otimes \kappa_m}$.
 \STATE Compute $\widehat{\omega}^{i}_{k+1}$ using equation \eqref{eq:random:weight}.
 \FORALL{$\ell \in 1,\dots, \widetilde N$} 
-\STATE \textbf{\sc Sampling Step} Sample independently\\ $j\sim  \{\widehat{\omega}_{k}^1,\dots,\widehat{\omega}_{k}^N\}$, $z\sim\zeta_k$, $u\sim \mathcal{U}[0,1]$
-\IF{ $$u \leq \frac{\widehat{\qk}(\xi_{k}^j,\xi_{k+1}^i,z)}{\hat{\sigma}_+},$$}
+\STATE \textbf{\sc Sampling Step} \\
+Sample independently $\zeta_k$, $U\sim \mathcal{U}[0,1]$ and $J\in\{1,\ldots,N\}$ with probabilities proportional to  $\{\widehat{\omega}_{k}^1,\dots,\widehat{\omega}_{k}^N\}$.
+\IF{ $$U \leq \frac{\widehat{\qk}(\xi_{k}^J,\xi_{k+1}^i,\zeta_k)}{\hat{\sigma}^k_+},$$}
 \STATE Set $J_k^{i,\ell} = j$.
 \STATE Update $\tau_{k+1}^i = \tau_{k+1}^i + \left(\tau^{J_k^{i,\ell}}_{k} + h_k(\xi^{J_k^{i,\ell}}_{k},\xi^i_{k+1})\right)/\tilde{N}$;
 \ELSE 
@@ -400,7 +315,19 @@ The resulting Ozaki In PaRIS (OzIRis) algortihm, which provides an approximation
 \end{algorithmic}
 \label{alg:Ozaki:PaRIS}
 \end{algorithm}
-%\log \left\{q^{\Delta t_k}_{\theta}(X_{k-1},X_k)g_{\theta}(X_k,Y_k)
+
+\subsection{Constant approximation of the drift}
+\label{sec:constantdrift}
+In the case where the function $\phi_k$ cannot be upper bounded when $\widetilde{\alpha}_k$ is set as a linear approximation of $\alpha$, \cite{giesecke:schwenkler:2016} suggests to set $\widetilde{\alpha}_k$ as a constant value $\widetilde{\alpha}_k= \rho_k$. The GPE of \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006} is a special case with $\rho_k = 0$. In this case, $H_k$ may be chosen as $H_k: x\mapsto A(x) - \rho_k x$. Then, following \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006,olsson:strojby:2011}, it is enough to sample a pair $(L_k,U_k)$ of random variables and a Brownian bridge $\mw\sim \mathbb{W}_k^{X_{k+1}}$ (or a Brownian bridge with a constant drift $\rho_k$) such that, for all $t_k\le t\le t_{k+1}$,
+\[
+L_k\le \phi_k(\mw_s)\le U_k\eqsp.
+\]
+Sampling the bridge conditionally on its minimum and maximum is possible using Bessel bridges as noted by \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006}. Then, the second term of \eqref{eq:unbiased:q} is replaced by:
+\[
+\mathrm{exp}\left\{-U_{k}\Delta_k\right\}\frac{( \Delta_k)^{\kappa}}{\mu(\kappa)\kappa!}\prod_{j=1}^{\kappa}\left(U_{k}-\phi_{k}(\mw_{U_j})\right)\eqsp.
+\]
+Here again, the choice of $\mu$ is restricted to distributions such that the associated estimator is upper bounded by an explicit constant $\hat{\sigma}_+^k$, see Section~\ref{sec:exp}.
+
 
 \section{Convergence results}
 Consider the following assumptions.
@@ -414,7 +341,10 @@ Consider the following assumptions.
 
 \begin{hypA}
 \label{assum:boundalgo}
-$\underset{k\geq 1}{\sup}|\vartheta_k|_{\infty} < \infty$, $\underset{k\geq 1}{\sup}|p_k|_{\infty} < \infty$ and $\underset{k\geq 1}{\sup}|\widetilde{\omega}_{k}|_{\infty} < \infty$.
+$\underset{k\geq 1}{\sup}|\vartheta_k|_{\infty} < \infty$, $\underset{k\geq 1}{\sup}|p_k|_{\infty} < \infty$ and $\underset{k\geq 1}{\sup}|\widehat{\omega}_{k}|_{\infty} < \infty$, where
+\[
+\widehat{\omega}_{k}(x,x';z) = \frac{\widehat{\qk}(x,x';z)g_{k+1}(x')}{\vartheta_{k+1}(x) p_{k} (x,x')}\eqsp.
+\]
 \end{hypA}
 %The following Lemma is proved in \cite[Lemma~11]{olsson:westerborn:2016}.
 %\begin{lemma}
@@ -424,7 +354,7 @@ $\underset{k\geq 1}{\sup}|\vartheta_k|_{\infty} < \infty$, $\underset{k\geq 1}{\
 
 \begin{lemma}
 \label{lem:iid}
-For all $0\le k \le n-1$, the random variables $\{\widetilde{\omega}_{k+1}^i\tau_{k+1}^i\}_{i=1}^N$ are independent conditionally on $\mathcal{F}_k^{N}$ and%For all bounded measurable function $h$ on $\mathbb{R}^d$,
+For all $0\le k \le n-1$, the random variables $\{\widehat{\omega}_{k+1}^i\tau_{k+1}^i\}_{i=1}^N$ are independent conditionally on $\mathcal{F}_k^{N}$ and%For all bounded measurable function $h$ on $\mathbb{R}^d$,
 \[
 \mathbb{E}\left[\tilde{\omega}^1_{k+1}\tau^{1}_{k+1}\middle| \mathcal{F}_k^{N}\right] = \left(\phi^N_{k}[\vartheta_{k+1}]\right)^{-1}\phi^N_{k}\left[\int q_{\theta}^{\Delta t_{k+1}}(\cdot,x)g_{k+1}(x)\left\{\tau_k(\cdot) + h_{k+1}(\cdot,x)\right\}\rmd x\right]\eqsp.
 \]
@@ -446,9 +376,9 @@ Write
 \[
 \phi_{k+1}^N[\tau_{k+1}] - \phi_{k+1}\left[T_{k+1}h_{k+1}\right] = \frac{a_N}{b_N}\eqsp,
 \]
-where $a_N = N^{-1}\sum_{i=1}^N \widetilde{\omega}_{k+1}^i \left(\tau_{k+1}^i - \phi_{k+1}\left[T_{k+1}h_{k+1}\right]\right)$ and $b_N =N^{-1}\sum_{i=1}^N \widetilde{\omega}_{k+1}^i$. By Lemma~\ref{lem:iid}, the random variables $\{\widetilde{\omega}_{k+1}^i\tau_{k+1}^i\}_{i=1}^N$ are independent conditionally on $\mathcal{F}_k^{N}$ and by H\ref{assum:boundalgo},
+where $a_N = N^{-1}\sum_{i=1}^N \widehat{\omega}_{k+1}^i \left(\tau_{k+1}^i - \phi_{k+1}\left[T_{k+1}h_{k+1}\right]\right)$ and $b_N =N^{-1}\sum_{i=1}^N \widehat{\omega}_{k+1}^i$. By Lemma~\ref{lem:iid}, the random variables $\{\widehat{\omega}_{k+1}^i\tau_{k+1}^i\}_{i=1}^N$ are independent conditionally on $\mathcal{F}_k^{N}$ and by H\ref{assum:boundalgo},
 \[
-\left|\widetilde{\omega}_{k+1}^i \left(\tau_{k+1}^i - \phi_{k+1}\left[T_{k+1}h_{k+1}\right]\right)\right| \le 2|\widetilde{\omega}_{k+1}|_{\infty}|H_{k+1}|_{\infty}\eqsp.
+\left|\widehat{\omega}_{k+1}^i \left(\tau_{k+1}^i - \phi_{k+1}\left[T_{k+1}h_{k+1}\right]\right)\right| \le 2|\widehat{\omega}_{k+1}|_{\infty}|H_{k+1}|_{\infty}\eqsp.
 \]
 Therefore, by Hoeffing inequality,
 \[
@@ -462,7 +392,7 @@ where
 \[
 \Upsilon_k(x_k) = \int q_{\theta}^{\Delta t_{k+1}}(\cdot,x)g_{k+1}(x)\left(\tau_k(x_k) + h_{k+1}(x_k,x) - \phi_{k+1}\left[T_{k+1}h_{k+1}\right]\right)\rmd x\eqsp.
 \]
-By \cite[Lemma~11]{olsson:westerborn:2016}., $\phi_{k}\left[\Upsilon_k\right] = 0$ which implies by Proposition~\ref{prop:filter} that 
+By \cite[Lemma~11]{olsson:westerborn:2016}, $\phi_{k}\left[\Upsilon_k\right] = 0$ which implies by Proposition~\ref{prop:filter} that 
 \[
 \mathbb{P}\left(\left|\mathbb{E}\left[a_N\middle|\mathcal{F}_k^{N}\right]\right|\ge \varepsilon\right)\le b_k\exp\left(-c_kN\varepsilon^2\right)\eqsp.
 \]
@@ -470,7 +400,7 @@ Then,
 \[
 \mathbb{P}\left(\left|a_N\right|\ge \varepsilon\right) \le b_k\exp\left(-c_kN\varepsilon^2\right)\eqsp.
 \] 
-Similarly, as $b_N \le |\widetilde{\omega}_k|_{\infty}$, by Hoeffding inequality,
+Similarly, as $b_N \le |\widehat{\omega}_k|_{\infty}$, by Hoeffding inequality,
 \[
 \mathbb{P}\left(\left|b_N - \mathbb{E}\left[b_N\middle|\mathcal{F}_k^{N}\right]\right|\ge \varepsilon\right) = \mathbb{E}\left[\mathbb{P}\left(\left|b_N - \mathbb{E}\left[b_N\middle|\mathcal{F}_k^{N}\right]\right|\ge \varepsilon\middle|\mathcal{F}_k^{N}\right)\right]\le 2\exp\left(-c_kN\varepsilon^2\right)\eqsp.
 \] 
@@ -503,15 +433,15 @@ See \cite{douc:garivier:moulines:olsson:2011}.
 
 \section{Numerical experiments}
 \label{sec:exp}
-This section investigates the performance of the proposed Ozaki-PaRIS EM algorithm. The different tuning parameters are:
+This section investigates the performance of the proposed algorithm. The different tuning parameters are:
 \begin{enumerate}[i)]
 \item the number of particles $N$ and the precision parameter $\widetilde{N}$;
 \item the proposal transition density $p_k$ and the adjustment multiplier $\vartheta_k$ used to propagate and weight particles;
 \item the discrete distribution $\mu$ used to define $\widetilde{q}_{\theta}^{\Delta t_k}$.
 \end{enumerate}
-The algorithm is compared to the fixed-lag particle smoother of \cite{}. To complete the numerical analysis, the impact of the bridge process used to estimate $q_{\theta}^{\Delta t_k}$ is also illustrated. Instead of the Ozaki discretization, the following bridges process are considered:
+The algorithm is compared to the fixed-lag particle smoother of \cite{olsson:strojby:2011}. To complete the numerical analysis, the impact of the bridge process used to estimate $q_{\theta}^{\Delta t_k}$ is also illustrated. Instead of the Ozaki discretization, the following bridges process are considered:
 \begin{enumerate}[i)]
-\item a bridge with constant drift as proposed in \cite{}.
+\item a bridge with constant drift as proposed in \cite{giesecke:schwenkler:2016}.
 \item a guided bridge process, see \cite{}.
 \end{enumerate}
 \paragraph{Choice of $\mu$}
