@@ -1,4 +1,4 @@
-\documentclass[12pt]{article}
+\documentclass[12pt,draft]{article}
 \usepackage[utf8]{inputenc}
 \usepackage{amssymb}
 \usepackage{makeidx}
@@ -24,6 +24,7 @@
 \pagestyle{fancy}
 
 \usepackage{graphicx}
+\graphicspath{{/home/gloaguen/Bureau/Travaux_agro/figures_article_oziris/}}
 \usepackage{enumerate}
 \usepackage{xcolor}
 \usepackage{algorithm,algorithmic}  
@@ -460,8 +461,11 @@ This section investigates the performance of the proposed algorithm. The differe
 \begin{enumerate}[i)]
 \item the number of particles $N$ and the precision parameter $\widetilde{N}$;
 \item the proposal transition density $p_k$ and the adjustment multiplier $\vartheta_k$ used to propagate and weight particles;
-\item the discrete distribution $\mu$ used to define $\widetilde{q}_{\theta}^{\Delta t_k}$.
+\item the discrete distribution $\mu$ used to define $\widetilde{q}_{\theta}^{\Delta t_k}$;
+\item the number of samples to compute $\widetilde{q}_{\theta}^{\Delta t_k}$.
 \end{enumerate}
+The performance of the algorithm is investigated on two known models based on diffusion process.
+\subsection*{The SINE model} 
 The algorithm is compared to the fixed-lag particle smoother of \cite{olsson:strojby:2011}. To complete the numerical analysis, the impact of the bridge process used to estimate $q_{\theta}^{\Delta t_k}$ is also illustrated. Instead of the Ozaki discretization, the following bridges process are considered:
 \begin{enumerate}[i)]
 \item a bridge with constant drift as proposed in \cite{giesecke:schwenkler:2016}.
@@ -487,6 +491,53 @@ As suggestd by \cite{}, a guided process between $t_{k-1}$ and $t_k$ may alo be 
 Y^{\mathsf{guid}}_{t_{k-1}} = X_{k-1}\quad\mbox{and}\quad\rmd Y^{\mathsf{guid}}_t = \frac{X_k - Y^{\mathsf{guid}}_t}{t_k-t}\rmd t + \rmd W_t\eqsp.
 \]
 Both processes lead to estimators of $q_{\theta}^{\Delta t_k}$ following the same steps as in Section~\ref{}.
+\subsection*{The Log-growth model}
+We now focus on a second well known model in population dynamics, the log-growth model, also used as example in \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006} and \cite{olsson:westerborn:2016}, defined by:
+\begin{equation}
+\rmd Z_t = \kappa Z_t\left(1-\frac{Z_t}{\gamma}\right)\rmd t + \sigma Z_t \rmd W_t,~~Z_0=Z_0. \label{eq:LG:SDE}
+\end{equation}
+In order to use Exact algorithms of \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006} and GPE used in \cite{fearnhead:papaspiliopoulos:roberts:2008}, we focus on the version of \eqref{eq:LG:SDE} after the Lamperti transform, i.e., we define $X_t=\eta(Z_t)$, with $\eta(z) := -\log (z)/\sigma$, in this case, $(X_t)_{t\geq 0}$ satisfies the following SDE:
+\begin{equation}
+\rmd X_t = \overbrace{\left( \frac{\sigma}{2} -  \frac{\kappa}{\sigma} + \frac{\kappa}{\gamma\sigma}\exp\left(-\sigma X_t\right)\right)}^{:=\alpha(X_t)}\rmd t +\rmd W_t,~~X_0=X_0.\label{eq:Lamp:LG}
+\end{equation}
+In this case, the conditions of the EA2 defined in \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006} are satisfied, as:
+\begin{equation}
+\forall m \in \mathbb{R}, \exists~\mathsf{U}(m)~\vert~\forall x\geq m, \psi(x):=\alpha^2(x)+\alpha'(x) \leq \mathsf{U}_m.
+\end{equation}
+Moreover, there exists $\mathsf{L}$ such that $\forall x, \psi(x):=\alpha^2(x)+\alpha'(x)\geq \mathsf{L}$. 
+Then, GPE estimators could be computed by simulating a the minimum of a OU bridge, and simulating OU bridges conditionnaly to this minimum. 
+However, to the best of our knowledge, no general techniques exist to do so. 
+We therefore apply the proposed algorithm, but with a GPE estimator computed with Bessel bridges, as proposed by \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006}.\\
+The process solution of \eqref{eq:Lamp:LG} is observed regularly at times $t_0=0,\dots,t_{50}=100$ through the observation process $(Y_k)_{k= 0,\dots,50}$:
+\begin{equation}
+Y_k = X_k + \varepsilon_k,~~\varepsilon \overset{i.i.d}{\sim} \mathcal{N}(0,\sigma^2_{obs})\label{eq:obs:LG}
+\end{equation}
+In the example presented here, we fixed the set of  parameter $$\theta_{true} =(\kappa=0.1,\sigma=0.1,\gamma=1000,\sigma^2_{obs}=4).$$\\
+In order to evaluate the performance of the algorithm presented here, we compare the estimation of the EM intermediate quantity with the one obtained by the fixed lag method, for different values of the lag (namely, 1,2,5,10,50). 
+We therefore compute the particle approximation of $\mathcal{Q}(\theta_{true},\theta_{true})$ for a set of observations presented on Figure \ref{fig:obs:LG}.\\ 
+This estimation is performed 300 times, using $N=400$ particles, with $\tilde{N}=2$, and 30 replications for the Monte Carlo approximation of each $q(\xi_k,\xi_{k+1})$. 
+Moreover, in the computation of the E step, the corresponding $h_k$ function of equation \eqref{def:addfunc} requires the computation of $\log\left(q(\xi_k,\xi_{k+1})\right)$. 
+This quantity is approximated independently from other approximations, using the unbiased estimator proposed in \cite{olsson:strojby:2011} (Appendix B). 
+Again, 30 Monte Carlo approximations are used to compute each estimation.\\ In order to obtain a reference value, the same estimation is performed 30 times using $N=10000$ particles (using the proposed algorithm), the reference value is then computed as the arithmetic mean of these 30 estimations. 
+The resulting estimates are presented on Figure \ref{fig:res:LG}.\\
+The results for the fixed lag technique are in conformity with the ones presented in \cite{olsson:strojby:2011} (Figure 1). 
+Indeed, for small lags, athe variance of estimates is small, but showing a bias. 
+The bias rapidly decreases as the lag increases, together with a  rapidly increasing variance. 
+The PaRIS algorithm for diffusion process presented results in an unbiased estimator, as expected, and show a small variance (lower than the variance for the fixed lag when the lag is one, therefore showing the best results on the presented example. 
+It is worth noting here that, as pointed out in \cite{olsson:strojby:2011}, results of the fixed lag technique indicates a quite strong forgetting in the model, and the choice of the lag should take into account this forgetting property. 
+As the PaRIS algorithm is always unbiased, there is no need to consider the forgetting property of a given model in the approximation of the EM intermediate quantity. 
+\begin{figure}[p]
+\centering
+\includegraphics[width=0.8\textwidth]{obs}
+\caption{One realisation of the process $(X_t)_{t\geq 0}$, solution of the SDE \eqref{eq:Lamp:LG} is represented in white. The observations of $Y$ at times $t_0=0,\dots,t_{50}=100$, satisfying equation \eqref{eq:obs:LG},  are represented in black.}
+\label{fig:obs:LG}
+\end{figure}
+\begin{figure}[p]
+\centering
+\includegraphics[width=0.8\textwidth]{res_Estep_LG}
+\caption{Estimation of the EM intermediate quantity $\mathcal{Q}(\theta_{true},\theta_{true})$ using observations of Figure \ref{fig:obs:LG}, using the fixed lag (FL) technique for 5 different lags (namely 1, 2, 5,10 ,50), and the PaRIS algorithm for diffusion process proposed in this work, using 300 replicates. The whiskers represent the extent of the 95\% central values. The dot represents the empirical mean over the 300 replicates. The dotted line shows the reference value, computed using the unbiased PaRIS algorithm with $N=10000$ particles.}
+\label{fig:res:LG}
+\end{figure}
 % where $\beta\in\mathbb{R}^d$ is chosen by the user. Assume that $\alpha_{\theta}$ is of the form $\alpha_{\theta}(x) = \nabla_x A_{\theta}(x)$ where $A_{\theta}: \mathbb{R}^d \to \mathbb{R}$. Writing $\mathbb{Q}_{\theta}$ (resp. $\mathbb{W}^{\beta}_{\theta}$) the probability measure induced by $(X_s)_{0\le s\le t}$  (resp. $(Y_s)_{0\le s\le t}$) on $(\mathsf{C},\mathcal{C})$, Girsanov theorem yields:
 % \[
 % \frac{\rmd \mathbb{Q}_{\theta}}{\rmd \mathbb{W}^{\beta}_{\theta}}(w) = \mathrm{exp}\left\{H_{\theta}(\omega_t) - H_{\theta}(\omega_0) - \frac{1}{2}\int_{0}^{t}\left\{\|\alpha_{\theta}(\mw_s)-\beta\|^2+\Delta H_{\theta}(\mw_s)\right\}\rmd s\right\}\eqsp,
