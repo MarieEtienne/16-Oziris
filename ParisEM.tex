@@ -137,7 +137,7 @@ when the transition density of the hidden states is not available explicitly and
 \phi_{0:n|n}[h] = \phi_n[T_n[h]]\eqsp,\;\mbox{where}\; T_n[h](X_n) = \E\left[h(X_{0:n})\vert X_n,~Y_{0:n}\right]\eqsp.\label{eq:FFbsm:equality}
 \end{equation}
 The approximation of \eqref{eq:FFbsm:equality} requires first to approximate the sequence of filtering distributions. Sequential Monte Carlo methods provide an efficient and simple solution to obtain these approximations using sets of particles $\{\xi^{\ell}_k\}_{\ell=1}^N$ associated with weights $\{\omega^{\ell}_k\}_{\ell=1}^N$, $0\le k \le n$.
-At time $k = 0$, $N$ particles $\{\xi^{\ell}_0\}_{\ell=1}^N$ are initialized by setting $\xi^{\ell}_0=x_0$. Then, $\xi^{\ell}_0$ is associated with the importance weights $\omega_0^{\ell} = g_0 (\xi^{\ell}_0)$. 
+At time $k = 0$, $N$ particles $\{\xi^{\ell}_0\}_{\ell=1}^N$ are sampled independently according to  $\xi^{\ell}_0 \sim \eta_0$, where $\eta_0$ is a probability density with respect to $\mu$. Then, $\xi^{\ell}_0$ is associated with the importance weights $\omega_0^{\ell} = \chi(\xi^{\ell}_0)g_0 (\xi^{\ell}_0)/\eta_0(\xi^{\ell}_0)$. 
 For any bounded and measurable function $h$ defined on $\mathbb{R}^d$, the expectation $\phi_{0}[h] $ is approximated by
 \[
 \phi^N_{0}[h] = \frac{1}{\Omega_0^N} \sum_{\ell=1}^N \omega_0^{\ell} h \left(\xi^{\ell}_0 \right)\eqsp, \quad \Omega_0^N:= \sum_{\ell=1}^N \omega_0^{\ell}\eqsp.
@@ -186,11 +186,11 @@ an extension of the PaRIS algorithm may be developed by replacing $\qk(\xi^{\ell
 \[
 \mathbb{E}\left[\widehat{q}_k(\xi^{\ell}_{k},\xi_{k+1}^{i};\zeta)\middle| \mathcal{F}_{k+1}^N\right] = \qk(\xi^{\ell}_{k},\xi_{k+1}^{i})\eqsp,
 \]
-where 
+where, for all $0\le k \le n$, 
 \[
-\mathcal{F}_{k+1}^N = \sigma\left\{Y_{0:k+1};(\xi^{\ell}_{u},\omega^{\ell}_{u},\tau^{\ell}_{u}),~1\le \ell\le N,~0\le u\le k+1\right\}\eqsp.
+\mathcal{F}_{k}^N = \sigma\left\{Y_{0:k};(\xi^{\ell}_{u},\omega^{\ell}_{u},\tau^{\ell}_{u}),~1\le \ell\le N,~0\le u\le k\right\}\eqsp.
 \]
-In the case where $\widehat{q}_k$ may be upper bounded by a constant $\hat{\sigma}_+$, step~\eqref{it:PaRIS:sampleindex} is replaced by the acceptance-rejection mechanism given in Algorithm~\ref{alg:AR:unknownq}. Lemma~\ref{lem:AR:unbiased} states that replacing  $\qk$ by its unbiased approximation is a valid alternative to step~\eqref{it:PaRIS:sampleindex}.
+In the case where $\widehat{q}_k$ may be upper bounded by a constant $\hat{\sigma}_+$, step~\eqref{it:PaRIS:sampleindex} is replaced by the accept reject mechanism given in Algorithm~\ref{alg:AR:unknownq}. Lemma~\ref{lem:AR:unbiased} states that replacing  $\qk$ by its unbiased approximation is a valid alternative to step~\eqref{it:PaRIS:sampleindex}.
 \begin{lemma}
 \label{lem:AR:unbiased}
 Let $0\le k\le n-1$.  For all $1\le i \le N$ and all $1\le \ell \le \widetilde{N}$, the conditional probability distribution given $\mathcal{F}_{k+1}^N$ of the random variable $J_{k}^{i,\ell}$ produced by Algorithm~\ref{alg:AR:unknownq} is  $\Lambda_{k}^N(i,\cdot)$. 
@@ -350,7 +350,7 @@ Consider the following assumptions.
 \label{assum:boundalgo}
 $\underset{k\geq 1}{\sup}|\vartheta_k|_{\infty} < \infty$, $\underset{k\geq 1}{\sup}|p_k|_{\infty} < \infty$ and $\underset{k\geq 1}{\sup}|\widehat{\omega}_{k}|_{\infty} < \infty$, where
 \[
-\widehat{\omega}_{k}(x,x';z) = \frac{\widehat{\qk}(x,x';z)g_{k+1}(x')}{\vartheta_{k+1}(x) p_{k} (x,x')}\eqsp.
+\widehat{\omega}_{0}(x) = \frac{\chi(x)g_0(x)}{\eta_0(x)} \quad\mbox{and for}\; k\ge1\quad\widehat{\omega}_{k}(x,x';z) = \frac{\widehat{\qk}(x,x';z)g_{k+1}(x')}{\vartheta_{k+1}(x) p_{k} (x,x')}\eqsp.
 \]
 \end{hypA}
 %The following Lemma is proved in \cite[Lemma~11]{olsson:westerborn:2016}.
@@ -363,7 +363,7 @@ $\underset{k\geq 1}{\sup}|\vartheta_k|_{\infty} < \infty$, $\underset{k\geq 1}{\
 \label{lem:iid}
 For all $0\le k \le n-1$, the random variables $\{\widehat{\omega}_{k+1}^i\tau_{k+1}^i\}_{i=1}^N$ are independent conditionally on $\mathcal{F}_k^{N}$ and%For all bounded measurable function $h$ on $\mathbb{R}^d$,
 \[
-\mathbb{E}\left[\tilde{\omega}^1_{k+1}\tau^{1}_{k+1}\middle| \mathcal{F}_k^{N}\right] = \left(\phi^N_{k}[\vartheta_{k+1}]\right)^{-1}\phi^N_{k}\left[\int q_{\theta}^{\Delta t_{k+1}}(\cdot,x)g_{k+1}(x)\left\{\tau_k(\cdot) + h_{k+1}(\cdot,x)\right\}\rmd x\right]\eqsp.
+\mathbb{E}\left[\widehat{\omega}^1_{k+1}\tau^{1}_{k+1}\middle| \mathcal{F}_k^{N}\right] = \left(\phi^N_{k}[\vartheta_{k+1}]\right)^{-1}\phi^N_{k}\left[\int q_{k}(\cdot,x)g_{k+1}(x)\left\{\tau_k(\cdot) + h_{k+1}(\cdot,x)\right\}\rmd x\right]\eqsp.
 \]
 \end{lemma}
 
@@ -372,34 +372,38 @@ See appendix \ref{sec:append:proofs}
 \end{proof}
 
 \begin{proposition}
-Assume that H\ref{assum:boundmodel} and H\ref{assum:boundalgo} hold and that for all $1\le k\le n$, $\mathrm{osc}(h_k)<+\infty$. For all $0\le k\le n$, there exist $b_k,c_k>0$ such that for all $N\ge 1$ and all $\varepsilon\in\mathbb{R}_+^\star$,
+Assume that H\ref{assum:boundmodel} and H\ref{assum:boundalgo} hold and that for all $1\le k\le n$, $\mathrm{osc}(h_k)<+\infty$. For all $0\le k\le n$ and all $\widetilde{N}\ge 1$, there exist $b_k,c_k>0$ such that for all $N\ge 1$ and all $\varepsilon\in\mathbb{R}_+^\star$,
 \[
 \mathbb{P}\left(\left|\phi_k^N[\tau_k] - \phi_k\left[T_kh_k\right]\right|\ge \varepsilon\right)\le b_k\exp\left(-c_kN\varepsilon^2\right)\eqsp.
 \]
 \end{proposition}
 
 \begin{proof}
-Write
+The results is proved by induction. At time $k=0$, the result holds using that for all $1\le i \le N$, $\rho_0^i = 0$ and the convention $T_0[h_0] =0$. In addition, $\phi_0^N$ is a standard importance sampler estimator of $\phi_0$ with $\omega_0^i\le |\widehat{\omega}_0|_{\infty}$ so that for any bounded function $h$ on $\mathsf{X}$,
 \[
-\phi_{k+1}^N[\tau_{k+1}] - \phi_{k+1}\left[T_{k+1}h_{k+1}\right] = \frac{a_N}{b_N}\eqsp,
+\mathbb{P}\left(\left|\phi_0^N[h] - \phi_0\left[h\right]\right|\ge \varepsilon\right)\le b_0\exp\left(-c_0N\varepsilon^2\right)\eqsp.
 \]
-where $a_N = N^{-1}\sum_{i=1}^N \widehat{\omega}_{k+1}^i \left(\tau_{k+1}^i - \phi_{k+1}\left[T_{k+1}h_{k+1}\right]\right)$ and $b_N =N^{-1}\sum_{i=1}^N \widehat{\omega}_{k+1}^i$. By Lemma~\ref{lem:iid}, the random variables $\{\widehat{\omega}_{k+1}^i\tau_{k+1}^i\}_{i=1}^N$ are independent conditionally on $\mathcal{F}_k^{N}$ and by H\ref{assum:boundalgo},
+Assume the results holds for $k\ge 1$ and write
 \[
-\left|\widehat{\omega}_{k+1}^i \left(\tau_{k+1}^i - \phi_{k+1}\left[T_{k+1}h_{k+1}\right]\right)\right| \le 2|\widehat{\omega}_{k+1}|_{\infty}|H_{k+1}|_{\infty}\eqsp.
+\phi_{k+1}^N[\tau_{k+1}] - \phi_{k+1}\left[T_{k+1}[h_{k+1}]\right] = a_N/b_N\eqsp,
 \]
-Therefore, by Hoeffing inequality,
+where $a_N = N^{-1}\sum_{i=1}^N \widehat{\omega}_{k+1}^i \left(\tau_{k+1}^i - \phi_{k+1}\left[T_{k+1}[h_{k+1}]\right]\right)$ and $b_N =N^{-1}\sum_{i=1}^N \widehat{\omega}_{k+1}^i$. By Lemma~\ref{lem:iid}, the random variables $\{\widehat{\omega}_{k+1}^i\tau_{k+1}^i\}_{i=1}^N$ are independent conditionally on $\mathcal{F}_k^{N}$ and by H\ref{assum:boundalgo},
+\[
+\left|\widehat{\omega}_{k+1}^i \left(\tau_{k+1}^i - \phi_{k+1}\left[T_{k+1}[h_{k+1}]\right]\right)\right| \le 2|\widehat{\omega}_{k+1}|_{\infty}|H_{k+1}|_{\infty}\eqsp.
+\]
+Therefore, by Hoeffding inequality,
 \[
 \mathbb{P}\left(\left|a_N - \mathbb{E}\left[a_N\middle|\mathcal{F}_k^{N}\right]\right|\ge \varepsilon\right) = \mathbb{E}\left[\mathbb{P}\left(\left|a_N - \mathbb{E}\left[a_N\middle|\mathcal{F}_k^{N}\right]\right|\ge \varepsilon\middle|\mathcal{F}_k^{N}\right)\right]\le 2\exp\left(-c_kN\varepsilon^2\right)\eqsp.
 \] 
 On the other hand,
 \[
-\mathbb{E}\left[a_N\middle|\mathcal{F}_k^{N}\right] = \left(\phi^N_{k}[\vartheta_{k+1}]\right)^{-1}\phi^N_{k}\left[\Upsilon_k\right] \eqsp,%\left(\phi^N_{k}[\vartheta_{k+1}]\right)^{-1}
+\mathbb{E}\left[a_N\middle|\mathcal{F}_k^{N}\right] = \left(\phi^N_{k}[\vartheta_{k+1}]\right)^{-1}\phi^N_{k}\left[\Upsilon_k\right] \eqsp,
 \]
 where
 \[
-\Upsilon_k(x_k) = \int q_{\theta}^{\Delta t_{k+1}}(\cdot,x)g_{k+1}(x)\left(\tau_k(x_k) + h_{k+1}(x_k,x) - \phi_{k+1}\left[T_{k+1}h_{k+1}\right]\right)\rmd x\eqsp.
+\Upsilon_k(x_k) = \int q_{k}(\cdot,x)g_{k+1}(x)\left(\tau_k(x_k) + h_{k+1}(x_k,x) - \phi_{k+1}\left[T_{k+1}[h_{k+1}]\right]\right)\rmd x\eqsp.
 \]
-By \cite[Lemma~11]{olsson:westerborn:2016}, $\phi_{k}\left[\Upsilon_k\right] = 0$ which implies by Proposition~\ref{prop:filter} that 
+By \cite[Lemma~11]{olsson:westerborn:2016}, $\phi_{k}\left[\Upsilon_k\right] = 0$ which implies by the induction assumption that 
 \[
 \mathbb{P}\left(\left|\mathbb{E}\left[a_N\middle|\mathcal{F}_k^{N}\right]\right|\ge \varepsilon\right)\le b_k\exp\left(-c_kN\varepsilon^2\right)\eqsp.
 \]
@@ -408,32 +412,19 @@ Then,
 \mathbb{P}\left(\left|a_N\right|\ge \varepsilon\right) \le b_k\exp\left(-c_kN\varepsilon^2\right)\eqsp.
 \] 
 Similarly, as $b_N \le |\widehat{\omega}_k|_{\infty}$, by Hoeffding inequality,
-\[
-\mathbb{P}\left(\left|b_N - \mathbb{E}\left[b_N\middle|\mathcal{F}_k^{N}\right]\right|\ge \varepsilon\right) = \mathbb{E}\left[\mathbb{P}\left(\left|b_N - \mathbb{E}\left[b_N\middle|\mathcal{F}_k^{N}\right]\right|\ge \varepsilon\middle|\mathcal{F}_k^{N}\right)\right]\le 2\exp\left(-c_kN\varepsilon^2\right)\eqsp.
-\] 
+\begin{multline*}
+\mathbb{P}\left(\left|b_N - \mathbb{E}\left[b_N\middle|\mathcal{F}_k^{N}\right]\right|\ge \varepsilon\right) \\
+= \mathbb{E}\left[\mathbb{P}\left(\left|b_N - \mathbb{E}\left[b_N\middle|\mathcal{F}_k^{N}\right]\right|\ge \varepsilon\middle|\mathcal{F}_k^{N}\right)\right]\le 2\exp\left(-c_kN\varepsilon^2\right)\eqsp.
+\end{multline*}
 Note that
 \[
-\mathbb{E}\left[b_N\middle|\mathcal{F}_k^{N}\right] = \phi^N_{k}\left[\int q_{\theta}^{\Delta t_{k+1}}(\cdot,x)g_{k+1}(x)\rmd x\right]\eqsp.%\left(\phi^N_{k}[\vartheta_{k+1}]\right)^{-1}
+\mathbb{E}\left[b_N\middle|\mathcal{F}_k^{N}\right] = \phi^N_{k}\left[\int q_{k}(\cdot,x)g_{k+1}(x)\rmd x\right]\eqsp.
 \]
-By Proposition~\ref{prop:filter},
+By  the induction assumption,
 \[
-\mathbb{P}\left(\left|\mathbb{E}\left[b_N\middle|\mathcal{F}_k^{N}\right]-\phi_k\left[\int q_{\theta}^{\Delta t_{k+1}}(\cdot,x)g_{k+1}(x)\rmd x\right]\right|\ge \varepsilon\right)\le b_k\exp\left(-c_kN\varepsilon^2\right)\eqsp.
+\mathbb{P}\left(\left|\mathbb{E}\left[b_N\middle|\mathcal{F}_k^{N}\right]-\phi_k\left[\int q_{k}(\cdot,x)g_{k+1}(x)\rmd x\right]\right|\ge \varepsilon\right)\le b_k\exp\left(-c_kN\varepsilon^2\right)\eqsp.
 \]
 The proof is completed using Lemma~\ref{lem:hoeffding:ratio}.
-\end{proof}
-
-\begin{proposition}
-\label{prop:filter}
-Assume that H\ref{assum:boundmodel} and H\ref{assum:boundalgo} hold. Then, for all $0\le k\le n$,
-there exist $b_k, c_k>0$ such that for all $N\ge 1$, all $\varepsilon > 0$, and all measurable function $h$ on $\mathsf{X}$,
-\begin{equation*}
-\mathbb{P}\left( \left|\phi_k^N[h] - \phi_k\left[h\right]\right| \geq \varepsilon \right) \leq b_k \mathrm{exp}\left(-c_k N \epsilon^2\right)\eqsp.
-\end{equation*}
-\end{proposition}
-
-\begin{proof}
-\textcolor{red}{On l'ecrit peut-etre... }
-The proof is a straightforward extension of \cite{douc:garivier:moulines:olsson:2011}. 
 \end{proof}
 
 \begin{lemma}\label{lem:hoeffding:ratio}
@@ -457,75 +448,71 @@ See \cite{douc:garivier:moulines:olsson:2011}.
 
 \section{Numerical experiments}
 \label{sec:exp}
-This section investigates the performance of the proposed algorithm. The different tuning parameters are:
-\begin{enumerate}[i)]
-\item the number of particles $N$ and the precision parameter $\widetilde{N}$;
-\item the proposal transition density $p_k$ and the adjustment multiplier $\vartheta_k$ used to propagate and weight particles;
-\item the discrete distribution $\mu$ used to define $\widetilde{q}_{\theta}^{\Delta t_k}$;
-\item the number of samples to compute $\widetilde{q}_{\theta}^{\Delta t_k}$.
-\end{enumerate}
-The performance of the algorithm is investigated on two known models based on diffusion process.
-\subsection*{The SINE model} 
-The algorithm is compared to the fixed-lag particle smoother of \cite{olsson:strojby:2011}. To complete the numerical analysis, the impact of the bridge process used to estimate $q_{\theta}^{\Delta t_k}$ is also illustrated. Instead of the Ozaki discretization, the following bridges process are considered:
-\begin{enumerate}[i)]
-\item a bridge with constant drift as proposed in \cite{giesecke:schwenkler:2016}.
-\item a guided bridge process, see \cite{}.
-\end{enumerate}
-\paragraph{Choice of $\mu$}
-A simple choice is to set $\mu$ as a Poisson distribution with mean $\Lambda_{\theta}t$ leading to the first estimator GPE-1:
-\begin{multline*}
-q^{t}_{\mathrm{GPE-1},\theta}(\kappa,\omega,(U_j)_{1\le j\le \kappa},x,y) =  \widetilde{q}^{t}_{\theta}(x,y)\eqsp\mathrm{exp}\left\{H_{\theta}(y) - H_{\theta}(x)+\ell(\theta)t\right\}\Lambda_{\theta}^{-\kappa}\\
-\times \prod_{j=1}^{\kappa}\left(\Lambda_{\theta}-\phi_{\theta}(\omega_{U_j})\right)\eqsp.
-\end{multline*}
+%This section investigates the performance of the proposed algorithm. The different tuning parameters are:
+%\begin{enumerate}[i)]
+%\item the number of particles $N$ and the precision parameter $\widetilde{N}$;
+%\item the proposal transition density $p_k$ and the adjustment multiplier $\vartheta_k$ used to propagate and weight particles;
+%\item the discrete distribution $\mu$ used to define $\widetilde{q}_{\theta}^{\Delta t_k}$;
+%\item the number of samples to compute $\widetilde{q}_{\theta}^{\Delta t_k}$.
+%\end{enumerate}
+%The performance of the algorithm is investigated on two known models based on diffusion process.
+
+
+\subsection*{Sine model} 
+The algorithm is compared to the fixed-lag particle smoother of \cite{olsson:strojby:2011}. 
+
+%To complete the numerical analysis, the impact of the bridge process used to estimate $q_{\theta}^{\Delta t_k}$ is also illustrated. Instead of the Ozaki discretization, the following bridges process are considered:
+%\begin{enumerate}[i)]
+%\item a bridge with constant drift as proposed in \cite{giesecke:schwenkler:2016}.
+%\item a guided bridge process, see \cite{}.
+%\end{enumerate}
+%\paragraph{Choice of $\mu$}
+%A simple choice is to set $\mu$ as a Poisson distribution with mean $\Lambda_{\theta}t$ leading to the first estimator GPE-1:
+%\begin{multline*}
+%q^{t}_{\mathrm{GPE-1},\theta}(\kappa,\omega,(U_j)_{1\le j\le \kappa},x,y) =  \widetilde{q}^{t}_{\theta}(x,y)\eqsp\mathrm{exp}\left\{H_{\theta}(y) - H_{\theta}(x)+\ell(\theta)t\right\}\Lambda_{\theta}^{-\kappa}\\
+%\times \prod_{j=1}^{\kappa}\left(\Lambda_{\theta}-\phi_{\theta}(\omega_{U_j})\right)\eqsp.
+%\end{multline*}
+
 % An important feature of this estimator is that under the assumptions of this section it may be bounded uniformly in $x,y$, $\sup_{x,y\in\mathbb{R}^d}  q^{t}_{\mathrm{GPE-1},\theta}(\kappa,\omega,(U_j)_{1\le j\le \kappa},x,y) \le M_\theta$ where:
 % \[
 % M_{\theta} = \sup_{x,y\in\mathbb{R}^d} \left(\widetilde{q}^{t}_{\theta}(x,y)\mathrm{exp}\left\{ H_{\theta}(y) - H_{\theta}(x)\right\}\right)\mathrm{exp}\left\{\ell(\theta)t\right\}\eqsp.
 % \]
-\paragraph{Choice of bridge process}
-The approximation of $q_{\theta}^{\Delta t_k}$ described in the paper may be compared to the approximation provided by other bridges with affine drift functions. Following \cite{}, let $(Y^{\beta}_t)_{t_{k-1}\le t\le t_k}$ be governed by the following stochastic differential equation for $t_{k-1}\le t\le t_k$:
-\[
-Y^{\beta}_{t_{k-1}} = X_{k-1}\quad\mbox{and}\quad\rmd Y^{\beta}_t = \beta\rmd t + \rmd W_t\eqsp.
-\]
-As suggestd by \cite{}, a guided process between $t_{k-1}$ and $t_k$ may alo be used:
-\[
-Y^{\mathsf{guid}}_{t_{k-1}} = X_{k-1}\quad\mbox{and}\quad\rmd Y^{\mathsf{guid}}_t = \frac{X_k - Y^{\mathsf{guid}}_t}{t_k-t}\rmd t + \rmd W_t\eqsp.
-\]
-Both processes lead to estimators of $q_{\theta}^{\Delta t_k}$ following the same steps as in Section~\ref{}.
-\subsection*{The Log-growth model}
-We now focus on a second well known model in population dynamics, the log-growth model, also used as example in \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006} and \cite{olsson:westerborn:2016}, defined by:
+%
+%\paragraph{Choice of bridge process}
+%The approximation of $q_{\theta}^{\Delta t_k}$ described in the paper may be compared to the approximation provided by other bridges with affine drift functions. Following \cite{}, let $(Y^{\beta}_t)_{t_{k-1}\le t\le t_k}$ be governed by the following stochastic differential equation for $t_{k-1}\le t\le t_k$:
+%\[
+%Y^{\beta}_{t_{k-1}} = X_{k-1}\quad\mbox{and}\quad\rmd Y^{\beta}_t = \beta\rmd t + \rmd W_t\eqsp.
+%\]
+%As suggestd by \cite{}, a guided process between $t_{k-1}$ and $t_k$ may alo be used:
+%\[
+%Y^{\mathsf{guid}}_{t_{k-1}} = X_{k-1}\quad\mbox{and}\quad\rmd Y^{\mathsf{guid}}_t = \frac{X_k - Y^{\mathsf{guid}}_t}{t_k-t}\rmd t + \rmd W_t\eqsp.
+%\]
+%Both processes lead to estimators of $q_{\theta}^{\Delta t_k}$ following the same steps as in Section~\ref{}.
+\subsection*{Log-growth model}
+Following \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006} and \cite{olsson:westerborn:2016}, the performance of the proposed algorithm are also illustrated with the log-growth model defined by:
 \begin{equation}
-\rmd Z_t = \kappa Z_t\left(1-\frac{Z_t}{\gamma}\right)\rmd t + \sigma Z_t \rmd W_t,~~Z_0=Z_0. \label{eq:LG:SDE}
+\rmd Z_t = \kappa Z_t\left(1-\frac{Z_t}{\gamma}\right)\rmd t + \sigma Z_t \rmd W_t,~~Z_0=z_0. \label{eq:LG:SDE}
 \end{equation}
-In order to use Exact algorithms of \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006} and GPE used in \cite{fearnhead:papaspiliopoulos:roberts:2008}, we focus on the version of \eqref{eq:LG:SDE} after the Lamperti transform, i.e., we define $X_t=\eta(Z_t)$, with $\eta(z) := -\log (z)/\sigma$, in this case, $(X_t)_{t\geq 0}$ satisfies the following SDE:
+In order to use the exact algorithms of \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006} and the GPE of \cite{fearnhead:papaspiliopoulos:roberts:2008}, we consider  \eqref{eq:LG:SDE} after the Lamperti transform, i.e., the process defined by $X_t=\eta(Z_t)$, with $\eta(z) := -\log (z)/\sigma$,  which satisfies the following SDE:
 \begin{equation}
-\rmd X_t = \overbrace{\left( \frac{\sigma}{2} -  \frac{\kappa}{\sigma} + \frac{\kappa}{\gamma\sigma}\exp\left(-\sigma X_t\right)\right)}^{:=\alpha(X_t)}\rmd t +\rmd W_t,~~X_0=X_0.\label{eq:Lamp:LG}
+\rmd X_t = \overbrace{\left( \frac{\sigma}{2} -  \frac{\kappa}{\sigma} + \frac{\kappa}{\gamma\sigma}\exp\left(-\sigma X_t\right)\right)}^{:=\alpha(X_t)}\rmd t +\rmd W_t,~~X_0=x_0=\eta(z_0).\label{eq:Lamp:LG}
 \end{equation}
-In this case, the conditions of the EA2 defined in \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006} are satisfied, as:
+In this case, the conditions of the Exact Algorithm~2 defined in \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006} are satisfied, as for any $m \in \mathbb{R}$ there exists $\mathsf{U}(m)$ such that for all $x\ge m$, $\psi(x):=\alpha^2(x)+\alpha'(x) \leq \mathsf{U}_m$. Moreover, $\psi$ is lower bounded uniformly by  $\mathsf{L}$.  Then, GPE estimators may be computed by simulating a the minimum of a OU bridge, and simulating OU bridges conditionally to this minimum.  However, to the best of our knowledge, no general techniques exist to do so.  We therefore apply the proposed algorithm, but with a GPE estimator computed with Bessel bridges, as proposed by \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006}.
+
+The process solution to \eqref{eq:Lamp:LG} is observed regularly at times $t_0=0,\dots,t_{50}=100$ through the observation process $(Y_k)_{0\le k\le 50}$ defined as:
 \begin{equation}
-\forall m \in \mathbb{R}, \exists~\mathsf{U}(m)~\vert~\forall x\geq m, \psi(x):=\alpha^2(x)+\alpha'(x) \leq \mathsf{U}_m.
+Y_k = X_k + \varepsilon_k\label{eq:obs:LG}\eqsp,
 \end{equation}
-Moreover, there exists $\mathsf{L}$ such that $\forall x, \psi(x):=\alpha^2(x)+\alpha'(x)\geq \mathsf{L}$. 
-Then, GPE estimators could be computed by simulating a the minimum of a OU bridge, and simulating OU bridges conditionnaly to this minimum. 
-However, to the best of our knowledge, no general techniques exist to do so. 
-We therefore apply the proposed algorithm, but with a GPE estimator computed with Bessel bridges, as proposed by \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006}.\\
-The process solution of \eqref{eq:Lamp:LG} is observed regularly at times $t_0=0,\dots,t_{50}=100$ through the observation process $(Y_k)_{k= 0,\dots,50}$:
-\begin{equation}
-Y_k = X_k + \varepsilon_k,~~\varepsilon \overset{i.i.d}{\sim} \mathcal{N}(0,\sigma^2_{obs})\label{eq:obs:LG}
-\end{equation}
-In the example presented here, we fixed the set of  parameter $$\theta_{true} =(\kappa=0.1,\sigma=0.1,\gamma=1000,\sigma^2_{obs}=4).$$\\
-In order to evaluate the performance of the algorithm presented here, we compare the estimation of the EM intermediate quantity with the one obtained by the fixed lag method, for different values of the lag (namely, 1,2,5,10,50). 
-We therefore compute the particle approximation of $\mathcal{Q}(\theta_{true},\theta_{true})$ for a set of observations presented on Figure \ref{fig:obs:LG}.\\ 
-This estimation is performed 300 times, using $N=400$ particles, with $\tilde{N}=2$, and 30 replications for the Monte Carlo approximation of each $q(\xi_k,\xi_{k+1})$. 
-Moreover, in the computation of the E step, the corresponding $h_k$ function of equation \eqref{def:addfunc} requires the computation of $\log\left(q(\xi_k,\xi_{k+1})\right)$. 
-This quantity is approximated independently from other approximations, using the unbiased estimator proposed in \cite{olsson:strojby:2011} (Appendix B). 
-Again, 30 Monte Carlo approximations are used to compute each estimation.\\ In order to obtain a reference value, the same estimation is performed 30 times using $N=10000$ particles (using the proposed algorithm), the reference value is then computed as the arithmetic mean of these 30 estimations. 
-The resulting estimates are presented on Figure \ref{fig:res:LG}.\\
-The results for the fixed lag technique are in conformity with the ones presented in \cite{olsson:strojby:2011} (Figure 1). 
-Indeed, for small lags, athe variance of estimates is small, but showing a bias. 
-The bias rapidly decreases as the lag increases, together with a  rapidly increasing variance. 
-The PaRIS algorithm for diffusion process presented results in an unbiased estimator, as expected, and show a small variance (lower than the variance for the fixed lag when the lag is one, therefore showing the best results on the presented example. 
-It is worth noting here that, as pointed out in \cite{olsson:strojby:2011}, results of the fixed lag technique indicates a quite strong forgetting in the model, and the choice of the lag should take into account this forgetting property. 
-As the PaRIS algorithm is always unbiased, there is no need to consider the forgetting property of a given model in the approximation of the EM intermediate quantity. 
+where the $(\varepsilon_k)_{0\le k \le 50}$ are i.i.d. $ \mathcal{N}(0,\sigma^2_{obs})$.
+The parameters are given by $$\theta =(\kappa=0.1,\sigma=0.1,\gamma=1000,\sigma^2_{obs}=4)\eqsp.$$
+In order to evaluate the performance of our algorithm, we compare the estimation of the EM intermediate quantity with the one obtained by the fixed lag method, for different values of the lag (namely, 1,2,5,10,50). We therefore compute the particle approximation of $\mathcal{Q}(\theta,\theta)$ for a sampled set of observations displayed in Figure~\ref{fig:obs:LG}.
+This estimation is performed 300 times, using $N=400$ particles, with $\tilde{N}=2$, and $M=30$ replications for the Monte Carlo approximation of each $q_k$.  Moreover, the E step boils down to the computation of a quantity such as \eqref{def:addfunc} with $h_k= \log g_k + \log q_k$.  $\log q_k$ is not available explicitly and is approximated using the unbiased estimator proposed in \cite{olsson:strojby:2011} (Appendix B) based on 30 independent Monte Carlo simulations.
+
+
+The intermediate quantity of the EM algorithm is also estimated with our algorithm 30 times using $N=10000$ particles, the reference value is then computed as the arithmetic mean of these 30 estimations, see Figure \ref{fig:res:LG}.
+The results for the fixed lag technique are similar to the ones presented in \cite{olsson:strojby:2011} (Figure 1). For small lags, the variance of the estimates is small, but the estimation is highly biased. The bias rapidly decreases as the lag increases, together with a  great variance increase.  The PaRIS algorithm outperforms the fixed lag smoother as it shows  a similar (vanishing) bias as the fixed lag for the largest lag and a smaller variance than the variance of the fixed lag when the lag is one. 
+%It is worth noting here that, as pointed out in \cite{olsson:strojby:2011}, results of the fixed lag technique indicates a quite strong forgetting in the model, and the choice of the lag should take into account this forgetting property. 
+%As the PaRIS algorithm is always unbiased, there is no need to consider the forgetting property of a given model in the approximation of the EM intermediate quantity. 
 \begin{figure}[p]
 \centering
 \includegraphics[width=0.8\textwidth]{obs}
@@ -616,19 +603,22 @@ which concludes the proof.
 %$$u \leq \frac{\hat{q}_k(\xi_k^\ell,\xi_{k+1},z)}{\sigma_+},$$
 %set $x=\ell$. \textbf{Else}, return to 1).
 %\end{enumerate}
-The lemma \ref{lem:AR:unbiased} states that $x$ is a realisation of a random variable $X\sim p_X$. Indeed
-\begin{align*}
-\mP\left(Y=\ell\vert U\leq \frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\right)&=\frac{\mP\left(U\leq \frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\vert Y=l \right) \mathbb{P}(Y=\ell)}{\mP\left(U\leq \frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\right)}\\
-&=\frac{\mP\left(U\leq \frac{\hat{q}_k(\xi_k^\ell,\xi_{k+1},\zeta)}{\sigma_+} \right) \omega_k^\ell}{\mP\left(U\leq \frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\right)}
-\intertext{We now note that}
-\mP\left(U\leq \frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\right)&=\E_{p_\zeta}\left[\E\left[\E_{p_Y}\left[\E\left[\mP\left(U\leq \frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\right) \vert Y\right] \right] \vert \zeta\right]\right]\\
-&=\E_{p_\zeta}\left[\sum_{\ell=1}^N w_k^l\frac{\hat{q}_k(\xi_k^\ell,\xi_{k+1},\zeta)}{\sigma_+} \right]~~(\text{As }\frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\leq 1)\\
-&=\frac{1}{\sigma_+}\sum_{\ell=1}^N w_k^\ell q_k(\xi_k^\ell,\xi_{k+1})
-\intertext{In the same way, we have:}
-\mP\left(U\leq \frac{\hat{q}_k(\xi_k^\ell,\xi_{k+1},\zeta)}{\sigma_+}\right)&=\frac{1}{\sigma_+} q_k(\xi_k^\ell,\xi_{k+1})
-\intertext{Which gives overall the wanted result}
-\mP\left(Y=\ell\vert U\leq \frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\right)&=\frac{\omega_k^\ell q_k(\xi_k^\ell,\xi_{k+1})}{\sum_{l=1}^N w_k^\ell q_k(\xi_k^\ell,\xi_{k+1})}=p_X(\ell),~~\ell\in \{1,\dots,N\}
-\end{align*}
+
+
+
+%The lemma \ref{lem:AR:unbiased} states that $x$ is a realisation of a random variable $X\sim p_X$. Indeed
+%\begin{align*}
+%\mP\left(Y=\ell\vert U\leq \frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\right)&=\frac{\mP\left(U\leq \frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\vert Y=l \right) \mathbb{P}(Y=\ell)}{\mP\left(U\leq \frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\right)}\\
+%&=\frac{\mP\left(U\leq \frac{\hat{q}_k(\xi_k^\ell,\xi_{k+1},\zeta)}{\sigma_+} \right) \omega_k^\ell}{\mP\left(U\leq \frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\right)}
+%\intertext{We now note that}
+%\mP\left(U\leq \frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\right)&=\E_{p_\zeta}\left[\E\left[\E_{p_Y}\left[\E\left[\mP\left(U\leq \frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\right) \vert Y\right] \right] \vert \zeta\right]\right]\\
+%&=\E_{p_\zeta}\left[\sum_{\ell=1}^N w_k^l\frac{\hat{q}_k(\xi_k^\ell,\xi_{k+1},\zeta)}{\sigma_+} \right]~~(\text{As }\frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\leq 1)\\
+%&=\frac{1}{\sigma_+}\sum_{\ell=1}^N w_k^\ell q_k(\xi_k^\ell,\xi_{k+1})
+%\intertext{In the same way, we have:}
+%\mP\left(U\leq \frac{\hat{q}_k(\xi_k^\ell,\xi_{k+1},\zeta)}{\sigma_+}\right)&=\frac{1}{\sigma_+} q_k(\xi_k^\ell,\xi_{k+1})
+%\intertext{Which gives overall the wanted result}
+%\mP\left(Y=\ell\vert U\leq \frac{\hat{q}_k(\xi_k^Y,\xi_{k+1},\zeta)}{\sigma_+}\right)&=\frac{\omega_k^\ell q_k(\xi_k^\ell,\xi_{k+1})}{\sum_{l=1}^N w_k^\ell q_k(\xi_k^\ell,\xi_{k+1})}=p_X(\ell),~~\ell\in \{1,\dots,N\}
+%\end{align*}
 %\end{proof}
 \end{proof}
 \begin{proof}[Proof of Lemma \ref{lem:iid}]
