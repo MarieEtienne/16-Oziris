@@ -575,11 +575,11 @@ Let $h$ be a function defined on $\{1,\ldots,N\}$,
 \begin{align*}
 \mathbb{E}\left[h(J^{i,j}_k)\middle| \mathcal{F}_k^N\right] & = \sum_{m\ge 1}\mathbb{E}\left[h(I_m)\1_{\tau=m}\middle| \mathcal{F}_k^N\right]\eqsp,\\
 & = \sum_{m\ge 1}h(m)\left(\prod_{\ell=1}^{m-1}\mathbb{E}\left[\1_{(\mathcal{A}^k_{\ell})^c}\middle| \mathcal{F}_k^N\right]\right)\mathbb{E}\left[h(I_m)\1_{\mathcal{A}^k_{m}}\middle| \mathcal{F}_k^N\right]\eqsp,\\
-& = \sum_{m\ge 1}\left(\prod_{\ell=1}^{m-1}\mathbb{E}\left[1-\frac{\widehat{q}^{\Delta t_k}(\xi_{k-1}^{I_\ell},\xi_k^{i},\Lambda_{\ell})}{\sigma_{+}}\middle| \mathcal{F}_k^N\right]\right)\\
-&\hspace{5cm}\times\mathbb{E}\left[h(I_m)\frac{\widehat{q}^{\Delta t_k}(\xi_{k-1}^{I_m},\xi_k^{i},\Lambda_{\ell})}{\sigma_{+}}\middle| \mathcal{F}_k^N\right]\eqsp,\\
-& = \sum_{m\ge 1}\left(\mathbb{E}\left[1-\frac{q^{\Delta t_k}_{\theta}(\xi_{k-1}^{I_1},\xi_k^{1})}{\sigma_{+}}\middle| \mathcal{F}_k^N\right]\right)^{m-1}\mathbb{E}\left[h(I_m)\frac{q^{\Delta t_k}_{\theta}(\xi_{k-1}^{I_m},\xi_k^{1})}{\sigma_{+}}\middle| \mathcal{F}_k^N\right]\eqsp,\\
-& = \mathbb{E}\left[h(I_1)q^{\Delta t_k}_{\theta}(\xi_{k-1}^{I_1},\xi_k^{i})\middle| \mathcal{F}_k^N\right]/\mathbb{E}\left[q^{\Delta t_k}_{\theta}(\xi_{k-1}^{I_m},\xi_k^{i})\middle| \mathcal{F}_k^N\right]\eqsp,\\
-& = \sum_{\ell=1}^N \frac{h(\ell)\omega_{k-1}^{\ell}q^{\Delta t_k}_{\theta}(\xi_{k-1}^{\ell},\xi_k^{i})}{\sum_{m=1}^N\omega_{k-1}^{m}q^{\Delta t_k}_{\theta}(\xi_{k-1}^{m},\xi_k^{i})}\eqsp,\\
+& = \sum_{m\ge 1}\left(\prod_{\ell=1}^{m-1}\mathbb{E}\left[1-\frac{\widehat{q_k}(\xi_{k-1}^{I_\ell},\xi_k^{i};\zeta_{\ell})}{\sigma_{+}}\middle| \mathcal{F}_k^N\right]\right)\\
+&\hspace{5cm}\times\mathbb{E}\left[h(I_m)\frac{\widehat{q_k}(\xi_{k-1}^{I_m},\xi_k^{i};\zeta_{\ell})}{\sigma_{+}}\middle| \mathcal{F}_k^N\right]\eqsp,\\
+& = \sum_{m\ge 1}\left(\mathbb{E}\left[1-\frac{q_k(\xi_{k-1}^{I_1},\xi_k^{1})}{\sigma_{+}}\middle| \mathcal{F}_k^N\right]\right)^{m-1}\mathbb{E}\left[h(I_m)\frac{q_k(\xi_{k-1}^{I_m},\xi_k^{1})}{\sigma_{+}}\middle| \mathcal{F}_k^N\right]\eqsp,\\
+& = \mathbb{E}\left[h(I_1)q_k(\xi_{k-1}^{I_1},\xi_k^{i})\middle| \mathcal{F}_k^N\right]/\mathbb{E}\left[q_k(\xi_{k-1}^{I_m},\xi_k^{i})\middle| \mathcal{F}_k^N\right]\eqsp,\\
+& = \sum_{\ell=1}^N \frac{h(\ell)\omega_{k-1}^{\ell}q_k(\xi_{k-1}^{\ell},\xi_k^{i})}{\sum_{m=1}^N\omega_{k-1}^{m}q_k(\xi_{k-1}^{m},\xi_k^{i})}\eqsp,\\
 &= \sum_{\ell=1}^N \Lambda_{k-1}^N(i,\ell)h(\ell) \eqsp,
 \end{align*}
 which concludes the proof.
@@ -622,10 +622,9 @@ which concludes the proof.
 %\end{proof}
 \end{proof}
 \begin{proof}[Proof of Lemma \ref{lem:iid}]
-The independence is ensured by the mechanism of SMC methods.\\
-By \eqref{eq:random:weight},
+The independence is ensured by the mechanism of SMC methods. By \eqref{eq:random:weight},
 \[
-\mathbb{E}\left[\tilde{\omega}^i_{k+1}\tau^{i}_{k+1}\middle| \mathcal{F}_k^{N}\right] = \mathbb{E}\left[\frac{M^{-1}\sum_{m=1}^M \widehat{\qk}(\xi_{k}^{I^{i}_{k+1}}, \xi^{i}_{k+1};\zeta^m_{k+1})g_{k+1}(\xi^{i}_{k+1})}{\vartheta_{k+1}(\xi^{I^{i}_{k+1}}_{k}) p_{k+1}(\xi_{k}^{I^{i}_{k+1}},\xi^{i}_{k+1})}\tau^{i}_{k+1}\middle| \mathcal{F}_k^{N}\right]\eqsp.
+\mathbb{E}\left[\widehat{\omega}^i_{k+1}\tau^{i}_{k+1}\middle| \mathcal{F}_k^{N}\right] = \mathbb{E}\left[\frac{M^{-1}\sum_{m=1}^M \widehat{\qk}(\xi_{k}^{I^{i}_{k+1}}, \xi^{i}_{k+1};\zeta^m_{k+1})g_{k+1}(\xi^{i}_{k+1})}{\vartheta_{k+1}(\xi^{I^{i}_{k+1}}_{k}) p_{k+1}(\xi_{k}^{I^{i}_{k+1}},\xi^{i}_{k+1})}\tau^{i}_{k+1}\middle| \mathcal{F}_k^{N}\right]\eqsp.
 %&= \mathbb{E}\left[\frac{g_{k+1}(\xi^{1}_{k+1})}{\vartheta_{k+1}(\xi^{I^{1}_{k+1}}_{k}) p_{k+1}(\xi_{k}^{I^{1}_{k+1}},\xi^{\ell}_{k+1})}\tau^{1}_{k+1}\widehat{q}_{\theta}^{\Delta t_{k+1}}(\xi_{k}^{I^{1}_{k+1}},\xi^{1}_{k+1};\Lambda_{k+1})\middle| \mathcal{F}_k^{N}\right]\eqsp,
 \]
 Note that
@@ -640,16 +639,16 @@ Since $\tau^{i}_{k+1}$ and $\{\zeta^m_{k+1}\}_{i=1}^M$ are independent condition
 \mathbb{E}\left[\tau^{i}_{k+1}M^{-1}\sum_{m=1}^M \widehat{\qk} (\xi_{k}^{I^{i}_{k+1}},\xi^{i}_{k+1};\zeta^m_{k+1})\middle|\sigma\left(\mathcal{F}_k^{N},\{\xi_{k+1}^i,I_{k+1}^i\} \right)\right]\\
  = q_k(\xi_{k}^{I^{i}_{k+1}},\xi^{i}_{k+1})\sum_{\ell=1}^N\frac{\omega_k^{\ell} \qk (\xi_{k}^{\ell},\xi^{i}_{k+1})\left(\tau^{\ell}_k + h_{k}(\xi_{k}^{\ell},\xi^{i}_{k+1})\right)}{\sum_{\ell'=1}^N\omega_k^{\ell'} \qk (\xi_{k}^{\ell'},\xi^{i}_{k+1})}\eqsp.
 \end{multline*}
-Moreover, The p.d.f. of the couple $(\xi_{k+1}^i,I_{k+1}^i)\vert \mathcal{F}_k^N$ is given by
-\begin{align*}
-p(x,j) &= \frac{\omega_k^j\vartheta_{k+1}(\xi_k^j)p_k(\xi_k^j,x)}{\sum_{l=1}^N\int \omega_k^l\vartheta_{k+1}(\xi_k^l)p_k(\xi_k^l,y)\rmd y}=\frac{\omega_k^j\vartheta_{k+1}(\xi_k^j)p_k(\xi_k^j,x)}{\phi_k^N[\vartheta_{k+1}]}
-\end{align*}
+Moreover, conditionally to $\mathcal{F}_k^N$, the probability density function of $(\xi_{k+1}^i,I_{k+1}^i)$ is given by
+\[
+(x,j) \mapsto \frac{\omega_k^j\vartheta_{k+1}(\xi_k^j)p_k(\xi_k^j,x)}{\Omega_k\phi_k^N[\vartheta_{k+1}]}\eqsp.
+\]
 Therefore, this yields:
 \begin{align*}
-\mathbb{E}\left[\tilde{\omega}^i_{k+1}\tau^{i}_{k+1}\middle| \mathcal{F}_k^{N}\right]&= \left(\phi^N_{k}[\vartheta_{k+1}]\right)^{-1} \sum_{j=1}^N\omega_k^j \int \vartheta_{k+1}(\xi^{j}_{k})\frac{\qk(\xi_{k}^{j},x) g_{k+1}(x)}{\vartheta_{k+1}(\xi^{j}_{k}) p_{k}(\xi_{k}^{j},x)}\\
+\mathbb{E}\left[\widehat{\omega}^i_{k+1}\tau^{i}_{k+1}\middle| \mathcal{F}_k^{N}\right]&= \left(\phi^N_{k}[\vartheta_{k+1}]\right)^{-1} \sum_{j=1}^N\frac{\omega_k^j}{\Omega_k} \int \vartheta_{k+1}(\xi^{j}_{k})\frac{\qk(\xi_{k}^{j},x) g_{k+1}(x)}{\vartheta_{k+1}(\xi^{j}_{k}) p_{k}(\xi_{k}^{j},x)}\\
 &\hspace{1cm}\times \sum_{\ell=1}^N\frac{\omega_k^{\ell} \qk (\xi_{k}^{\ell},x)\left(\tau^{\ell}_k + h_{k}(\xi_{k}^{\ell},x)\right)}{\sum_{\ell'=1}^N\omega_k^{\ell'}\qk(\xi_{k}^{\ell'},x)}p_{k}(\xi_{k}^{j},x)\rmd x\eqsp,\\
 &= \left(\phi^N_{k}[\vartheta_{k+1}]\right)^{-1}\\
-&~~~~\times\sum_{\ell=1}^N \omega_k^\ell\left[\int \frac{ \sum_{j=1}^N \omega_k^j\qk(\xi_k^j,x) }{ \sum_{\ell'=1}^N\omega_k^{\ell'}\qk(\xi_{k}^{\ell'},x) } g_{k+1}(x)\qk (\xi_{k}^{\ell},x)\left(\tau^{\ell}_k + h_{k}(\xi_{k}^{\ell},x)\right) \rmd x \right]\\ 
+&~~~~\times\sum_{\ell=1}^N \frac{\omega_k^\ell}{\Omega_k}\left[\int \frac{ \sum_{j=1}^N \omega_k^j\qk(\xi_k^j,x) }{ \sum_{\ell'=1}^N\omega_k^{\ell'}\qk(\xi_{k}^{\ell'},x) } g_{k+1}(x)\qk (\xi_{k}^{\ell},x)\left(\tau^{\ell}_k + h_{k}(\xi_{k}^{\ell},x)\right) \rmd x \right]\\ 
 & =\left(\phi^N_{k}[\vartheta_{k+1}]\right)^{-1}\phi^N_{k}\left[\int \qk(\cdot,x)g_{k+1}(x)\left\{\tau_k(\cdot) + h_{k}(\cdot,x)\right\}\rmd x\right]\eqsp,
 \end{align*}
 which concludes the proof.
