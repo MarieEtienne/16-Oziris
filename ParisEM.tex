@@ -663,19 +663,19 @@ which concludes the proof.
 \begin{proof}[Proof of Lemma \ref{lem:iid}]
 The independence is ensured by the mechanism of SMC methods. By \eqref{eq:random:weight},
 \[
-\mathbb{E}\left[\widehat{\omega}^i_{k+1}\tau^{i}_{k+1}\middle| \mathcal{F}_k^{N}\right] = \mathbb{E}\left[\frac{M^{-1}\sum_{m=1}^M \widehat{\qk}(\xi_{k}^{I^{i}_{k+1}}, \xi^{i}_{k+1};\zeta^m_{k+1})g_{k+1}(\xi^{i}_{k+1})}{\vartheta_{k+1}(\xi^{I^{i}_{k+1}}_{k}) p_{k+1}(\xi_{k}^{I^{i}_{k+1}},\xi^{i}_{k+1})}\tau^{i}_{k+1}\middle| \mathcal{F}_k^{N}\right]\eqsp.
+\mathbb{E}\left[\widehat{\omega}^i_{k+1}\tau^{i}_{k+1}\middle| \mathcal{F}_k^{N}\right] = \mathbb{E}\left[\frac{ \widehat{\qk}(\xi_{k}^{I^{i}_{k+1}}, \xi^{i}_{k+1};\zeta_{k+1})g_{k+1}(\xi^{i}_{k+1})}{\vartheta_{k+1}(\xi^{I^{i}_{k+1}}_{k}) p_{k+1}(\xi_{k}^{I^{i}_{k+1}},\xi^{i}_{k+1})}\tau^{i}_{k+1}\middle| \mathcal{F}_k^{N}\right]\eqsp.
 %&= \mathbb{E}\left[\frac{g_{k+1}(\xi^{1}_{k+1})}{\vartheta_{k+1}(\xi^{I^{1}_{k+1}}_{k}) p_{k+1}(\xi_{k}^{I^{1}_{k+1}},\xi^{\ell}_{k+1})}\tau^{1}_{k+1}\widehat{q}_{\theta}^{\Delta t_{k+1}}(\xi_{k}^{I^{1}_{k+1}},\xi^{1}_{k+1};\Lambda_{k+1})\middle| \mathcal{F}_k^{N}\right]\eqsp,
 \]
 Note that
 \begin{align*}
 &\mathbb{E}\left[\tau^{i}_{k+1}\middle|\sigma\left(\mathcal{F}_k^{N},\{\xi_{k+1}^i,I_{k+1}^i\}\right)\right]
  = \sum_{\ell=1}^N\frac{\omega_k^{\ell} \qk(\xi_{k}^{\ell}, \xi^{i}_{k+1}) \left(\tau^{\ell}_k + h_{k}(\xi_{k}^{\ell},\xi^{i}_{k+1})\right)}{\sum_{\ell'=1}^N\omega_k^{\ell'} \qk(\xi_{k}^{\ell'},\xi^{i}_{k+1})}\eqsp,\\
-&\mathbb{E} \left[ M^{-1}\sum_{m=1}^M \widehat{\qk}(\xi_{k}^{I^{i}_{k+1}},\xi^{i}_{k+1};\zeta^m_{k+1}) \middle| \sigma \left(\mathcal{F}_k^{N},\{\xi_{k+1}^i,I^{i}_{k+1}\}\right)\right]
+&\mathbb{E} \left[\widehat{\qk}(\xi_{k}^{I^{i}_{k+1}},\xi^{i}_{k+1};\zeta_{k+1}) \middle| \sigma \left(\mathcal{F}_k^{N},\{\xi_{k+1}^i,I^{i}_{k+1}\}\right)\right]
  = \qk(\xi_{k}^{I^{i}_{k+1}},\xi^{i}_{k+1})\eqsp.
 \end{align*}
-Since $\tau^{i}_{k+1}$ and $\{\zeta^m_{k+1}\}_{i=1}^M$ are independent conditionally to $\sigma\left(\mathcal{F}_k^{N},\{\xi_{k+1}^l, I_{k+1}^l\}_{l=1}^N\right)$:
+Since $\tau^{i}_{k+1}$ and $\zeta_{k+1}$ are independent conditionally to $\sigma\left(\mathcal{F}_k^{N},\{\xi_{k+1}^{\ell}, I_{k+1}^{\ell}\}_{\ell=1}^N\right)$:
 \begin{multline*}
-\mathbb{E}\left[\tau^{i}_{k+1}M^{-1}\sum_{m=1}^M \widehat{\qk} (\xi_{k}^{I^{i}_{k+1}},\xi^{i}_{k+1};\zeta^m_{k+1})\middle|\sigma\left(\mathcal{F}_k^{N},\{\xi_{k+1}^i,I_{k+1}^i\} \right)\right]\\
+\mathbb{E}\left[\tau^{i}_{k+1} \widehat{\qk} (\xi_{k}^{I^{i}_{k+1}},\xi^{i}_{k+1};\zeta_{k+1})\middle|\sigma\left(\mathcal{F}_k^{N},\{\xi_{k+1}^i,I_{k+1}^i\} \right)\right]\\
  = q_k(\xi_{k}^{I^{i}_{k+1}},\xi^{i}_{k+1})\sum_{\ell=1}^N\frac{\omega_k^{\ell} \qk (\xi_{k}^{\ell},\xi^{i}_{k+1})\left(\tau^{\ell}_k + h_{k}(\xi_{k}^{\ell},\xi^{i}_{k+1})\right)}{\sum_{\ell'=1}^N\omega_k^{\ell'} \qk (\xi_{k}^{\ell'},\xi^{i}_{k+1})}\eqsp.
 \end{multline*}
 Moreover, conditionally to $\mathcal{F}_k^N$, the probability density function of $(\xi_{k+1}^i,I_{k+1}^i)$ is given by
@@ -732,7 +732,7 @@ The results is proved by induction. At time $k=0$, the result holds using that f
 \[
 \mathbb{P}\left(\left|\phi_0^N[h] - \phi_0\left[h\right]\right|\ge \varepsilon\right)\le b_0\exp\left(-c_0N\varepsilon^2\right)\eqsp.
 \]
-Assume the results holds for $k\ge 1$ and write
+Assume the results holds for $k\ge 1$ and that $\vartheta_{k+1} = 1$ for simplicity. Write
 \[
 \phi_{k+1}^N[\tau_{k+1}] - \phi_{k+1}\left[T_{k+1}[h_{k+1}]\right] = a_N/b_N\eqsp,
 \]
@@ -746,7 +746,8 @@ Therefore, by Hoeffding inequality,
 \] 
 On the other hand,
 \[
-\mathbb{E}\left[a_N\middle|\mathcal{F}_k^{N}\right] = \left(\phi^N_{k}[\vartheta_{k+1}]\right)^{-1}\phi^N_{k}\left[\Upsilon_k\right] \eqsp,
+%\mathbb{E}\left[a_N\middle|\mathcal{F}_k^{N}\right] = \left(\phi^N_{k}[\vartheta_{k+1}]\right)^{-1}\phi^N_{k}\left[\Upsilon_k\right] \eqsp,
+\mathbb{E}\left[a_N\middle|\mathcal{F}_k^{N}\right] = \phi^N_{k}\left[\Upsilon_k\right] \eqsp,
 \]
 where
 \[
