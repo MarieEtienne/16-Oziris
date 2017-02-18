@@ -25,6 +25,8 @@
 \pagestyle{fancy}
 
 \usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
 \graphicspath{{/home/gloaguen/Bureau/Travaux_agro/figures_article_oziris/}}
 \usepackage{enumerate}
 \usepackage{xcolor}
@@ -476,22 +478,23 @@ In both cases we compare the performance of the GRand PaRIS algorithm with the f
 \subsection*{The SINE model} 
 The performance of the GRand PaRIS algorithm are first highlighted using the SINE model, where $(X_t)_{t\geq 0}$ is supposed to be the solution to: 
 \begin{equation}
-\rmd X_t = \sin \left(X_t-\theta\right)\rmd t + \rmd W_t,~~X_0=x_0. \label{eq:SINE:SDE}
+\rmd X_t = \sin \left(X_t-\theta\right)\rmd t + \rmd W_t,~~X_0=x_0. \label{eq:Lamp:SINE}
 \end{equation}
 This simple model has no explicit transition density, however GPE estimators may be computed by simulating Brownian bridges.
-The process solution to \eqref{eq:SINE:SDE} is observed regularly at times $t_0=0,\ldots,t_{200}=200$ through the observation process $(Y_k)_{0\leq k \leq 200}$:
+The process solution to \eqref{eq:SINE:SDE} is observed regularly at times $t_0=0,\ldots,t_{100}=50$ through the observation process $(Y_k)_{0\leq k \leq 100}$:
 \begin{equation}
 Y_k = X_k + \varepsilon_k\label{eq:obs:SINE}\eqsp,
 \end{equation}
-where the $(\varepsilon)_{0\leq k \leq 200}$ are i.i.d. $\mathcal{N}(0,1)$.
+where the $(\varepsilon)_{0\leq k \leq 100}$ are i.i.d. $\mathcal{N}(0,1)$.
 In the example showed on Figure \ref{fig:obs:SINE}, we set $\theta=0$.
 In that case, the $\rho_{\Delta_k}$ function defined in \eqref{eq:rho:func} can be upper bounded either globaly on $(x,y)$ or only on $y$, the resulting GRand PaRIS algorithm has therefore a linear complexity.\\
-In order to evaluate the performance of our algorithm, we compare the estimation of the EM intermediate quantity with the one obtained by the fixed lag method, for different values of the lag (namely, 1,2,5,10,50). We therefore compute the particle approximation of $\mathcal{Q}(\theta,\theta)$ for a sampled set of observations displayed in Figure~\ref{fig:obs:SINE}.
+In order to evaluate the performance of our algorithm, we compare the estimation of the EM intermediate quantity with the one obtained by the fixed lag method, for different values of the lag (namely, 1,2,5,10,50). The particle approximation of $\mathcal{Q}(\theta,\theta)$ is computed using each algorithm. An example of 200 estimates for a sampled set of observations is displayed in Figure~\ref{fig:obs:SINE}.\\
 
 This estimation is performed 300 times with $\tilde{N}=2$, and $M=30$ replications for the Monte Carlo approximation of each $q_k$.  Moreover, the E step boils down to the computation of a quantity such as \eqref{def:addfunc} with $h_k= \log g_k + \log q_k$.  $\log q_k$ is not available explicitly and is approximated using the unbiased estimator proposed in \cite[Appendix B]{olsson:strojby:2011} based on 30 independent Monte Carlo simulations.
-The intermediate quantity of the EM algorithm is also estimated                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      with our algorithm 30 times using $N=10000$ particles, the reference value is then computed as the arithmetic mean of these 30 estimations, see Figure \ref{fig:res:SINE}.
+The intermediate quantity of the EM algorithm is also estimated                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      with our algorithm 30 times using $N=5000$ particles, the reference value is then computed as the arithmetic mean of these 30 estimations, see Figure \ref{fig:res:SINE}.\\
+This experiment was reproduced on a hundred different simulated data, in order study the distribution of the empirical absolute relative bias and coefficient of variations for all methods. The results are shown on Figure \ref{fig:mult:SINE}. 
 
-The GRand PaRIS algorithm outperforms the fixed lag methods, for any value of the lag as the bias is already negligible for $N=400$, and with a lower variance than unbiased fixed lag estimates (i.e., in this case, lags larer than 5). Small lags lead to strongly biased estimates for the fixed lag method, and unbiased estimates are at the cost of a large variance. It is worth noting here that the small bias observed when the lag is equal to five is observation dependent, and no general rule can be made on which lag will lead to a neglictible bias. 
+The GRand PaRIS algorithm outperforms the fixed lag methods, for any value of the lag as the bias is the lowest already negligible for $N=400$, and with a lower variance than unbiased fixed lag estimates (i.e., in this case, lags larger than 10). Small lags lead to strongly biased estimates for the fixed lag method, and unbiased estimates are at the cost of a large variance. It is worth noting here that the lag for which the bias is small is model dependant, and that the GRand PaRIS algorithm do not require any knowledge of the forgetting properties of the model. 
 %To complete the numerical analysis, the impact of the bridge process used to estimate $q_{\theta}^{\Delta t_k}$ is also illustrated. Instead of the Ozaki discretization, the following bridges process are considered:
 %\begin{enumerate}[i)]
 %\item a bridge with constant drift as proposed in \cite{giesecke:schwenkler:2016}.
@@ -539,32 +542,52 @@ The parameters are given by $$\theta =(\kappa=0.1,\sigma=0.1,\gamma=1000,\sigma^
 In that case, the $\rho_{\Delta_k}$ function defined in \eqref{eq:rho:func} can be upper bounded as a function of $y$ when $x\in \{\xi_k^1,\dots, \xi_k^N\}$, the resulting GRand PaRIS algorithm has therefore a linear complexity.\\
 Again, we evaluate the intermediate quantity of the EM algorithm using the same amount of samples as for the SINE model.
 
-The results for the fixed lag technique are similar to the ones presented in \cite[Figure 1]{olsson:strojby:2011} on the same model. For small lags, the variance of the estimates is small, but the estimation is highly biased. The bias rapidly decreases as the lag increases, together with a  great increase of variance.  PaRIS algorithm outperforms the fixed lag smoother as it shows  a similar (vanishing) bias as the fixed lag for the largest lag and a smaller variance than the non biased fixed lags estimates. 
+The results for the fixed lag technique are similar to the ones presented in \cite[Figure 1]{olsson:strojby:2011} on the same model. For small lags, the variance of the estimates is small, but the estimation is highly biased. The bias rapidly decreases as the lag increases, together with a  great increase of variance.  Again, the GRand PaRIS algorithm outperforms the fixed lag smoother as it shows  a similar (vanishing) bias as the fixed lag for the largest lag and a smaller variance than the non biased fixed lags estimates. 
 %It is worth noting here that, as pointed out in \cite{olsson:strojby:2011}, results of the fixed lag technique indicates a quite strong forgetting in the model, and the choice of the lag should take into account this forgetting property. 
 %As the PaRIS algorithm is always unbiased, there is no need to consider the forgetting property of a given model in the approximation of the EM intermediate quantity. 
 \begin{figure}[p]
 \centering
-\includegraphics[width=0.8\textwidth]{obs_SINE}
-\caption{Process $X$ solution to the SDE \eqref{eq:Lamp:SINE} (white) and observations $Y$ satisfying equation \eqref{eq:obs:SINE} (black) at times $t_0=0,\dots,t_{200}=200$.}
-\label{fig:obs:SINE}
-\end{figure}
-\begin{figure}[p]
-\centering
-\includegraphics[width=0.8\textwidth]{obs_LG}
-\caption{Process $X$ solution to the SDE \eqref{eq:Lamp:LG} (white) and observations $Y$ satisfying equation \eqref{eq:obs:LG}  (black) at times $t_0=0,\dots,t_{200}=100$.}
-\label{fig:obs:LG}
-\end{figure}
-\begin{figure}[p]
-\centering
-\includegraphics[width=0.8\textwidth]{res_Estep_SINE}
-\caption{Estimation of the EM intermediate quantity $\mathcal{Q}(\theta_{true},\theta_{true})$ using observations of Figure \ref{fig:obs:SINE}, using the fixed lag (FL) technique for 5 different lags (namely 1, 2, 5,10 ,50), and the GRand PaRIS algorithm for the diffusion process proposed in this work, using 300 replicates. The whiskers represent the extent of the 95\% central values. The dot represents the empirical mean over the 300 replicates. The dotted line shows the reference value, computed using the unbiased GRand PaRIS algorithm with $N=10000$ particles.}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{obs_SINE}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{res_Estep_SINE}
+\end{subfigure}
+\caption{\textit{Left: }Observations of the process $X$ solution to the SDE \eqref{eq:Lamp:SINE} (black) and observations $Y$ satisfying equation \eqref{eq:obs:SINE} (white) at times $t_0=0,\dots,t_{100}=50$. \textit{Right: } Estimation of the EM intermediate quantity $\mathcal{Q}(\theta_{true},\theta_{true})$  using the fixed lag (FL) technique for 5 different lags (namely 1, 2, 5,10 ,50), and the GRand PaRIS algorithm for the diffusion process proposed in this work, using 300 replicates. The whiskers represent the extent of the 95\% central values. The dot represents the empirical mean over the 300 replicates. The dotted line shows the reference value, computed using the unbiased GRand PaRIS algorithm with $N=10000$ particles.}
 \label{fig:res:SINE}
 \end{figure}
 \begin{figure}[p]
 \centering
-\includegraphics[width=0.8\textwidth]{res_Estep_LG}
-\caption{Estimation of the EM intermediate quantity $\mathcal{Q}(\theta_{true},\theta_{true})$ using observations of Figure \ref{fig:obs:LG}, using the fixed lag (FL) technique for 5 different lags (namely 1, 2, 5,10 ,50), and the GRand PaRIS algorithm for the diffusion process proposed in this work, using 300 replicates. The whiskers represent the extent of the 95\% central values. The dot represents the empirical mean over the 300 replicates. The dotted line shows the reference value, computed using the unbiased GRand PaRIS algorithm with $N=10000$ particles.}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{res_mult_SINE_bias}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{res_mult_SINE_cv}
+\end{subfigure}
+\caption{Evolution of the empirical relative bias for each method in the case of the log-growth model. 100 replcations of the experience showed on Figure \ref{fig:res:SINE} are made. The empirical abolute relative bias is computed for each one. The whiskers show the 95\% central values and the dot shows the empirical median. All estimations are performed with an equal computation time.}
+\label{fig:mult:SINE}
+\end{figure}
+\begin{figure}[p]
+\centering
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{obs_LG}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{res_Estep_LG}
+\end{subfigure}
+\caption{\textit{Left: }Observations of the process $X$ solution to the SDE \eqref{eq:Lamp:LG} (black) and observations $Y$ satisfying equation \eqref{eq:obs:LG} (white) at times $t_0=0,\dots,t_{100}=50$. \textit{Right: } Estimation of the EM intermediate quantity $\mathcal{Q}(\theta_{true},\theta_{true})$  using the fixed lag (FL) technique for 5 different lags (namely 1, 2, 5,10 ,50), and the GRand PaRIS algorithm for the diffusion process proposed in this work, using 300 replicates. The whiskers represent the extent of the 95\% central values. The dot represents the empirical mean over the 300 replicates. The dotted line shows the reference value, computed using the unbiased GRand PaRIS algorithm with $N=10000$ particles.}
 \label{fig:res:LG}
+\end{figure}
+\begin{figure}[p]
+\centering
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{res_mult_LG_bias}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{res_mult_LG_cv}
+\end{subfigure}
+\caption{Empirical distribution of the absolute relative bias and te coefficient of variation of each estimation method. 100 replications of the experience showed on figure \ref{fig:res:LG} are made. The whiskers show the 95\% central values and the dot shows the empirical median. All estimations are performed with an equal computation time.}
+\label{fig:mult:LG}
 \end{figure}
 \section{Conclusions}
 This paper presents a new online SMC smoother for partially observed differential equations. This algorithm relies on an acceptance reject procedure inspired from the recent PaRIS algorithm. The main result of the article for practical applications is that the mechanism of this procedure remains valid when the transition density is approximated by a an unbiased positive estimator. The proposed procedure outperforms the existing fixed lag smoother for SDE of \cite{olsson:strojby:2011}, as it does not introduce intrinsic non vanishing bias,  and numerical simulations highlight a better variance on two examples. It can be implemented for the class of models $\mathcal{D}_1$ and $\mathcal{D}_2$ defined in \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006} with a linear complexity in $N$. 
