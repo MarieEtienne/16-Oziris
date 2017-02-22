@@ -54,7 +54,7 @@
 %\newcommand{\qk}{q^{\Delta t_k}_{\theta}}
 \newtheorem{lemma}{Lemma}
 \newtheorem{proposition}{Proposition}
-
+\newcommand{\hQ}{\widehat{Q}}
 \newcounter{hypA}
 \newenvironment{hypA}{\refstepcounter{hypA}\begin{itemize}
 \item[{\bf H\arabic{hypA}}]}{\end{itemize}}
@@ -472,7 +472,7 @@ See appendix \ref{sec:append:proofs}
 %The performance of the algorithm is investigated on two known models based on diffusion process.
 This section investigates the performance of the proposed algorithm with the sine and log-growth models. In both cases, the proposal distribution $p_k$ is chosen as the following approximation of the optimal filter (or the fully adapted particle filter in the terminology of \cite{pitt:shephard:1999}): 
 $$p_k(x_{k-1},x_k)\propto \tilde{q}_k(x_{k-1}, x_k)g_k(x_{k})\eqsp,$$
-where $\tilde{q}_k(x_{k-1},x_k)$ is the p.d.f. of Gaussian distibution with mean $\alpha(x_{k-1})\Delta_k$ and variance $\Delta_kI_d$, i.e. the Euler approximation of equation \eqref{eq:target:sde}. As the observation model is linear and Gaussian, the proposal distribution is therefore Gaussian with explicit mean and variance. The GRand PaRIS algorithm is compared with the fixed lag method of \cite{olsson:strojby:2011}. The GRand Paris algorithm is performed using $N=400$ particles in both cases, the fixed lag technique using $N=2000$ for the sine model and $N=1400$ for the log growth model so that both estimations have similar computational times.
+where $\tilde{q}_k(x_{k-1},x_k)$ is the p.d.f. of Gaussian distibution with mean $\alpha(x_{k-1})\Delta_k$ and variance $\Delta_kI_d$, i.e. the Euler approximation of equation \eqref{eq:target:sde}. As the observation model is linear and Gaussian, the proposal distribution is therefore Gaussian with explicit mean and variance. The GRand PaRIS algorithm is compared with the fixed lag method of \cite{olsson:strojby:2011}. The GRand Paris algorithm is performed using $N=400$ particles in both cases, the fixed lag technique using $N=1600$ so that both estimations have similar computational times.
 
 \subsection*{The SINE model} 
 The performance of the GRand PaRIS algorithm are first highlighted using the SINE model, where $(X_t)_{t\geq 0}$ is supposed to be the solution to: 
@@ -488,11 +488,15 @@ where the $(\varepsilon)_{0\leq k \leq 100}$ are i.i.d. $\mathcal{N}(0,1)$.
 In the example displayed on Figure \ref{fig:res:SINE}, we set $\theta=0$.
 In that case, the function $\rho_{\Delta_k}$ defined in \eqref{eq:rho:func} can be upper bounded either on $(x,y)$ or only on $y$, the resulting GRand PaRIS algorithm has therefore a linear complexity.
 
-In order to evaluate the performance of our algorithm, we compare the estimation of the EM intermediate quantity with the one obtained by the fixed lag method, for different values of the lag (namely, 1,2,5,10,50). The particle approximation of $\mathcal{Q}(\theta,\theta)$ is computed using each algorithm, see Figure~\ref{fig:res:SINE}. This estimation is performed 200 times with $\tilde{N}=2$, and $M=30$ replications for the Monte Carlo approximation of each $q_k$.  Moreover, the E step requires the computation of a quantity such as \eqref{def:addfunc} with $h_k= \log g_k + \log q_k$.  $\log q_k$ is not available explicitly and is approximated using the unbiased estimator proposed in \cite[Appendix B]{olsson:strojby:2011} based on 30 independent Monte Carlo simulations.
-The intermediate quantity of the EM algorithm is also estimated                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      with our algorithm 30 times using $N=5000$ particles, the reference value is then computed as the arithmetic mean of these 30 estimations, see Figure \ref{fig:res:SINE}. 
-
-\textcolor{red}{Detailler plus clairement ce que dit la figure 2 ici (donner clairement les estimateurs voire m\^eme les formules pour le biais et la variance relatifs)}
-This experiment was reproduced on a hundred different simulated data, in order study the distribution of the empirical absolute relative bias and coefficient of variations for all methods. The results are shown on Figure \ref{fig:mult:SINE}. 
+In order to evaluate the performance of our algorithm, we compare the estimation of the EM intermediate quantity with the one obtained by the fixed lag method, for different values of the lag (namely, 1,2,5,10,50). The particle approximation of $\mathcal{Q}(\theta,\theta)$ is computed using each algorithm, see Figure~\ref{fig:res:SINE}. This estimation is performed 200 times, resulting in estimates $\hQ_1,\dots,\hQ_{200}$, using $\tilde{N}=2$, and $M=30$ replications for the Monte Carlo approximation of each $q_k$.  Moreover, the E step requires the computation of a quantity such as \eqref{def:addfunc} with $h_k= \log g_k + \log q_k$.  $\log q_k$ is not available explicitly and is approximated using the unbiased estimator proposed in \cite[Appendix B]{olsson:strojby:2011} based on 30 independent Monte Carlo simulations.
+The intermediate quantity of the EM algorithm is also estimated                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      with our algorithm 30 times using $N=5000$ particles, the reference value is then computed as the arithmetic mean of these 30 estimations, and denoted by $\hQ_\star$. Figure \ref{fig:res:SINE} shows this estimates for an example on one simulated data set.\\ 
+\\
+This same experiment was reproduced on 100 different simulated data sets.  For each simulation $s$, the empirical absolute relative bias $\mathsf{arb}_s$ and the empirical absolute coefficient of variation $\mathsf{acv}_s$ are computed as
+\begin{align}
+\mathsf{arb}_s &= \frac{\vert m(\hQ^s)-\hQ^s_\star\vert }{\vert \hQ^s_\star\vert }\label{eq:emp:bias}\\
+\mathsf{acv}_s&=\frac{\sigma(\hQ^s)}{\vert m(\hQ^s)\vert }\label{eq:emp:cv}
+\end{align}
+where $m(\hQ^s)$ and $\sigma(\hQ^s)$ are the empirical mean and standard deviation of the sample $Q_1^s,\dots,Q_{200}^s$. For each estimation method, the resulting distributions of $\mathsf{arb}_1,\dots,\mathsf{arb}_{100}$ and $\mathsf{acv}_1,\dots,\mathsf{acv}_{100}$  are shown on Figure \ref{fig:mult:SINE}.\\ 
 
 The GRand PaRIS algorithm outperforms the fixed lag methods for any value of the lag as the bias is the lowest (it is already negligible for $N=400$) and with a lower variance than fixed lag estimates with negligible bias (i.e., in this case, lags larger than 10). Small lags lead to strongly biased estimates for the fixed lag method, and unbiased estimates are at the cost of a large variance. It is worth noting here that the lag for which the bias is small is model dependent. 
 %To complete the numerical analysis, the impact of the bridge process used to estimate $q_{\theta}^{\Delta t_k}$ is also illustrated. Instead of the Ozaki discretization, the following bridges process are considered:
@@ -563,7 +567,7 @@ The results for the fixed lag technique are similar to the ones presented in \ci
 \begin{subfigure}{0.49\textwidth}
 \includegraphics[width=\textwidth]{res_mult_SINE_cv}
 \end{subfigure}
-\caption{Evolution of the empirical relative bias for each method in the case of the log-growth model. 100 replications of the experience showed on Figure \ref{fig:res:SINE} are made. The empirical abolute relative bias is computed for each one. The whiskers show the 95\% central values and the dot shows the empirical median. All estimations are performed with an equal computation time.}
+\caption{\textit{Left: }Distribution of the empirical absolute relative bias (given in equation \eqref{eq:emp:bias}) for each method in the case of the SINE model. \textit{Right: }Distribution of the empirical absolute coefficient of variation (given in equation \eqref{eq:emp:cv}) for each method for the SINE model.These distributions are obtained using 100 replications of the experience showed on Figure \ref{fig:res:SINE}. All estimations are performed in a similar computation time.}
 \label{fig:mult:SINE}
 \end{figure}
 \begin{figure}[p]
@@ -585,7 +589,7 @@ The results for the fixed lag technique are similar to the ones presented in \ci
 \begin{subfigure}{0.49\textwidth}
 \includegraphics[width=\textwidth]{res_mult_LG_cv}
 \end{subfigure}
-\caption{Empirical distribution of the absolute relative bias and the coefficient of variation of each estimation method. 100 replications of the experience showed on figure \ref{fig:res:LG} are made. The whiskers show the 95\% central values and the dot shows the empirical median. All estimations are performed with an equal computation time.}
+\caption{\textit{Left: }Distribution of the empirical absolute relative bias (given in equation \eqref{eq:emp:bias}) for each method in the case of the Log-growth model. \textit{Right: }Distribution of the empirical absolute coefficient of variation (given in equation \eqref{eq:emp:cv}) for each method for the Log-growth model.These distributions are obtained using 100 replications of the experience showed on Figure \ref{fig:res:LG}. All estimations are performed in a similar computation time.}
 \label{fig:mult:LG}
 \end{figure}
 \section{Conclusions}
