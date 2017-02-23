@@ -118,7 +118,7 @@ Recently, \cite{olsson:westerborn:2016} proposed a new SMC algorithm, the partic
 Unlike the FFBS algorithm, the complexity of this algorithm grows only linearly with the number of particles $N$ and contrary to the FFBSi algorithm, no backward pass is required. 
 
 In this paper, we extend the use of  PaRIS algorithm to partially observed SDE. 
-The proposed algorithm allows to approximate smoothed expectations of additive functionals online and with a complexity growing only linearly with the number of particles. The crucial and simple result (Lemma~\ref{lem:AR:unbiased}) of the application of PaRIS algorithm to SDE is that the accept reject mechanism ensuring the linear complexity of the procedure is still correct when the transition densities are replaced by unbiased estimates. The usual FFBS and FFBSi algorithms may not be extended this easily since they both require the computation of weights defined as ratios involving the transition densities, thus replacing these unknown quantities by unbiased estimates does not lead to unbiased estimators of the weights. The proposed generalized random version of PaRIS algorithm, hereafter named GRand PaRIS algorithm, may be applied to general hidden Markov models whose Markovian dynamics is ruled by a stochastic differential equation (one of the first two domains defined in \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006}) but also to any general state space model where the transition density of the hidden chain may be estimated unbiasedly.
+The proposed algorithm allows to approximate smoothed expectations of additive functionals online and with a complexity growing only linearly with the number of particles. The crucial and simple result (Lemma~\ref{lem:AR:unbiased}) of the application of PaRIS algorithm to SDE is that the accept-reject mechanism ensuring the linear complexity of the procedure is still correct when the transition densities are replaced by unbiased estimates. The usual FFBS and FFBSi algorithms may not be extended this easily since they both require the computation of weights defined as ratios involving the transition densities, thus replacing these unknown quantities by unbiased estimates does not lead to unbiased estimators of the weights. The proposed generalized random version of PaRIS algorithm, hereafter named GRand PaRIS algorithm, may be applied to general hidden Markov models whose Markovian dynamics is ruled by a stochastic differential equation (one of the first two domains defined in \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006}) but also to any general state space model where the transition density of the hidden chain may be estimated unbiasedly.
 %We also propose to improve the algorithm of \cite{fearnhead:papaspiliopoulos:roberts:2008} by extending the range of diffusion processes for which SMC methods can be applied. To do so, we introduce a new class of GPE based on the Ozaki discretization of the target SDE, see \cite{ozaki:1992,shoji:ozaki:1998}. These new GPE estimators use an order one Taylor expansion of the drift of the SDE to obtain more efficient estimates than Brownian Bridge based GPE. 
 
 The paper is organized as follows. Section~\ref{sec:rwparis} describes the random weight PaRIS algorithm to approximate smoothed additive functionals using unbiased estimates of the transition density of the hidden states and details the application of this algorithm when the transition density may be approximated using a GPE. 
@@ -213,26 +213,27 @@ Then, \eqref{def:addfunc} is approximated by
 \[
 \phi_{0:n\vert n}^N[\tau_n] = \frac{1}{\Omega_n^N}\sum_{i=1}^N \omega^{i}_n \tau_n^i\eqsp.
 \] 
-As proved in \cite{olsson:westerborn:2016}, the algorithm is asymptotically consistent (as $N$ goes to infinity) for any precision parameter $\tilde N$. However, there is a significant qualitative difference between the cases $\tilde{N} = 1$ and $\tilde{N} \geq 2$. As for the FFBSi algorithm,  when there exists $\sigma_+$ such that $0<\qk <\sigma_+$, PaRIS algorithm may be implemented with $\mathcal{O}(N)$ complexity using the accept reject mechanism of \cite{douc:garivier:moulines:olsson:2011}.
+As proved in \cite{olsson:westerborn:2016}, the algorithm is asymptotically consistent (as $N$ goes to infinity) for any precision parameter $\tilde N$. However, there is a significant qualitative difference between the cases $\tilde{N} = 1$ and $\tilde{N} \geq 2$. As for the FFBSi algorithm,  when there exists $\sigma_+$ such that $0<\qk <\sigma_+$, PaRIS algorithm may be implemented with $\mathcal{O}(N)$ complexity using the accept-reject mechanism of \cite{douc:garivier:moulines:olsson:2011}.
 
 In general situations, PaRIS algorithm cannot be used for stochastic differential equations as $\qk$ is unknown. Therefore, the computation of the importance weights $\omega_{k}^{\ell}$ and of the acceptance ratio of \cite{douc:garivier:moulines:olsson:2011} is not tractable. Following \cite{fearnhead:papaspiliopoulos:roberts:2008,olsson:strojby:2011}, filtering weights can be approximated by replacing $\qk(\xi^{\ell}_{k},\xi_{k+1}^{i})$  by an  estimator $\widehat{q}_k(\xi^{\ell}_{k},\xi_{k+1}^{i};\zeta_k)$, where $\zeta_k$ is a random variable such that:
 \begin{align*}
 \widehat{q}_k(\xi^{\ell}_{k},\xi_{k+1}^{i};\zeta_k)&> 0~~\text{a.s}\eqsp,\\
-\mathbb{E}\left[\widehat{q}_k(\xi^{\ell}_{k},\xi_{k+1}^{i};\zeta_k)\middle| \mathcal{F}_{k+1}^N\right] &= \qk(\xi^{\ell}_{k},\xi_{k+1}^{i})\eqsp,
+\mathbb{E}\left[\widehat{q}_k(\xi^{\ell}_{k},\xi_{k+1}^{i};\zeta_k)\middle| \mathcal{G}_{k+1}^N\right] &= \qk(\xi^{\ell}_{k},\xi_{k+1}^{i})\eqsp,
 \end{align*}
 where, for all $0\le k \le n$, 
-\[
-\mathcal{F}_{k}^N = \sigma\left\{Y_{0:k};(\xi^{\ell}_{u},\omega^{\ell}_{u},\tau^{\ell}_{u}),~1\le \ell\le N,~0\le u\le k\right\}\eqsp.
-\]
+\begin{align*}
+\mathcal{F}_{k}^N &= \sigma\left\{Y_{0:k};(\xi^{\ell}_{u},\omega^{\ell}_{u},\tau^{\ell}_{u});J_{v}^{\ell,j};~1\le \ell\le N,~0\le u\le k, 1\le j \le \widetilde{N}, 0\le v< k\right\}\eqsp,\\
+\mathcal{G}_{k+1}^N &= \mathcal{F}_{k}^N \vee \sigma\left\{Y_{k+1};(\xi^{\ell}_{k+1},\omega^{\ell}_{k+1});~1\le \ell\le N\right\}\eqsp.
+\end{align*}
 In the case where $\qk$ is unknown, the filtering weights in \eqref{eq:importance:weights} then become:
 \begin{equation}
 \label{eq:random:weight}
 \widehat{\omega}^{\ell}_k := \frac{\widehat{q}_k(\xi_{k-1}^{I^{\ell}_k},\xi^{\ell}_k;\zeta_k)g_k(\xi^{\ell}_k)}{\vartheta_k(\xi^{I^{\ell}_k}_{k-1}) p_k (\xi_{k-1}^{I^{\ell}_k},\xi^{\ell}_k)}\eqsp.
 \end{equation}
-Therefore, to obtain a generalized random version of PaRIS, we only need to be able to sample from weight $\Lambda_k^N(i,\ell)$ in the case of SDE based HMM. If $\widehat{q}_k$ may be upper bounded almost surely by a constant $\hat{\sigma}_+$, this task is performed using the accept reject mechanism given in Algorithm~\ref{alg:AR:unknownq}. Lemma~\ref{lem:AR:unbiased} states that replacing  $\qk$ by its unbiased approximation is a valid alternative to step~\eqref{it:PaRIS:sampleindex}.\\
+Therefore, to obtain a generalized random version of PaRIS, we only need to be able to sample from weight $\Lambda_k^N(i,\ell)$ in the case of SDE based HMM. If $\widehat{q}_k$ may be upper bounded almost surely by a constant $\hat{\sigma}_+$, this task is performed using the accept-reject mechanism given in Algorithm~\ref{alg:AR:unknownq}. Lemma~\ref{lem:AR:unbiased} states that replacing  $\qk$ by its unbiased approximation is a valid alternative to step~\eqref{it:PaRIS:sampleindex}.\\
 \begin{lemma}
 \label{lem:AR:unbiased}
-Let $0\le k\le n-1$.  For all $1\le i \le N$ and all $1\le \ell \le \widetilde{N}$, the conditional probability distribution given $\mathcal{F}_{k+1}^N$ of the random variable $J_{k}^{i,\ell}$ produced by Algorithm~\ref{alg:AR:unknownq} is  $\Lambda_{k-1}^N(i,\cdot)$. 
+Let $0\le k\le n-1$.  For all $1\le i \le N$ and all $1\le \ell \le \widetilde{N}$, the conditional probability distribution given $\mathcal{G}_{k+1}^N$ of the random variable $J_{k}^{i,\ell}$ produced by Algorithm~\ref{alg:AR:unknownq} is  $\Lambda_{k-1}^N(i,\cdot)$. 
 \end{lemma}
 \begin{proof}
 See Appendix \ref{sec:append:proofs}.
@@ -486,19 +487,43 @@ Y_k = X_k + \varepsilon_k\label{eq:obs:SINE}\eqsp,
 \end{equation}
 where the $(\varepsilon)_{0\leq k \leq 100}$ are i.i.d. $\mathcal{N}(0,1)$.
 In the example displayed on Figure \ref{fig:res:SINE}, we set $\theta=0$.
-In that case, the function $\rho_{\Delta_k}$ defined in \eqref{eq:rho:func} can be upper bounded either on $(x,y)$ or only on $y$, the resulting GRand PaRIS algorithm has therefore a linear complexity.
+In that case, the function $\rho_{\Delta_k}$ defined in \eqref{eq:rho:func} can be upper bounded either on $(x,y)$ or only on $y$, the GRand PaRIS algorithm has therefore a linear complexity.
 
-In order to evaluate the performance of our algorithm, we compare the estimation of the EM intermediate quantity with the one obtained by the fixed lag method, for different values of the lag (namely, 1,2,5,10,50). The particle approximation of $\mathcal{Q}(\theta,\theta)$ is computed using each algorithm, see Figure~\ref{fig:res:SINE}. This estimation is performed 200 times, resulting in estimates $\hQ_1,\dots,\hQ_{200}$, using $\tilde{N}=2$, and $M=30$ replications for the Monte Carlo approximation of each $q_k$.  Moreover, the E step requires the computation of a quantity such as \eqref{def:addfunc} with $h_k= \log g_k + \log q_k$.  $\log q_k$ is not available explicitly and is approximated using the unbiased estimator proposed in \cite[Appendix B]{olsson:strojby:2011} based on 30 independent Monte Carlo simulations.
-The intermediate quantity of the EM algorithm is also estimated                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      with our algorithm 30 times using $N=5000$ particles, the reference value is then computed as the arithmetic mean of these 30 estimations, and denoted by $\hQ_\star$. Figure \ref{fig:res:SINE} shows this estimates for an example on one simulated data set.\\ 
-\\
-This same experiment was reproduced on 100 different simulated data sets.  For each simulation $s$, the empirical absolute relative bias $\mathsf{arb}_s$ and the empirical absolute coefficient of variation $\mathsf{acv}_s$ are computed as
-\begin{align}
-\mathsf{arb}_s &= \frac{\vert m(\hQ^s)-\hQ^s_\star\vert }{\vert \hQ^s_\star\vert }\label{eq:emp:bias}\\
-\mathsf{acv}_s&=\frac{\sigma(\hQ^s)}{\vert m(\hQ^s)\vert }\label{eq:emp:cv}
-\end{align}
-where $m(\hQ^s)$ and $\sigma(\hQ^s)$ are the empirical mean and standard deviation of the sample $Q_1^s,\dots,Q_{200}^s$. For each estimation method, the resulting distributions of $\mathsf{arb}_1,\dots,\mathsf{arb}_{100}$ and $\mathsf{acv}_1,\dots,\mathsf{acv}_{100}$  are shown on Figure \ref{fig:mult:SINE}.\\ 
+In order to evaluate the performance of our algorithm, we compare the estimation of the EM intermediate quantity with the one obtained by the fixed lag method, for different values of the lag (namely, 1,2,5,10,50). The particle approximation of $\mathcal{Q}(\theta,\theta)$ is computed using each algorithm, see Figure~\ref{fig:res:SINE}. This estimation is performed 200 times using $\tilde{N}=2$, and $M=30$ replications for the Monte Carlo approximation of each $q_k$, and provides the estimates $\hQ_1,\dots,\hQ_{200}$.  The E step requires the computation of a quantity such as \eqref{def:addfunc} with $h_k= \log g_k + \log q_k$.  $\log q_k$ is not available explicitly and is approximated using the unbiased estimator proposed in \cite[Appendix B]{olsson:strojby:2011} based on 30 independent Monte Carlo simulations.
+The intermediate quantity of the EM algorithm is also estimated                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      with our algorithm 30 times using $N=5000$ particles, the reference value is then computed as the arithmetic mean of these 30 estimations, and denoted by $\hQ_\star$. This estimate is also displayed in Figure \ref{fig:res:SINE}.
+
+The same experiment was reproduced with 100 different simulated data sets.  For each data set $s$, the empirical absolute relative bias $\mathsf{arb}_s$ and the empirical absolute coefficient of variation $\mathsf{acv}_s$ are computed as
+\begin{equation}
+\label{eq:emp:bias}
+\mathsf{arb}_s = \frac{\vert m(\hQ^s)-\hQ^s_\star\vert }{\vert \hQ^s_\star\vert }\quad\mbox{and}\quad \mathsf{acv}_s=\frac{\sigma(\hQ^s)}{\vert m(\hQ^s)\vert }\eqsp,
+\end{equation}
+where $m(\hQ^s)$ and $\sigma(\hQ^s)$ are the empirical mean and standard deviation of the estimates $\hQ_1^s,\dots,\hQ_{200}^s$ for each data set. The distributions of $\mathsf{arb}_1,\dots,\mathsf{arb}_{100}$ and $\mathsf{acv}_1,\dots,\mathsf{acv}_{100}$  are shown in Figure \ref{fig:mult:SINE} for both estimation methods.
 
 The GRand PaRIS algorithm outperforms the fixed lag methods for any value of the lag as the bias is the lowest (it is already negligible for $N=400$) and with a lower variance than fixed lag estimates with negligible bias (i.e., in this case, lags larger than 10). Small lags lead to strongly biased estimates for the fixed lag method, and unbiased estimates are at the cost of a large variance. It is worth noting here that the lag for which the bias is small is model dependent. 
+
+\begin{figure}[p]
+\centering
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{obs_SINE}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{res_Estep_SINE}
+\end{subfigure}
+\caption{{\em SINE model}. Process $X$ solution to the SDE (balls) and observations $Y$ (circles) at times $t_0=0,\dots,t_{100}=50$ [left]. Estimation of the EM intermediate quantity $\mathcal{Q}(\theta,\theta)$  using the fixed lag (FL) technique for 5 different lags, and the GRand PaRIS algorithm using 200 replicates [right]. The whiskers represent the extent of the 95\% central values. The dot represents the empirical mean over the 200 replicates. The dotted line shows the reference value, computed using the GRand PaRIS algorithm with $N=5000$ particles.}
+\label{fig:res:SINE}
+\end{figure}
+\begin{figure}[p]
+\centering
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{res_mult_SINE_bias}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{res_mult_SINE_cv}
+\end{subfigure}
+\caption{{\em SINE model}. Distribution of the empirical absolute relative bias [left] and of the empirical absolute coefficient of variation [right] for each method, see \eqref{eq:emp:bias}.}
+\label{fig:mult:SINE}
+\end{figure}
+
 %To complete the numerical analysis, the impact of the bridge process used to estimate $q_{\theta}^{\Delta t_k}$ is also illustrated. Instead of the Ozaki discretization, the following bridges process are considered:
 %\begin{enumerate}[i)]
 %\item a bridge with constant drift as proposed in \cite{giesecke:schwenkler:2016}.
@@ -543,33 +568,10 @@ Y_k = X_k + \varepsilon_k\label{eq:obs:LG}\eqsp,
 \end{equation}
 where the $(\varepsilon_k)_{0\le k \le 50}$ are i.i.d. $ \mathcal{N}(0,\sigma^2_{obs})$.
 The parameters are given by $$\theta =(\kappa=0.1,\sigma=0.1,\gamma=1000,\sigma^2_{obs}=4)\eqsp.$$
-In that case, the $\rho_{\Delta_k}$ function defined in \eqref{eq:rho:func} can be upper bounded as a function of $y$ when $x\in \{\xi_k^1,\dots, \xi_k^N\}$, the resulting GRand PaRIS algorithm has therefore a linear complexity. The intermediate quantity of the EM algorithm is evaluated  as for the SINE model, see Figures~\ref{fig:res:LG} and~\ref{fig:mult:LG}.
+In that case, the $\rho_{\Delta_k}$ function defined in \eqref{eq:rho:func} can be upper bounded as a function of $y$ when $x\in \{\xi_k^1,\dots, \xi_k^N\}$, the GRand PaRIS algorithm has therefore a linear complexity. The intermediate quantity of the EM algorithm is evaluated  as for the SINE model, see Figures~\ref{fig:res:LG} and~\ref{fig:mult:LG}.
 
 The results for the fixed lag technique are similar to the ones presented in \cite[Figure 1]{olsson:strojby:2011} on the same model. For small lags, the variance of the estimates is small, but the estimation is highly biased. The bias rapidly decreases as the lag increases, together with a  great increase of variance.  Again, the GRand PaRIS algorithm outperforms the fixed lag smoother as it shows  a similar (vanishing) bias as the fixed lag for the largest lag and a smaller variance than the fixed lags estimates with negligible bias. 
-%It is worth noting here that, as pointed out in \cite{olsson:strojby:2011}, results of the fixed lag technique indicates a quite strong forgetting in the model, and the choice of the lag should take into account this forgetting property. 
-%As the PaRIS algorithm is always unbiased, there is no need to consider the forgetting property of a given model in the approximation of the EM intermediate quantity. 
-\begin{figure}[p]
-\centering
-\begin{subfigure}{0.49\textwidth}
-\includegraphics[width=\textwidth]{obs_SINE}
-\end{subfigure}
-\begin{subfigure}{0.49\textwidth}
-\includegraphics[width=\textwidth]{res_Estep_SINE}
-\end{subfigure}
-\caption{\textit{Left: }Process $X$ solution to the SDE \eqref{eq:Lamp:SINE} (black) and observations $Y$ satisfying equation \eqref{eq:obs:SINE} (white) at times $t_0=0,\dots,t_{100}=50$. \textit{Right: } Estimation of the EM intermediate quantity $\mathcal{Q}(\theta_{true},\theta_{true})$  using the fixed lag (FL) technique for 5 different lags (namely 1, 2, 5,10 ,50), and the GRand PaRIS algorithm using 200 replicates. The whiskers represent the extent of the 95\% central values. The dot represents the empirical mean over the 200 replicates. The dotted line shows the reference value, computed using the GRand PaRIS algorithm with $N=5000$ particles.}
-\label{fig:res:SINE}
-\end{figure}
-\begin{figure}[p]
-\centering
-\begin{subfigure}{0.49\textwidth}
-\includegraphics[width=\textwidth]{res_mult_SINE_bias}
-\end{subfigure}
-\begin{subfigure}{0.49\textwidth}
-\includegraphics[width=\textwidth]{res_mult_SINE_cv}
-\end{subfigure}
-\caption{\textit{Left: }Distribution of the empirical absolute relative bias (given in equation \eqref{eq:emp:bias}) for each method in the case of the SINE model. \textit{Right: }Distribution of the empirical absolute coefficient of variation (given in equation \eqref{eq:emp:cv}) for each method for the SINE model.These distributions are obtained using 100 replications of the experience showed on Figure \ref{fig:res:SINE}. All estimations are performed in a similar computation time.}
-\label{fig:mult:SINE}
-\end{figure}
+
 \begin{figure}[p]
 \centering
 \begin{subfigure}{0.49\textwidth}
@@ -578,7 +580,7 @@ The results for the fixed lag technique are similar to the ones presented in \ci
 \begin{subfigure}{0.49\textwidth}
 \includegraphics[width=\textwidth]{res_Estep_LG}
 \end{subfigure}
-\caption{\textit{Left: }Process $X$ solution to the SDE \eqref{eq:Lamp:LG} (black) and observations $Y$ satisfying equation \eqref{eq:obs:LG} (white) at times $t_0=0,\dots,t_{100}=50$. \textit{Right: } Estimation of the EM intermediate quantity $\mathcal{Q}(\theta_{true},\theta_{true})$  using the fixed lag (FL) technique for 5 different lags (namely 1, 2, 5,10 ,50), and the GRand PaRIS algorithm using 200 replicates. The whiskers represent the extent of the 95\% central values. The dot represents the empirical mean over the 200 replicates. The dotted line shows the reference value, computed using the GRand PaRIS algorithm with $N=5000$ particles.}
+\caption{{\em Log-growth model}. Process $X$ solution to the SDE (balls) and observations $Y$ (circles) at times $t_0=0,\dots,t_{100}=50$ [left]. Estimation of the EM intermediate quantity $\mathcal{Q}(\theta,\theta)$  using the fixed lag (FL) technique for 5 different lags, and the GRand PaRIS algorithm using 200 replicates [right]. The whiskers represent the extent of the 95\% central values. The dot represents the empirical mean over the 200 replicates. The dotted line shows the reference value, computed using the GRand PaRIS algorithm with $N=5000$ particles.}
 \label{fig:res:LG}
 \end{figure}
 \begin{figure}[p]
@@ -589,11 +591,11 @@ The results for the fixed lag technique are similar to the ones presented in \ci
 \begin{subfigure}{0.49\textwidth}
 \includegraphics[width=\textwidth]{res_mult_LG_cv}
 \end{subfigure}
-\caption{\textit{Left: }Distribution of the empirical absolute relative bias (given in equation \eqref{eq:emp:bias}) for each method in the case of the Log-growth model. \textit{Right: }Distribution of the empirical absolute coefficient of variation (given in equation \eqref{eq:emp:cv}) for each method for the Log-growth model.These distributions are obtained using 100 replications of the experience showed on Figure \ref{fig:res:LG}. All estimations are performed in a similar computation time.}
+\caption{{\em Log-growth model}. Distribution of the empirical absolute relative bias [left] and of the empirical absolute coefficient of variation [right] for each method, see \eqref{eq:emp:bias}.}
 \label{fig:mult:LG}
 \end{figure}
 \section{Conclusions}
-This paper presents a new online SMC smoother for partially observed differential equations. This algorithm relies on an acceptance reject procedure inspired from the recent PaRIS algorithm. The main result of the article for practical applications is that the mechanism of this procedure remains valid when the transition density is approximated by a an unbiased positive estimator. The proposed procedure outperforms the existing fixed lag smoother for SDE of \cite{olsson:strojby:2011}, as it does not introduce intrinsic non vanishing bias,  and numerical simulations highlight a better variance on two examples. It can be implemented for the class of models $\mathcal{D}_1$ and $\mathcal{D}_2$ defined in \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006} with a linear complexity in $N$. 
+This paper presents a new online SMC smoother for partially observed differential equations. This algorithm relies on an accept-reject procedure inspired from the recent PaRIS algorithm. The main result of the article for practical applications is that the mechanism of this procedure remains valid when the transition density is approximated by a an unbiased positive estimator. The proposed procedure outperforms the existing fixed lag smoother for SDE of \cite{olsson:strojby:2011}, as it does not introduce an intrinsic and non vanishing bias. In addition, numerical simulations highlight a better variance using data from two different models. It can be implemented for the class of models $\mathcal{D}_1$ and $\mathcal{D}_2$ defined in \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006} with a linear complexity in $N$. 
 % where $\beta\in\mathbb{R}^d$ is chosen by the user. Assume that $\alpha_{\theta}$ is of the form $\alpha_{\theta}(x) = \nabla_x A_{\theta}(x)$ where $A_{\theta}: \mathbb{R}^d \to \mathbb{R}$. Writing $\mathbb{Q}_{\theta}$ (resp. $\mathbb{W}^{\beta}_{\theta}$) the probability measure induced by $(X_s)_{0\le s\le t}$  (resp. $(Y_s)_{0\le s\le t}$) on $(\mathsf{C},\mathcal{C})$, Girsanov theorem yields:
 % \[
 % \frac{\rmd \mathbb{Q}_{\theta}}{\rmd \mathbb{W}^{\beta}_{\theta}}(w) = \mathrm{exp}\left\{H_{\theta}(\omega_t) - H_{\theta}(\omega_0) - \frac{1}{2}\int_{0}^{t}\left\{\|\alpha_{\theta}(\mw_s)-\beta\|^2+\Delta H_{\theta}(\mw_s)\right\}\rmd s\right\}\eqsp,
@@ -637,17 +639,17 @@ This paper presents a new online SMC smoother for partially observed differentia
 \begin{proof}[Proof of Lemma~\ref{lem:AR:unbiased}]
 Let $\tau$ be the first time  draws are accepted in the accept-reject mechanism. For all $\ell\ge 1$, write
 \[
-\mathcal{A}^k_{\ell} = \left\{U_\ell<\widehat{q}_{k}(\xi_{k-1}^{J_\ell},\xi_k^{i},\zeta^{\ell}_{k})/\sigma_+\right\}\eqsp.
+\mathcal{A}^k_{\ell} = \left\{U_\ell<\widehat{q}_{k}(\xi_{k}^{J_\ell},\xi_{k+1}^{i},\zeta^{\ell}_{k})/\sigma_+\right\}\eqsp.
 \]
 Let $h$ be a function defined on $\{1,\ldots,N\}$,
 \begin{align*}
-\mathbb{E}\left[h(J^{i,j}_k)\middle| \mathcal{F}_k^N\right] & = \sum_{m\ge 1}\mathbb{E}\left[h(J_m)\1_{\tau=m}\middle| \mathcal{F}_k^N\right]\eqsp,\\
-& = \sum_{m\ge 1}h(m)\left(\prod_{\ell=1}^{m-1}\mathbb{E}\left[\1_{(\mathcal{A}^k_{\ell})^c}\middle| \mathcal{F}_k^N\right]\right)\mathbb{E}\left[h(J_m)\1_{\mathcal{A}^k_{m}}\middle| \mathcal{F}_k^N\right]\eqsp,\\
-& = \sum_{m\ge 1}\left(\prod_{\ell=1}^{m-1}\mathbb{E}\left[1-\frac{\widehat{q_k}(\xi_{k-1}^{J_\ell},\xi_k^{i};\zeta_k^{\ell})}{\hat{\sigma}_{+}}\middle| \mathcal{F}_k^N\right]\right)\\
-&\hspace{5cm}\times\mathbb{E}\left[h(I_m)\frac{\widehat{q_k}(\xi_{k-1}^{J_m},\xi_k^{i};\zeta_k^{\ell})}{\hat{\sigma}_{+}}\middle| \mathcal{F}_k^N\right]\eqsp,\\
-& = \sum_{m\ge 1}\left(\mathbb{E}\left[1-\frac{q_k(\xi_{k-1}^{J_1},\xi_k^{1})}{\hat{\sigma}_{+}}\middle| \mathcal{F}_k^N\right]\right)^{m-1}\mathbb{E}\left[h(J_m)\frac{q_k(\xi_{k-1}^{J_m},\xi_k^{1})}{\hat{\sigma}_{+}}\middle| \mathcal{F}_k^N\right]\eqsp,\\
-& = \mathbb{E}\left[h(J_1)q_k(\xi_{k-1}^{J_1},\xi_k^{i})\middle| \mathcal{F}_k^N\right]/\mathbb{E}\left[q_k(\xi_{k-1}^{J_m},\xi_k^{i})\middle| \mathcal{F}_k^N\right]\eqsp,\\
-& = \sum_{\ell=1}^N \frac{h(\ell)\omega_{k-1}^{\ell}q_k(\xi_{k-1}^{\ell},\xi_k^{i})}{\sum_{m=1}^N\omega_{k-1}^{m}q_k(\xi_{k-1}^{m},\xi_k^{i})}\eqsp,\\
+\mathbb{E}\left[h(J^{i,j}_k)\middle| \mathcal{G}_{k+1}^N\right] & = \sum_{m\ge 1}\mathbb{E}\left[h(J_m)\1_{\tau=m}\middle| \mathcal{G}_{k+1}^N\right]\eqsp,\\
+& = \sum_{m\ge 1}h(m)\left(\prod_{\ell=1}^{m-1}\mathbb{E}\left[\1_{(\mathcal{A}^k_{\ell})^c}\middle| \mathcal{G}_{k+1}^N\right]\right)\mathbb{E}\left[h(J_m)\1_{\mathcal{A}^k_{m}}\middle| \mathcal{G}_{k+1}^N\right]\eqsp,\\
+& = \sum_{m\ge 1}\left(\prod_{\ell=1}^{m-1}\mathbb{E}\left[1-\frac{\widehat{q_k}(\xi_{k}^{J_\ell},\xi_{k+1}^{i};\zeta_k^{\ell})}{\hat{\sigma}_{+}}\middle| \mathcal{G}_{k+1}^N\right]\right)\\
+&\hspace{5cm}\times\mathbb{E}\left[h(J_m)\frac{\widehat{q_k}(\xi_{k}^{J_m},\xi_{k+1}^{i};\zeta_k^{m})}{\hat{\sigma}_{+}}\middle| \mathcal{G}_{k+1}^N\right]\eqsp,\\
+& = \sum_{m\ge 1}\left(\mathbb{E}\left[1-\frac{q_k(\xi_{k}^{J_1},\xi_{k+1}^{1})}{\hat{\sigma}_{+}}\middle| \mathcal{G}_{k+1}^N\right]\right)^{m-1}\mathbb{E}\left[h(J_1)\frac{q_k(\xi_{k}^{J_1},\xi_{k+1}^{1})}{\hat{\sigma}_{+}}\middle| \mathcal{G}_{k+1}^N\right]\eqsp,\\
+& = \mathbb{E}\left[h(J_1)q_k(\xi_{k}^{J_1},\xi_{k+1}^{i})\middle| \mathcal{F}_k^N\right]/\mathbb{E}\left[q_k(\xi_{k}^{J_1},\xi_{k+1}^{i})\middle| \mathcal{G}_{k+1}^N\right]\eqsp,\\
+& = \sum_{\ell=1}^N \frac{h(\ell)\omega_{k-1}^{\ell}q_k(\xi_{k}^{\ell},\xi_{k+1}^{i})}{\sum_{m=1}^N\omega_{k-1}^{m}q_k(\xi_{k}^{m},\xi_{k+1}^{i})}\eqsp,\\
 &= \sum_{\ell=1}^N \Lambda_{k-1}^N(i,\ell)h(\ell) \eqsp,
 \end{align*}
 which concludes the proof.
@@ -694,19 +696,19 @@ which concludes the proof.
 \begin{proof}[Proof of Lemma \ref{lem:iid}]
 The independence is ensured by the mechanism of SMC methods. By \eqref{eq:random:weight},
 \[
-\mathbb{E}\left[\widehat{\omega}^i_{k+1}\tau^{i}_{k+1}\middle| \mathcal{F}_k^{N}\right] = \mathbb{E}\left[\frac{ \widehat{\qk}(\xi_{k}^{I^{i}_{k+1}}, \xi^{i}_{k+1};\zeta_{k+1})g_{k+1}(\xi^{i}_{k+1})}{\vartheta_{k+1}(\xi^{I^{i}_{k+1}}_{k}) p_{k+1}(\xi_{k}^{I^{i}_{k+1}},\xi^{i}_{k+1})}\tau^{i}_{k+1}\middle| \mathcal{F}_k^{N}\right]\eqsp.
-%&= \mathbb{E}\left[\frac{g_{k+1}(\xi^{1}_{k+1})}{\vartheta_{k+1}(\xi^{I^{1}_{k+1}}_{k}) p_{k+1}(\xi_{k}^{I^{1}_{k+1}},\xi^{\ell}_{k+1})}\tau^{1}_{k+1}\widehat{q}_{\theta}^{\Delta t_{k+1}}(\xi_{k}^{I^{1}_{k+1}},\xi^{1}_{k+1};\Lambda_{k+1})\middle| \mathcal{F}_k^{N}\right]\eqsp,
+\mathbb{E}\left[\widehat{\omega}^i_{k+1}\tau^{i}_{k+1}\middle| \mathcal{F}_k^{N}\right] = \mathbb{E}\left[\frac{ \widehat{\qk}(\xi_{k}^{I^{i}_{k+1}}, \xi^{i}_{k+1};\zeta_{k})g_{k+1}(\xi^{i}_{k+1})}{\vartheta_{k+1}(\xi^{I^{i}_{k+1}}_{k}) p_{k+1}(\xi_{k}^{I^{i}_{k+1}},\xi^{i}_{k+1})}\tau^{i}_{k+1}\middle| \mathcal{F}_k^{N}\right]\eqsp.
 \]
-Note that
+Note that by Lemma~\ref{lem:AR:unbiased},
+%\sigma\left(\mathcal{F}_k^{N},\{\xi_{k+1}^i,I_{k+1}^i\}\right)
 \begin{align*}
-&\mathbb{E}\left[\tau^{i}_{k+1}\middle|\sigma\left(\mathcal{F}_k^{N},\{\xi_{k+1}^i,I_{k+1}^i\}\right)\right]
+&\mathbb{E}\left[\tau^{i}_{k+1}\middle|\mathcal{G}_{k+1}^{N}\right]
  = \sum_{\ell=1}^N\frac{\omega_k^{\ell} \qk(\xi_{k}^{\ell}, \xi^{i}_{k+1}) \left(\tau^{\ell}_k + h_{k}(\xi_{k}^{\ell},\xi^{i}_{k+1})\right)}{\sum_{\ell'=1}^N\omega_k^{\ell'} \qk(\xi_{k}^{\ell'},\xi^{i}_{k+1})}\eqsp,\\
-&\mathbb{E} \left[\widehat{\qk}(\xi_{k}^{I^{i}_{k+1}},\xi^{i}_{k+1};\zeta_{k+1}) \middle| \sigma \left(\mathcal{F}_k^{N},\{\xi_{k+1}^i,I^{i}_{k+1}\}\right)\right]
+&\mathbb{E} \left[\widehat{\qk}(\xi_{k}^{I^{i}_{k+1}},\xi^{i}_{k+1};\zeta_{k}) \middle| \mathcal{G}_{k+1}^{N}\right]
  = \qk(\xi_{k}^{I^{i}_{k+1}},\xi^{i}_{k+1})\eqsp.
 \end{align*}
-Since $\tau^{i}_{k+1}$ and $\zeta_{k+1}$ are independent conditionally to $\sigma\left(\mathcal{F}_k^{N},\{\xi_{k+1}^{\ell}, I_{k+1}^{\ell}\}_{\ell=1}^N\right)$:
+Since $\tau^{i}_{k+1}$ and $\zeta_{k+1}$ are independent conditionally to $\mathcal{G}_{k+1}^{N}$:
 \begin{multline*}
-\mathbb{E}\left[\tau^{i}_{k+1} \widehat{\qk} (\xi_{k}^{I^{i}_{k+1}},\xi^{i}_{k+1};\zeta_{k+1})\middle|\sigma\left(\mathcal{F}_k^{N},\{\xi_{k+1}^i,I_{k+1}^i\} \right)\right]\\
+\mathbb{E}\left[\tau^{i}_{k+1} \widehat{\qk} (\xi_{k}^{I^{i}_{k+1}},\xi^{i}_{k+1};\zeta_{k+1})\middle|\mathcal{G}_{k+1}^{N}\right]\\
  = q_k(\xi_{k}^{I^{i}_{k+1}},\xi^{i}_{k+1})\sum_{\ell=1}^N\frac{\omega_k^{\ell} \qk (\xi_{k}^{\ell},\xi^{i}_{k+1})\left(\tau^{\ell}_k + h_{k}(\xi_{k}^{\ell},\xi^{i}_{k+1})\right)}{\sum_{\ell'=1}^N\omega_k^{\ell'} \qk (\xi_{k}^{\ell'},\xi^{i}_{k+1})}\eqsp.
 \end{multline*}
 Moreover, conditionally to $\mathcal{F}_k^N$, the probability density function of $(\xi_{k+1}^i,I_{k+1}^i)$ is given by
