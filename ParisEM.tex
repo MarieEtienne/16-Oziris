@@ -226,20 +226,16 @@ In general situations, PaRIS algorithm cannot be used for stochastic differentia
 \mathbb{E}\left[\widehat{q}_k(\xi^{\ell}_{k},\xi_{k+1}^{i};\zeta_k)\middle| \mathcal{G}_{k+1}^N\right] &= \qk(\xi^{\ell}_{k},\xi_{k+1}^{i})\eqsp,
 \end{align*}
 where, for all $0\le k \le n$, 
-<<<<<<< HEAD
-\[
-\mathcal{F}_{k}^N = \sigma\left\{Y_{0:k};(\xi^{\ell}_{u},\omega^{\ell}_{u},\tau^{\ell}_{u}),~1\le \ell\le N,~0\le u\le k\right\}\eqsp.
-\]
-
-Practical choices for $\zeta_k$ are presented in the paragraph devoted to the construction of bounded estimators for $q$ and more specifically equation \ref{eq:GPE1} presents the choice made for the implementation of such estimator in our context.
 
 
-=======
 \begin{align*}
 \mathcal{F}_{k}^N &= \sigma\left\{Y_{0:k};(\xi^{\ell}_{u},\omega^{\ell}_{u},\tau^{\ell}_{u});J_{v}^{\ell,j};~1\le \ell\le N,~0\le u\le k, 1\le j \le \widetilde{N}, 0\le v< k\right\}\eqsp,\\
 \mathcal{G}_{k+1}^N &= \mathcal{F}_{k}^N \vee \sigma\left\{Y_{k+1};(\xi^{\ell}_{k+1},\omega^{\ell}_{k+1});~1\le \ell\le N\right\}\eqsp.
 \end{align*}
->>>>>>> 30bd4c5cdb36200c049a576de641a037c6caaa9f
+
+Practical choices for $\zeta_k$ are presented in the paragraph devoted to the construction of bounded estimators for $q$ and more specifically equation \ref{eq:GPE1} presents the choice made for the implementation of such estimator in our context.
+
+
 In the case where $\qk$ is unknown, the filtering weights in \eqref{eq:importance:weights} then become:
 \begin{equation}
 \label{eq:random:weight}
@@ -491,7 +487,7 @@ $$p_k(x_{k-1},x_k)\propto \tilde{q}_k(x_{k-1}, x_k)g_k(x_{k})\eqsp,$$
 where $\tilde{q}_k(x_{k-1},x_k)$ is the p.d.f. of Gaussian distibution with mean $\alpha(x_{k-1})\Delta_k$ and variance $\Delta_kI_d$, i.e. the Euler approximation of equation \eqref{eq:target:sde}. As the observation model is linear and Gaussian, the proposal distribution is therefore Gaussian with explicit mean and variance.
 
 
-In order to evaluate the performance of the GRand PaRIS, the following strategy has been chosen. We compare the estimation of the EM intermediate quantity with the one obtained by the fixed lag method, for different values of the lag (namely, 1,2,5,10,50). The particle approximation of $\mathcal{Q}(\theta,\theta)$ for each model  is computed using each algorithm, see Figure~\ref{fig:res:SINE} for the SINE model (and respectively Figure~\ref{fig:res:LG} for the log-growth model). This estimation is performed 200 times, resulting in estimates $\hQ_1,\dots,\hQ_{200}$, using $\tilde{N}=2$ particles for the filter part, and $M=30$ replications for the Monte Carlo approximation of each $q_k$.  Moreover, the E step requires the computation of a quantity such as \eqref{def:addfunc} with $h_k= \log g_k + \log q_k$.  $\log q_k$ is not available explicitly and is approximated using the unbiased estimator proposed in \cite[Appendix B]{olsson:strojby:2011} based on 30 independent Monte Carlo simulations.
+In order to evaluate the performance of the GRand PaRIS, the following strategy has been chosen. We compare the estimation of the EM intermediate quantity with the one obtained by the fixed lag method, for different values of the lag (namely, 1,2,5,10,50). The particle approximation of $\mathcal{Q}(\theta,\theta)$ for each model  is computed using each algorithm, see Figure~\ref{fig:res:SINE} for the SINE model (and respectively Figure~\ref{fig:res:LG} for the log-growth model). This estimation is performed 200 times, resulting in estimates $\hQ_1,\dots,\hQ_{200}$, using $\tilde{N}=2$ particles for the PaRIS part, and $M=30$ replications for the Monte Carlo approximation of each $q_k$.  Moreover, the E step requires the computation of a quantity such as \eqref{def:addfunc} with $h_k= \log g_k + \log q_k$.  $\log q_k$ is not available explicitly and is approximated using the unbiased estimator proposed in \cite[Appendix B]{olsson:strojby:2011} based on 30 independent Monte Carlo simulations.
 The intermediate quantity of the EM algorithm is also estimated                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      with our algorithm 30 times using $N=5000$ particles, the reference value is then computed as the arithmetic mean of these 30 estimations, and denoted by $\hQ_\star$. Figure \ref{fig:res:SINE} (resp. \ref{fig:res:LG} ) shows this estimates for an example on one simulated data set.\\ 
 The GRand PaRIS algorithm is compared with the fixed lag method of \cite{olsson:strojby:2011}. The GRand Paris algorithm is performed using $N=400$ particles in both cases, the fixed lag technique using $N=1600$ so that both estimations have similar computational times.
 
