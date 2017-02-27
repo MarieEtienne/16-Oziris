@@ -58,7 +58,15 @@
 \newcounter{hypA}
 \newenvironment{hypA}{\refstepcounter{hypA}\begin{itemize}
 \item[{\bf H\arabic{hypA}}]}{\end{itemize}}
-
+%%ENvironmment assumption
+\newcounter{defcounter}
+\setcounter{defcounter}{0}
+\newenvironment{assumpt}{%
+\addtocounter{equation}{-1}
+\refstepcounter{defcounter}
+\renewcommand\theequation{\textbf{A}\thedefcounter}
+\begin{equation}}
+{\end{equation}}
 \begin{document}
 
 \author{Pierre Gloaguen\footnotemark[1] \and Marie-Pierre Etienne\footnotemark[1] \and Sylvain Le {C}orff\footnotemark[2]}
@@ -79,7 +87,7 @@
 This paper introduces a new algorithm to solve the smoothing problem for partially observed continuous time stochastic processes. In this setting, the hidden state process $(X_t)_{t\ge 0}$ is assumed to be a solution to a stochastic differential equation (SDE) and the only information available is given by noisy observations $(Y_{k})_{0\le k\le n}$ of the states $(X_k)_{0\le k\le  n}$ at some discrete time points $(t_k)_{0\le k\le n}$. The bivariate stochastic process $\{(X_{k},Y_{k})\}_{0\le k\le n}$ is a state space model such that conditional on the state sequence $(X_{k})_{0\le k\le n}$ the observations $(Y_{k})_{0\le k\le n}$ are independent and for all $0\le \ell\le n$ the conditional distribution of $Y_{\ell}$ given $\{X_{k}\}_{0\le k\le n}$ depends on $X_{\ell}$ only.
 
 %Statistical inference for partially observed stochastic differential equations is a challenging task since some elementary quantities, such as transition probabilities, are not available explicitly.
-Statistical inference for partially observed stochastic differential equations often requires to solve bayesian filtering and smoothing problems, i.e. the computation of the posterior distributions of sequences of hidden states given observations. The filtering problem refers to the estimation, for each $0\le k \le n$,  of the distributions of the hidden state $X_k$ given the observations $(Y_0,\ldots,Y_k)$. Smoothing stands for the estimation of the distributions of the sequence of states $(X_{k},\ldots,X_{p})$ given observations $(Y_{0},\ldots,Y_{\ell})$ with $0\le k\le p \le \ell \le n$. 
+Statistical inference for partially observed stochastic differential equations often requires to solve bayesian filtering and smoothing problems, i.e.\ the computation of the posterior distributions of sequences of hidden states given observations. The filtering problem refers to the estimation, for each $0\le k \le n$,  of the distributions of the hidden state $X_k$ given the observations $(Y_0,\ldots,Y_k)$. Smoothing stands for the estimation of the distributions of the sequence of states $(X_{k},\ldots,X_{p})$ given observations $(Y_{0},\ldots,Y_{\ell})$ with $0\le k\le p \le \ell \le n$. 
 These posterior distributions are crucial to compute maximum likelihood estimators of the unknown model parameters using the observations $(Y_0,\ldots,Y_n)$ only.
 % $\theta\mapsto \ell_{\theta}^{n}$ given by
 %\begin{equation*}
@@ -114,7 +122,7 @@ In the case of discrete time state space models, approximations of the smoothing
 Both algorithms require first a forward pass which produces a set of particles and weights approximating the sequence of filtering distributions up to time $n$. Then, a backward pass is performed to compute new weights (FFBS) or sample trajectories (FFBSi) in order to approximate the smoothing distributions. 
 %In the case of partially observed SDE, this forward pass may be performed with the SMC steps combined with the GPE of \cite{fearnhead:papaspiliopoulos:roberts:2008}. 
 %Then, the backward pass of the FFBS algorithm keeps all the particles sampled during the forward pass and computes new weights to take into account the information brought by all the observations from time $n$ to time $0$. Instead of computing new weights, the FFBSi  algorithm samples independently backward in time particle trajectories using the particles and weights produced by the forward pass. 
-Recently, \cite{olsson:westerborn:2016} proposed a new SMC algorithm, the particle-based rapid incremental smoother (PaRIS), to approximate on-the-fly (i.e. using the observations as they are received) smoothed expectations of additive functionals. 
+Recently, \cite{olsson:westerborn:2016} proposed a new SMC algorithm, the particle-based rapid incremental smoother (PaRIS), to approximate on-the-fly (i.e.\ using the observations as they are received) smoothed expectations of additive functionals. 
 Unlike the FFBS algorithm, the complexity of this algorithm grows only linearly with the number of particles $N$ and contrary to the FFBSi algorithm, no backward pass is required. 
 
 In this paper, we extend the use of  PaRIS algorithm to partially observed SDE. 
@@ -241,9 +249,10 @@ In the case where $\qk$ is unknown, the filtering weights in \eqref{eq:importanc
 \end{equation}
 Therefore, to obtain a generalized random version of PaRIS, we only need to be able to sample from weight $\Lambda_k^N(i,\ell)$ in the case of SDE based HMM.\\
 We need to define the following assumption:\\
-\[
-\textbf{A1: }\forall~0\leq k\leq n,~\exists \hat{\sigma}_+ \text{ such that }\forall (x,y) \in\mathbb{R}^d\times  \mathbb{R}^d,~~\widehat{q}_k(x,y,\zeta_k)\leq \hat{\sigma_+}
-\]
+\begin{assumpt}
+\label{assumpt:global}
+\forall~0\leq k\leq n,~\exists \hat{\sigma}_+ \text{ such that }\forall (x,y) \in\mathbb{R}^d\times  \mathbb{R}^d,~~\widehat{q}_k(x,y,\zeta_k)\leq \hat{\sigma_+}
+\end{assumpt}
 Then, the following lemma provides the missing step of a Generalized Random PaRIS (GRand Paris)
 \begin{lemma}
 \label{lem:AR:unbiased}
@@ -257,19 +266,21 @@ Let $0\le k\le n-1$ and $1\le i \le N$, and suppose $A_1$ holds may be upper bou
 \STATE Return to \textbf{\sc Sampling Step}
 \ENDIF
 \end{algorithmic}
-Then, the conditional probability distribution given $\mathcal{G}_{k+1}^N$ of $J_{k}^{i,\ell}$ is $\Lambda_{k-1}^N(i,\cdot)$. 
+Then, the conditional probability distribution given $\mathcal{G}_{k+1}^N$ of $J_{k}^{i,\ell}$ is $\Lambda_{k}^N(i,\cdot)$. 
 \end{lemma}
 \begin{proof}
 See Appendix \ref{sec:append:proofs}.
 \end{proof}
-Note that the assumption \textbf{A1} can be relaxed and replaced by one of the two following properties:
-\begin{align*}
-\textbf{A2: }\forall~0\leq k\leq n,~\exists \hat{\sigma}_+ \text{ such that }\forall (j,y) \in [[1,N]]\times  \mathbb{R}^d,~~\widehat{q}_k(\xi^j_k,y,\zeta_k)\leq \hat{\sigma_+}\\
-\textbf{A3: }\forall~0\leq k\leq n,~\exists \hat{\sigma}_+ \text{ such that }\forall (j,y) \in [[1,N]]\times  \mathbb{R}^d,~~\widehat{q}_k(\xi^j_k,y,\zeta_k)\leq \hat{\sigma_+}
-\end{align*}
-
-
- for all $1\le j\le N$, $\sup_y \hat{q}_k(\xi_k^j,y,\zeta_k)< \hat{\sigma}_+^k$ almost surely is actually sufficient to apply Algorithm \ref{alg:AR:unknownq}. This improvement keeps the linear complexity property of PaRIS algorithm and Algorithm \ref{alg:Ozaki:PaRIS}, and allows to increase significantly the acceptance rate of Algorithm \ref{alg:AR:unknownq}. %Moreover, the AR algorithm still stands if one can define 
+Note that lemma \ref{lem:AR:unbiased} still holds if assumption \eqref{assumpt:global} is relaxed and replaced by one of the two following assumptions:
+\begin{assumpt}\label{assumpt:ysupport}
+\forall~0\leq k\leq n,~\exists \hat{\sigma}_+ \text{ such that }\forall (j,y) \in [[1,N]]\times  \mathbb{R}^d,~~\widehat{q}_k(\xi^j_k,y,\zeta_k)\leq \hat{\sigma}_+
+\end{assumpt}
+\vspace{-\baselineskip}
+\begin{assumpt}\label{assumpt:local}
+\forall~0\leq k\leq n,~\exists \hat{\sigma}_+ \text{ such that }\forall j \in [[1,N]],~~\widehat{q}_k(\xi^j_k,\xi^j_{k+1},\zeta_k)\leq \hat{\sigma}_+
+\end{assumpt}
+It is worth noting that under assumptions \eqref{assumpt:global} or \eqref{assumpt:ysupport}, the linear complexity property of PaRIS algorithm still holds, whereas if only assumption \eqref{assumpt:local} holds, the resulting algorithm has a quadratic complexity.
+%Moreover, the AR algorithm still stands if one can define 
 %\begin{equation}
 %\hat{\sigma}_{+}^{k,i}= \underset{j=1,\dots,N}{\text{sup}}\rho_\Delta(\xi_{k-1}^j,\xi_k^i)\eqsp, \label{eq:quadr:bound}
 %\end{equation}
@@ -296,19 +307,15 @@ Interesting choices of $\mu$ are discussed in \cite{fearnhead:papaspiliopoulos:r
 \begin{equation}
 \widehat{q}_{k}(x,y;\zeta_k) = \varphi_{\Delta_k}(x,y) \exp \left\{A(y) - A(x)- \Lo_\mw\Delta_k \right\}\prod_{j=1}^{\kappa}\frac{\U_\mw-\phi(\mw_{U_j})}{\U_\mw-\Lo_\mw}\eqsp.\label{eq:GPE1}
 \end{equation}
-On the r.h.s. of \eqref{eq:GPE1}, the product over $\kappa$ elements is bounded by 1, therefore, a sufficient condition to obtain an upper bound  $\hat{q}_k$ is that the function:
+On the r.h.s. of \eqref{eq:GPE1}, the product over $\kappa$ elements is bounded by 1, therefore, a sufficient condition to satisfy of the assumptions \eqref{assumpt:global}-\eqref{assumpt:local} is that the function:
 \begin{align}
 \rho_{\Delta_k}:\eqsp\mathbb{R}^d\times \mathbb{R}^d &\mapsto \mathbb{R}\nonumber\\
 (x,y)&\mapsto \varphi_{\Delta_k}(x,y) \exp \left\{A(y) - A(x)- \Lo_\mw\Delta_k \right\}\label{eq:rho:func}
 \end{align}
-is upper bounded almost surely by $\hat{\sigma}_+^k$.
-As said above, the GRand PaRIS algorithm only requires a bound $\hat{\sigma}_+^k$ for the function $\rho_{\Delta_k}$ where $x \in \{\xi_{k}^1,\dots,\xi_{1}^N\}$. In order to improve the acceptance rate (at a cost of a quadratic complexity in $N$), we can always compute, for all $1\le i\le N$, the bound 
-\begin{equation}
-\hat{\sigma}_{+}^{k,i}= \underset{1 \le j\le N}{\text{sup}}\rho_{\Delta_k}(\xi_{k-1}^j,\xi_k^i)\eqsp, \label{eq:quadr:bound}
-\end{equation}
-as long as $\Lo_\mw$ is bounded almost surely. This might increase significantly the acceptance rate of the algorithm, and therefore reduce the number of drawings of the random variable $\zeta_k$, which has a much higher cost than the computation of $\rho$, as it requires simulation of Brownian Bridges. It is worth noting here that this latter option can also avoid numerical optimization if no analytical version of $\hat{\sigma}_+^k$ is available. In the example of the SINE model presented below, for $N=400$ particles, the algorithm with linear complexity  has a 40\% higher computation time than the algorithm with a quadratic complexity. Actually, this condition is always satisfied for models in the domains $\mathcal{D}_1$ and $\mathcal{D}_2$ defined in \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006}, i.e. domains for which the exact algorithms EA1 and EA2 can be used. 
-
-
+is upper bounded almost surely by $\hat{\sigma}_+$.
+In particular, if $Lo_\mw$ is bounded almost surely, \eqref{eq:rho:func} always satisfies assumption \eqref{assumpt:local}, therefore, algorithm \eqref{alg:Ozaki:PaRIS} can be perfomed, in the worse case with a quadratic complexity in $N$. Therefore, this condition is always satisfied for models in the domains $\mathcal{D}_1$ and $\mathcal{D}_2$ defined in \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006}, i.e.\ domains for which the exact algorithms EA1 and EA2 can be used.\\ 
+In that case, and when \eqref{assumpt:global} or \eqref{assumpt:ysupport} holds, it can be nonetheless of practical interest to choose the $\hat{\sigma}_+$ corresponding to \eqref{assumpt:global}. Indeed, this might increase significantly the acceptance rate of the algorithm, and therefore reduce the number of drawings of the random variable $\zeta_k$, which has a much higher cost than the computation of $\rho$, as it requires simulation of Brownian Bridges. 
+Moreover, this latter option can also avoid numerical optimization if no analytical version of $\hat{\sigma}_+^k$ is available. In practice, we found this option more efficient in terms of computation time when $N$ has moderate values. 
 %\subsection*{Note on the complexity and practical implementation}
 %As said above, as long as one can define a $\sigma_+^k$ such that
 %$$ \forall\eqsp 0\leq k\leq n-1,\eqsp 1\leq i\leq N,\eqsp y\in\mathbb{R}^d,\eqsp \hat{q}_k(\xi_k^i,y,\zeta_k)<\hat{\sigma}_+^k \text{ a.s.,}$$ then the resulting GRand Paris algorithm has a linear complexity in $N$.\\
@@ -486,7 +493,7 @@ See appendix \ref{sec:append:proofs}
 %The performance of the algorithm is investigated on two known models based on diffusion process.
 This section investigates the performance of the proposed algorithm with the sine and log-growth models. In both cases, the proposal distribution $p_k$ is chosen as the following approximation of the optimal filter (or the fully adapted particle filter in the terminology of \cite{pitt:shephard:1999}): 
 $$p_k(x_{k-1},x_k)\propto \tilde{q}_k(x_{k-1}, x_k)g_k(x_{k})\eqsp,$$
-where $\tilde{q}_k(x_{k-1},x_k)$ is the p.d.f. of Gaussian distibution with mean $\alpha(x_{k-1})\Delta_k$ and variance $\Delta_kI_d$, i.e. the Euler approximation of equation \eqref{eq:target:sde}. As the observation model is linear and Gaussian, the proposal distribution is therefore Gaussian with explicit mean and variance.
+where $\tilde{q}_k(x_{k-1},x_k)$ is the p.d.f. of Gaussian distibution with mean $\alpha(x_{k-1})\Delta_k$ and variance $\Delta_kI_d$, i.e.\ the Euler approximation of equation \eqref{eq:target:sde}. As the observation model is linear and Gaussian, the proposal distribution is therefore Gaussian with explicit mean and variance.
 
 
 In order to evaluate the performance of the GRand PaRIS, the following strategy has been chosen. We compare the estimation of the EM intermediate quantity with the one obtained by the fixed lag method, for different values of the lag (namely, 1,2,5,10,50). The particle approximation of $\mathcal{Q}(\theta,\theta)$ for each model  is computed using each algorithm, see Figure~\ref{fig:res:SINE} for the SINE model (and respectively Figure~\ref{fig:res:LG} for the log-growth model). This estimation is performed 200 times, resulting in estimates $\hQ_1,\dots,\hQ_{200}$, using $\tilde{N}=2$ particles for the PaRIS part, and $M=30$ replications for the Monte Carlo approximation of each $q_k$.  Moreover, the E step requires the computation of a quantity such as \eqref{def:addfunc} with $h_k= \log g_k + \log q_k$.  $\log q_k$ is not available explicitly and is approximated using the unbiased estimator proposed in \cite[Appendix B]{olsson:strojby:2011} based on 30 independent Monte Carlo simulations.
@@ -675,7 +682,7 @@ which concludes the proof.
 %\begin{equation}
 %\mP(X=\ell)= p_X(\ell)=\frac{\omega_k^\ell q_k(\xi_k^\ell,\xi_{k+1})}{\sum_{\ell=1}^N\omega_k^\ell q_k(\xi_k^\ell,\xi_{k+1})},~~\ell\in \{1,\dots,N\}
 %\end{equation}
-%for some $\xi_{k+1}$ that has no importance in this result. We assume $\omega_k$ are normalized weights, i.e. $\sum_\ell \omega_k^l=1$. The candidate will therefore be sampled from $Y$, a r.v. with the following distribution:
+%for some $\xi_{k+1}$ that has no importance in this result. We assume $\omega_k$ are normalized weights, i.e.\ $\sum_\ell \omega_k^l=1$. The candidate will therefore be sampled from $Y$, a r.v. with the following distribution:
 %\begin{equation}
 %\mP(Y=\ell)=p_Y(\ell)= \omega_k^\ell,~~\ell\in \{1,\dots,N\}
 %\end{equation}
