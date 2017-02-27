@@ -239,37 +239,41 @@ In the case where $\qk$ is unknown, the filtering weights in \eqref{eq:importanc
 \label{eq:random:weight}
 \widehat{\omega}^{\ell}_k := \frac{\widehat{q}_k(\xi_{k-1}^{I^{\ell}_k},\xi^{\ell}_k;\zeta_k)g_k(\xi^{\ell}_k)}{\vartheta_k(\xi^{I^{\ell}_k}_{k-1}) p_k (\xi_{k-1}^{I^{\ell}_k},\xi^{\ell}_k)}\eqsp.
 \end{equation}
-Therefore, to obtain a generalized random version of PaRIS, we only need to be able to sample from weight $\Lambda_k^N(i,\ell)$ in the case of SDE based HMM. If $\widehat{q}_k$ may be upper bounded almost surely by a constant $\hat{\sigma}_+$, this task is performed using the accept-reject mechanism given in Algorithm~\ref{alg:AR:unknownq}. Lemma~\ref{lem:AR:unbiased} states that replacing  $\qk$ by its unbiased approximation is a valid alternative to step~\eqref{it:PaRIS:sampleindex}.\\
+Therefore, to obtain a generalized random version of PaRIS, we only need to be able to sample from weight $\Lambda_k^N(i,\ell)$ in the case of SDE based HMM.\\
+We need to define the following assumption:\\
+\[
+\textbf{A1: }\forall~0\leq k\leq n,~\exists \hat{\sigma}_+ \text{ such that }\forall (x,y) \in\mathbb{R}^d\times  \mathbb{R}^d,~~\widehat{q}_k(x,y,\zeta_k)\leq \hat{\sigma_+}
+\]
+Then, the following lemma provides the missing step of a Generalized Random PaRIS (GRand Paris)
 \begin{lemma}
 \label{lem:AR:unbiased}
-Let $0\le k\le n-1$.  For all $1\le i \le N$ and all $1\le \ell \le \widetilde{N}$, the conditional probability distribution given $\mathcal{G}_{k+1}^N$ of the random variable $J_{k}^{i,\ell}$ produced by Algorithm~\ref{alg:AR:unknownq} is  $\Lambda_{k-1}^N(i,\cdot)$. 
-\end{lemma}
-\begin{proof}
-See Appendix \ref{sec:append:proofs}.
-\end{proof}
-Note that the assumption that for all $1\le j\le N$, $\sup_y \hat{q}_k(\xi_k^j,y,\zeta_k)< \hat{\sigma}_+^k$ almost surely is actually sufficient to apply Algorithm \ref{alg:AR:unknownq}. This improvement keeps the linear complexity property of PaRIS algorithm and Algorithm \ref{alg:Ozaki:PaRIS}, and allows to increase significantly the acceptance rate of Algorithm \ref{alg:AR:unknownq}. %Moreover, the AR algorithm still stands if one can define 
-%\begin{equation}
-%\hat{\sigma}_{+}^{k,i}= \underset{j=1,\dots,N}{\text{sup}}\rho_\Delta(\xi_{k-1}^j,\xi_k^i)\eqsp, \label{eq:quadr:bound}
-%\end{equation}
-%which is a weaker assumption. However, in this case, the resulting algorithm has a quadratic complexity in $N$. Nevertheless, in practice, this choice can result in a much more efficient acceptance rate, which would reduce the computational time of the algorithm. 
-\begin{algorithm}[H]
-\caption{Random weight accept-reject backward sampling}
+Let $0\le k\le n-1$ and $1\le i \le N$, and suppose $A_1$ holds may be upper bounded almost surely by a constant $\hat{\sigma}_+$. Let's define the random variable $J_k^i$ as follow:
 \begin{algorithmic}
-\FORALL{$i \in 1,\dots, N$}
-\FORALL{$\ell \in 1,\dots, \widetilde N$} 
-\STATE \textbf{\sc Sampling Step} \\
-Sample independently $
+\STATE \textsc{Sampling step:} Sample independently $
 \zeta_k$, $U\sim \mathcal{U}[0,1]$ and $J\in\{1,\ldots,N\}$ with probabilities proportional to $\{\widehat{\omega}_{k}^1,\dots,\widehat{\omega}_{k}^N\}$.
 \IF{ $$U \leq \frac{\widehat{\qk}(\xi_{k}^J,\xi_{k+1}^i,\zeta_k)}{\hat{\sigma}_+},$$}
 \STATE Set $J_k^{i,\ell} = J$.
 \ELSE 
 \STATE Return to \textbf{\sc Sampling Step}
 \ENDIF
-\ENDFOR
-\ENDFOR
 \end{algorithmic}
-\label{alg:AR:unknownq}
-\end{algorithm}
+Then, the conditional probability distribution given $\mathcal{G}_{k+1}^N$ of $J_{k}^{i,\ell}$ is $\Lambda_{k-1}^N(i,\cdot)$. 
+\end{lemma}
+\begin{proof}
+See Appendix \ref{sec:append:proofs}.
+\end{proof}
+Note that the assumption \textbf{A1} can be relaxed and replaced by one of the two following properties:
+\begin{align*}
+\textbf{A2: }\forall~0\leq k\leq n,~\exists \hat{\sigma}_+ \text{ such that }\forall (j,y) \in [[1,N]]\times  \mathbb{R}^d,~~\widehat{q}_k(\xi^j_k,y,\zeta_k)\leq \hat{\sigma_+}\\
+\textbf{A3: }\forall~0\leq k\leq n,~\exists \hat{\sigma}_+ \text{ such that }\forall (j,y) \in [[1,N]]\times  \mathbb{R}^d,~~\widehat{q}_k(\xi^j_k,y,\zeta_k)\leq \hat{\sigma_+}
+\end{align*}
+
+
+ for all $1\le j\le N$, $\sup_y \hat{q}_k(\xi_k^j,y,\zeta_k)< \hat{\sigma}_+^k$ almost surely is actually sufficient to apply Algorithm \ref{alg:AR:unknownq}. This improvement keeps the linear complexity property of PaRIS algorithm and Algorithm \ref{alg:Ozaki:PaRIS}, and allows to increase significantly the acceptance rate of Algorithm \ref{alg:AR:unknownq}. %Moreover, the AR algorithm still stands if one can define 
+%\begin{equation}
+%\hat{\sigma}_{+}^{k,i}= \underset{j=1,\dots,N}{\text{sup}}\rho_\Delta(\xi_{k-1}^j,\xi_k^i)\eqsp, \label{eq:quadr:bound}
+%\end{equation}
+%which is a weaker assumption. However, in this case, the resulting algorithm has a quadratic complexity in $N$. Nevertheless, in practice, this choice can result in a much more efficient acceptance rate, which would reduce the computational time of the algorithm. 
 \subsection*{Bounded estimator of $q_k$}
 For $x, y \in \mathbb{R}^d$, by Girsanov and Ito's formulas, the transition density $q_k(x,y)$ of \eqref{eq:target:sde} satisfies, with $\Delta_k = t_{k+1}-t_k$,
 \begin{align*}
