@@ -1,0 +1,129 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amssymb}
+\usepackage{makeidx}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{amsfonts,amsmath,amssymb,amsthm}
+\usepackage{oldgerm}
+\usepackage{mathrsfs}
+\usepackage[active]{srcltx}
+\usepackage{verbatim}
+\usepackage[toc,page]{appendix}
+\usepackage{aliascnt}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage[textwidth=4cm,textsize=footnotesize]{todonotes}
+\usepackage{xargs}
+\usepackage{cellspace}
+\usepackage[Symbolsmallscale]{upgreek}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{array}
+\geometry{top=3.5cm, bottom=3.5cm, left=3.5cm , right=3.5cm}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\graphicspath{{figures/}}
+\usepackage{enumerate}
+\usepackage{xcolor}
+\usepackage{algorithm,algorithmic}  
+
+\newcommand{\x}[2]{x_{#1}^{(#2)}}
+\newcommand{\w}[2]{w_{#1}^{(#2)}}
+\newcommand{\tw}[2]{\tilde{w}_{#1}^{(#2)}}
+\newcommand{\p}[2]{\xi_{#1}^{(#2)}}
+\newcommand{\tp}[2]{\tilde{\xi}_{#1}^{(#2)}}
+\newcommand{\ta}[2]{\tau_{#1}^{(#2)}}
+\newcommand{\rmd}{\mathrm{d}}
+\newcommand{\eqsp}{\;}
+\newcommand{\1}{\mathrm{1}}
+\newcommand{\com}[1]{{\color{gray} // #1}}
+\newcommand{\mP}{\mathbb{P}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\qk}{q_{k}}
+\newcommand{\acom}[1]{\textit{\color{gray} //#1}}
+\newcommand{\Oz}{Z}%Letter for the Ozaki approximation
+\newcommand{\Jk}{J_{\alpha}^k}%Command for Jacobian of alpha
+\newcommand{\mw}{\mathsf{w}}%For bridge realisations
+\newcommand{\U}{\mathsf{U}}
+\newcommand{\Lo}{\mathsf{L}}
+%\newcommand{\qk}{q^{\Delta t_k}_{\theta}}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
+\newcommand{\hQ}{\widehat{Q}}
+\newcounter{hypA}
+\newenvironment{hypA}{\refstepcounter{hypA}\begin{itemize}
+\item[{\bf H\arabic{hypA}}]}{\end{itemize}}
+%%ENvironmment assumption
+\newcounter{defcounter}
+\setcounter{defcounter}{0}
+\newenvironment{assumpt}{%
+\addtocounter{equation}{-1}
+\refstepcounter{defcounter}
+\renewcommand\theequation{\textbf{A}\thedefcounter}
+\begin{equation}}
+{\end{equation}}
+\begin{document}
+
+\author{Pierre Gloaguen\footnotemark[1] \and Marie-Pierre Etienne\footnotemark[1] \and Sylvain Le {C}orff\footnotemark[2]}
+ 
+\footnotetext[1]{AgroParistech, UMR MIA 518, F-75231 Paris, France.}
+\footnotetext[2]{Laboratoire de Math\'ematiques d'Orsay, Univ. Paris-Sud, CNRS, Universit\'e Paris-Saclay.}
+
+
+\title{Efficient online Sequential Monte Carlo smoother for partially observed stochastic differential equations}
+
+\lhead{Gloaguen et al.}
+\rhead{Particle smoother for SDE}
+
+\maketitle
+
+The authors are grateful to the associate editor and the anonymous referees for their comments to improve the manuscript. The paper has been modified to take these remarks into account and also carefully proof read to remove remaining typos and minor mistakes. We provide below detailed answers for all comments.
+
+\subsection*{Referee 1}
+{\em I have two major comments that I think should be addressed before publishing. First of all the whole presentation is written as given a  fixed observation record $(Y_k)_{1\le k \le n}$, one of the main points of the PaRIS algorithm, which you rely on, is the ability to work with data streams of observations with a  fixed memory usage. Maybe it would be a good idea to include this in the paper.}
+
+\vspace{.3cm}
+
+As pointed by the Referee, one of the best feature of PaRIS algorithm is that it may be implemented "online", processing the observations $(Y_k)_{k\ge 1}$ as they are received, without any storage. This may be seen for instance in steps (i)-(iii) in page 6 which describe the way the intermediate quantities $(\tau_k^i)_{1\le i \le N}$ can be computed at each time step. Each time a new observation $Y_{n+1}$ is received, these quantities can be updated only using $Y_{n+1}$, $(\tau_n^i)_{1\le i \le N}$ and the particle filter at time $n$. This means that storage requirements do not increase. The update is stopped when the last observations is received to compute the approximation of the smoothed additive functional. 
+
+This remark was added after steps (i)-(iii) to highlight the online property of the extension of PaRIS algorithm (with no additional storage requirements). The introduction also insists on this property of the algorithm.
+
+In common applications (for instance in the cas of the EM algorithm),  the smoothed additive functional to be computed is known in advance, this is the reason why we chose to stop the updates for a given arbitrary time $n$, but it is now clear that the algorithm may be stopped at any time.
+
+\vspace{1cm}
+{\em Secondly in the algorithm presented on page 9, it says to draw $M$ samples from $\zeta_k$ while not mentioningwhat to do with these. This should be specified in the manuscript.}
+
+\vspace{.3cm}
+
+The way the unbiased estimation of $q_k(\xi^{I_k^\ell}_{k-1},\xi^\ell_k)$ was computed was indeed not clear. In (7) and at the bottom of page 6 we only stated the existence of a random variable $\zeta_k$ such that $\widehat{q}_k(\xi^{I_k^\ell}_{k-1},\xi^\ell_k;\zeta_k)$ is an unbiased estimation of $q_k(\xi^{I_k^\ell}_{k-1},\xi^\ell_k)$. 
+
+At each time step, we then sample independently $(\zeta^m_k)_{1\le m \le M}$ and define the following estimator of $q_k(\xi^{I_k^\ell}_{k-1},\xi^\ell_k)$:
+\[
+\frac{1}{M}\sum_{m=1}^M \widehat{q}_k(\xi^{I_k^\ell}_{k-1},\xi^\ell_k;\zeta^m_k)\eqsp.
+\]
+This is now detailed in clearly in \eqref{}.
+
+\vspace{1cm}
+
+{\em On page 4 line 28 $q_k$ is defined as the transition from $X_k$ to $X_{k+1}$, while on page 5 line 30 (equation4) it is used as the transition from $X_{k-1}$ to $X_k$, this also happens on page 10 line 35.}
+
+\vspace{.3cm}
+
+This was corrected, $q_k$ is the transition density of the law of $X_k$ given $X_{k+1}$.
+
+\vspace{1cm}
+
+{\em On page 15, line 13, I believe that $h(m)$ has sneaked its way into the equation and should be removed.}
+
+\vspace{.3cm}
+ $h(m)$ was removed in this equation. 
+
+\subsection*{Referee 2}
+
+
+\end{document}
