@@ -106,7 +106,26 @@ At each time step, we then sample independently $(\zeta^m_k)_{1\le m \le M}$ and
 \[
 \frac{1}{M}\sum_{m=1}^M \widehat{q}_k(\xi^{I_k^\ell}_{k-1},\xi^\ell_k;\zeta^m_k)\eqsp.
 \]
-This is now detailed in clearly in \eqref{}.
+This is now detailed clearly just after (7).
+
+\vspace{1cm}
+
+
+{\em Maybe if the time continuous process was denoted by $\widetilde{X}$ or something similar the difference would be clear.}
+
+\vspace{.3cm}
+
+\textcolor{red}{Il est gentil Michel mais introduire une notation pour ca moi ca ne me plait pas. On repond au reste, je suis d'avis de lui dire merci mais non merci.}
+
+\vspace{1cm}
+
+{\em
+On page 3, you talk about not being able to extend the FFBSi algorithm to this class of models, butas far as I understand it the same sampling technique should be possible to draw from the approximativesmoothing distribution.
+}
+
+\vspace{.3cm}
+
+The usual FFBSi cannot be extended easily for the same reasons as the FFBS (it relies on the approximation of the backward kernel which is a ratio as defined in (6) in our paper). But it is true that the linear version of the FFBSi may be extended in a similar way as PaRIS algorithm (while it does stil require a backward pass). The introduction was modified to make this statement clear.
 
 \vspace{1cm}
 
@@ -125,5 +144,85 @@ This was corrected, $q_k$ is the transition density of the law of $X_k$ given $X
 
 \subsection*{Referee 2}
 
+
+\subsubsection*{Major comments}
+\begin{enumerate}
+\item
+\item {\em When presenting equation (2), the authors should explain the importance of approximating those type of functionals.}
+
+\vspace{.3cm}
+
+The importance of these quantities is now clearly stated after equation (2). We added the usual applications to the computation of the Fisher score and the intermediate quantity of the EM algorithm. We also highlighted that it was crucial for online inference of latent data models which supports the use of the proposed online smoother.
+
+\item {\em General practical strategies to specify $\vartheta_k$, $p_k$, $\hat{\sigma}_+^k$ in the SDE context should bediscussed.}
+
+\vspace{.3cm}
+
+Choices that can be made for  $\vartheta_k$ and $p_{k-1}$ are discussed after (4) and the definition of $\phi_k^N$. The specific approximation of the fully adapted particle filter is also illustrated in the numerical section. \textcolor{red}{Pour le sigma Pierre tu as peut-etre plus d'elements. On peut bien sur parler des conditions de l'EA mais je pense qu'une intuition pratique est plus percutante ici.}
+
+\item {\em Conditions (A1)-(A3) should be carefully discussed. How restrictive are they? Forexample, what if $\phi(\omega_s)$ (or $L_\omega$) is not bounded below? Is there any general solutionin this case?}
+
+\vspace{.3cm}
+
+\item
+\item
+\item
+\item
+\item {\em Can anything be said about the bias of the proposed estimator for finite $N$? Is itonly due to the form of  $\Lambda_k^N$ ?}
+
+\vspace{.3cm}
+
+
+\item {\em What can be said about a CLT for the proposed estimator?}
+\textcolor{red}{On peut le faire, pas tres dur, mais ca va allonger les choses et sans message tres clair sur la variance asymptotique a mon avis. Voila une suggestion de reponse...}
+
+\vspace{.3cm}
+
+A CLT was derived for the original version of PaRIS algorithm as the number $N$ of particles grows to infinity. A CLT may also derived for our extension as it is a noisy version of the original method. However, even if its proof is not too involved it still require additional assumptions and technicalities. And the asymptotic variance remains hard to analyze (for instance to choose the parameters in comparison to other smoothing methods). Analyzing the variance of particle smoothers (FFBS, FFBSi, PaRIS, two-filer) is at the core of ongoing works and we believe that comparing the variance would be more suitable and interesting than just providing a CLT with no rules to choose between methods. We are also working on the estimation of such asymptotic variances which is a complex problem out of the scope of this paper.
+
+\item {\em It is worth mentioning that, for the log-growth model, $X$ is a function of $\sigma$ and whatare the consequences of that in a context where $\sigma$ is an unknown parameter.}
+
+\vspace{.3cm}
+
+\item {\em I quite like the choice of $Q(\theta;\theta)$ in the examples. It would be very interesting tohave an implementation of the actual EM algorithm for parameter estimation in theexamples provided, using GRand Paris on the E step.}
+
+\vspace{.3cm}
+
+The numerical section now contains a complete implementation of the EM algorithm which highlights clearly \textcolor{red}{BIM} the performance of the proposed PaRIS algorithm.  
+\end{enumerate}
+
+
+
+\subsubsection*{Minor comments}
+\begin{enumerate}
+\item{\em page 3, line 36: The authors should clearly state that the proposed methodologydoes not rely on time discretisation approximations.}
+
+\vspace{.3cm}
+
+This is now explicitly written in the introduction.
+
+\item{\em page 5, line 21: computing $\longrightarrow$ computed.}
+
+\vspace{.3cm}
+
+This typo was corrected.
+
+\item {\em page 8, line 52: I suggest "... $L_w$ is bounded below almost surely, ..."}
+
+\vspace{.3cm}
+
+This was changed as suggested.
+
+\item {\em page 11, line 10: does the fixed lag algorithm have the same cost for all lag values?What is the computational time of one run of GRand PaRIS for the examples presented?}
+
+\vspace{.3cm}
+
+\textcolor{red}{M. Gloaguen, your call !}
+
+\item {\em page 16, line 49: For the proof to be valid, the induction result needs to be established for $k\ge 0$.}
+
+\vspace{.3cm}
+
+\end{enumerate}
 
 \end{document}
