@@ -381,7 +381,7 @@ The process solution to \eqref{eq:Lamp:SINE} is observed regularly at times $t_0
 \begin{equation}
 Y_k = X_k + \varepsilon_k\label{eq:obs:SINE}\eqsp,
 \end{equation}
-where the $(\varepsilon)_{0\leq k \leq 100}$ are i.i.d. $\mathcal{N}(0,1)$.
+where the $(\varepsilon_k)_{0\leq k \leq 100}$ are i.i.d. $\mathcal{N}(0,1)$.
 In the example displayed on Figure \ref{fig:res:SINE:obs}, we set $\theta=0$.
 In that case, the function $\rho_{\Delta_k}$ defined in \eqref{eq:rho:func} can be upper bounded either on $(x,y)$ or only on $y$, the GRand PaRIS algorithm has therefore a linear complexity.
 
@@ -424,6 +424,26 @@ The GRand PaRIS algorithm outperforms the fixed lag methods for any value of the
 \caption{{\em SINE model - variance}. Distribution of the empirical absolute coefficient of variation.}
 \label{fig:mult:SINE:cv}
 \end{figure}
+
+The performance of our algorithm are also assessed in the case where $\theta$ and the variance $\sigma^2$ of $\varepsilon_1$ are unknown and estimated using a generalized EM algorithm: $n=200$ observations are sampled with $\theta = 0$ and $\sigma^2 = 0.5$ and the Grand PaRIS algorithm is based on $N=200$ particles, $\widetilde{N} = \textcolor{red}{???}$ backward samples and $M = \textcolor{red}{???}$ replicates of the transition density estimator to approximate the importance weights. 
+As their is no closed form solution to compute the M step of the EM algorithm and propose new parameter estimates, at each iteration $50$ new parameter estimates are sampled \textcolor{red}{comment ?} close to the current estimate and the intermediate quantity is approximated using our algorithm for each candidate. Then, parameter values leading to the greatest value of the approximate intermediate quantities are selected as the new parameter estimates.
+Figures~\ref{fig:SINE:theta} and~\ref{fig:SINE:sigma} illustrate the performance of the estimation for several initializations of $\theta$ (resp. $\sigma^2$) uniformly chosen in  $(-\pi,\pi)$ (resp. in $(0,6)$) after only a few iterations of the EM procedure.
+
+\begin{figure}[p]
+\centering
+\includegraphics[scale=0.5]{figure_theta}
+\caption{{\em SINE model - EM}. Estimation  of $\theta$.}
+\label{fig:SINE:theta}
+\end{figure}
+
+
+\begin{figure}[p]
+\centering
+\includegraphics[scale=0.5]{figure_sigma2}
+\caption{{\em SINE model - EM}. Estimation of $\sigma^2$.}
+\label{fig:SINE:sigma}
+\end{figure}
+
 
 \subsection*{Log-growth model}
 Following \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006} and \cite{olsson:westerborn:2016}, the performance of the proposed algorithm are also illustrated with the log-growth model defined by:

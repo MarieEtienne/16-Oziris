@@ -96,7 +96,9 @@ This remark was added after steps (i)-(iii) to highlight the online property of 
 In common applications (for instance in the cas of the EM algorithm),  the smoothed additive functional to be computed is known in advance, this is the reason why we chose to stop the updates for a given arbitrary time $n$, but it is now clear that the algorithm may be stopped at any time.
 
 \vspace{1cm}
-{\em Secondly in the algorithm presented on page 9, it says to draw $M$ samples from $\zeta_k$ while not mentioningwhat to do with these. This should be specified in the manuscript.}
+
+{\em Secondly in the algorithm presented on page 9, it says to draw $M$ samples from $\zeta_k$ while not mentioning
+what to do with these. This should be specified in the manuscript.}
 
 \vspace{.3cm}
 
@@ -120,7 +122,9 @@ This is now detailed clearly just after (7).
 \vspace{1cm}
 
 {\em
-On page 3, you talk about not being able to extend the FFBSi algorithm to this class of models, butas far as I understand it the same sampling technique should be possible to draw from the approximativesmoothing distribution.
+On page 3, you talk about not being able to extend the FFBSi algorithm to this class of models, but
+as far as I understand it the same sampling technique should be possible to draw from the approximative
+smoothing distribution.
 }
 
 \vspace{.3cm}
@@ -129,7 +133,8 @@ The usual FFBSi cannot be extended easily for the same reasons as the FFBS (it r
 
 \vspace{1cm}
 
-{\em On page 4 line 28 $q_k$ is defined as the transition from $X_k$ to $X_{k+1}$, while on page 5 line 30 (equation4) it is used as the transition from $X_{k-1}$ to $X_k$, this also happens on page 10 line 35.}
+{\em On page 4 line 28 $q_k$ is defined as the transition from $X_k$ to $X_{k+1}$, while on page 5 line 30 (equation
+4) it is used as the transition from $X_{k-1}$ to $X_k$, this also happens on page 10 line 35.}
 
 \vspace{.3cm}
 
@@ -154,13 +159,16 @@ This was corrected, $q_k$ is the transition density of the law of $X_k$ given $X
 
 The importance of these quantities is now clearly stated after equation (2). We added the usual applications to the computation of the Fisher score and the intermediate quantity of the EM algorithm. We also highlighted that it was crucial for online inference of latent data models which supports the use of the proposed online smoother.
 
-\item {\em General practical strategies to specify $\vartheta_k$, $p_k$, $\hat{\sigma}_+^k$ in the SDE context should bediscussed.}
+\item {\em General practical strategies to specify $\vartheta_k$, $p_k$, $\hat{\sigma}_+^k$ in the SDE context should be
+discussed.}
 
 \vspace{.3cm}
 
 Choices that can be made for  $\vartheta_k$ and $p_{k-1}$ are discussed after (4) and the definition of $\phi_k^N$. The specific approximation of the fully adapted particle filter is also illustrated in the numerical section. \textcolor{red}{Pour le sigma Pierre tu as peut-etre plus d'elements. On peut bien sur parler des conditions de l'EA mais je pense qu'une intuition pratique est plus percutante ici.}
 
-\item {\em Conditions (A1)-(A3) should be carefully discussed. How restrictive are they? Forexample, what if $\phi(\omega_s)$ (or $L_\omega$) is not bounded below? Is there any general solutionin this case?}
+\item {\em Conditions (A1)-(A3) should be carefully discussed. How restrictive are they? For
+example, what if $\phi(\omega_s)$ (or $L_\omega$) is not bounded below? Is there any general solution
+in this case?}
 
 \vspace{.3cm}
 
@@ -168,7 +176,8 @@ Choices that can be made for  $\vartheta_k$ and $p_{k-1}$ are discussed after (4
 \item
 \item
 \item
-\item {\em Can anything be said about the bias of the proposed estimator for finite $N$? Is itonly due to the form of  $\Lambda_k^N$ ?}
+\item {\em Can anything be said about the bias of the proposed estimator for finite $N$? Is it
+only due to the form of  $\Lambda_k^N$ ?}
 
 \vspace{.3cm}
 
@@ -180,22 +189,26 @@ Choices that can be made for  $\vartheta_k$ and $p_{k-1}$ are discussed after (4
 
 A CLT was derived for the original version of PaRIS algorithm as the number $N$ of particles grows to infinity. A CLT may also derived for our extension as it is a noisy version of the original method. However, even if its proof is not too involved it still require additional assumptions and technicalities. And the asymptotic variance remains hard to analyze (for instance to choose the parameters in comparison to other smoothing methods). Analyzing the variance of particle smoothers (FFBS, FFBSi, PaRIS, two-filer) is at the core of ongoing works and we believe that comparing the variance would be more suitable and interesting than just providing a CLT with no rules to choose between methods. We are also working on the estimation of such asymptotic variances which is a complex problem out of the scope of this paper.
 
-\item {\em It is worth mentioning that, for the log-growth model, $X$ is a function of $\sigma$ and whatare the consequences of that in a context where $\sigma$ is an unknown parameter.}
+\item {\em It is worth mentioning that, for the log-growth model, $X$ is a function of $\sigma$ and what
+are the consequences of that in a context where $\sigma$ is an unknown parameter.}
 
 \vspace{.3cm}
 
-\item {\em I quite like the choice of $Q(\theta;\theta)$ in the examples. It would be very interesting tohave an implementation of the actual EM algorithm for parameter estimation in theexamples provided, using GRand Paris on the E step.}
+\item {\em I quite like the choice of $Q(\theta;\theta)$ in the examples. It would be very interesting to
+have an implementation of the actual EM algorithm for parameter estimation in the
+examples provided, using GRand Paris on the E step.}
 
 \vspace{.3cm}
 
-The numerical section now contains a complete implementation of the EM algorithm which highlights clearly \textcolor{red}{BIM} the performance of the proposed PaRIS algorithm.  
+The numerical section now contains a complete implementation of a generalized EM algorithm for the SINE model which highlights clearly the performance of the proposed PaRIS algorithm.  
 \end{enumerate}
 
 
 
 \subsubsection*{Minor comments}
 \begin{enumerate}
-\item{\em page 3, line 36: The authors should clearly state that the proposed methodologydoes not rely on time discretisation approximations.}
+\item{\em page 3, line 36: The authors should clearly state that the proposed methodology
+does not rely on time discretisation approximations.}
 
 \vspace{.3cm}
 
@@ -213,7 +226,8 @@ This typo was corrected.
 
 This was changed as suggested.
 
-\item {\em page 11, line 10: does the fixed lag algorithm have the same cost for all lag values?What is the computational time of one run of GRand PaRIS for the examples presented?}
+\item {\em page 11, line 10: does the fixed lag algorithm have the same cost for all lag values?
+What is the computational time of one run of GRand PaRIS for the examples presented?}
 
 \vspace{.3cm}
 
