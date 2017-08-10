@@ -181,6 +181,8 @@ only due to the form of  $\Lambda_k^N$ ?}
 
 \vspace{.3cm}
 
+The bias of forward backward based particle smoothers due to $\Lambda_k^N$ (i.e. to the particle approximations) was analyzed in \cite{delmoral:doucet:singh:2010}. In the case of additive functional as in (2), the bias of the forward only version of the FFBS algorithm is shown to be upper bounded by a term of order $n/N$ for strongly mixing hidden Markov models.  
+
 
 \item {\em What can be said about a CLT for the proposed estimator?}
 \textcolor{red}{On peut le faire, pas tres dur, mais ca va allonger les choses et sans message tres clair sur la variance asymptotique a mon avis. Voila une suggestion de reponse...}
@@ -193,6 +195,8 @@ A CLT was derived for the original version of PaRIS algorithm as the number $N$ 
 are the consequences of that in a context where $\sigma$ is an unknown parameter.}
 
 \vspace{.3cm}
+
+Even if there is no actual implementation of the EM algorithm in the paper for the log-growth model, we agree that providing some insights on the way it could be used may be very useful. We added a paragraph at the end of the log-growth section following the work of [4] explaining how the process can be transformed to estimate $\sigma$ using an EM algorithm although $X$ is a function of $\sigma$. \textcolor{red}{Pas si simple, la transformation en deux etapes de Beskos et al ne fonctionne pas comme le processus X n'est pas directement observe...}
 
 \item {\em I quite like the choice of $Q(\theta;\theta)$ in the examples. It would be very interesting to
 have an implementation of the actual EM algorithm for parameter estimation in the
@@ -238,5 +242,14 @@ What is the computational time of one run of GRand PaRIS for the examples presen
 \vspace{.3cm}
 
 \end{enumerate}
+
+\bibliographystyle{plain}
+\begin{thebibliography}{10}
+
+\bibitem{delmoral:doucet:singh:2010}
+P.~{D}el {M}oral, {A}.~{D}oucet, and {S}.{S}.~{S}ingh.
+\newblock A backward particle intepretation of {F}eynman-{K}ac formulae.
+\newblock {\em {ESAIM:~M2AN}}, 44:947--975, 2010.
+\end{thebibliography}
 
 \end{document}
