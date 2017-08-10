@@ -152,7 +152,17 @@ This was corrected, $q_k$ is the transition density of the law of $X_k$ given $X
 
 \subsubsection*{Major comments}
 \begin{enumerate}
-\item
+\item \textcolor{red}{Je pense que c'est le gros morceau... La reponse a cette question recouvre en fait les questions 1/4/5/6/8 donc quasiment tout ce qu'il reste.
+On s'est focalises sur ces EDS essentiellement pour l'utilisation des estimateurs sans biais et leurs applications a des modeles en ecologie. C'est facile d'expliquer la partie gradient et d'utiliser Ait-Sahalia pour expliquer que c'est dur en non scalaire. Ensuite, je pense que le mieux c'est de bien decrire que les estimateurs de densites peuvent s'obtenir avec tous les EA et dans ce cas detailler les hypotheses proprement pour justifier notre approche. On peut aller jusqu'a l'EA3, qui sera quadratique probablement mais remplit la condition A3 donc peut etre a priori utilise. Ensuite, je pense que l'on peut mentionner que ce que l'on fait peut s'etendre a d'autres EDS avec une diffusion non unitaire grace aux tres recentes methodes d'importance sampling. La team Roberts n'a pas encore publie son algo (le fera-t-elle un jour ?) mais Kohatsu-Higa si et son algor ressemble beaucoup a l'approche Warwickienne. On a dans ce cas un estimateur sans biais, et que l'on peut simuler, sous des hypotheses plus generales. On ne change pas tout notre papier, on garde une focalisation de type Poisson mais on peut faire un paragraphe que se passe-t-il dans le cas non unitaire... PaRIS marche exactement pareil, a chacun d'utiliser son estimateur de densite prefere. What ya think ?
+Je change dans cet esprit, vous me direz ce que vous en pensez !}
+
+\vspace{.3cm}
+
+We agree with the Referee that the model was not introduced properly and that the use of generalized Poisson estimators required additional comments. This remark led to a major modification of the beginning of Section~2. The assumptions mentioned by the Referee are highlighted clearly and much more commented to explain the setting in which GPE can be used. 
+
+As some assumptions may be restrictive (specifically the gradient assumption on the drift), we also provide alternative to GPE to estimate transition densities. The only requirement to extend PaRIS algorithm is to obtain an unbiased estimator than can be evaluated explicitly to compute the importance weights. A recent class of estimators which do not use the gradient assumptions are the continuous importance sampling based methods of \cite{}. They introduce other sets of assumptions such as... 
+
+
 \item {\em When presenting equation (2), the authors should explain the importance of approximating those type of functionals.}
 
 \vspace{.3cm}
@@ -250,6 +260,14 @@ What is the computational time of one run of GRand PaRIS for the examples presen
 P.~{D}el {M}oral, {A}.~{D}oucet, and {S}.{S}.~{S}ingh.
 \newblock A backward particle intepretation of {F}eynman-{K}ac formulae.
 \newblock {\em {ESAIM:~M2AN}}, 44:947--975, 2010.
+
+\bibitem{olsson:westerborn:2016}
+J.~Olsson and J.~Westerborn.
+\newblock Efficient particle-based online smoothing in general hidden {M}arkov
+  models: the {PaRIS} algorithm.
+\newblock {\em ArXiv:1412.7550}, 2016.
+
+
 \end{thebibliography}
 
 \end{document}

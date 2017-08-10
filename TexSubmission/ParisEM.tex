@@ -114,12 +114,49 @@ All proofs are postponed to Appendix~\ref{sec:append:proofs}.
 
 \section{The Generalized Random PaRIS algorithm}
 \label{sec:rwparis}
-$(X_t)_{t\ge 0}$ is defined as a weak solution to the following SDE in $\mathbb{R}^d$:
+%. These estimators are designed for stochastic processes
+Let $(X_t)_{t\ge 0}$ be defined as a weak solution to the following SDE in $\mathbb{R}^d$:
 \begin{equation}
 \label{eq:target:sde}
-X_0 = x_0\quad\mbox{and}\quad \rmd X_t = \alpha(X_t)\rmd t + \rmd W_t\eqsp,
+X_0 = x_0\quad\mbox{and}\quad \rmd X_t = \alpha(X_t)\rmd t + \Gamma(X_t)\rmd W_t\eqsp,
 \end{equation}
-where $(W_t)_{t\ge 0}$ is a standard Brownian motion. It is assumed that $\alpha$ is of the form $\alpha(x) = \nabla_x A(x)$ where $A: \mathbb{R}^d \to \mathbb{R}$ is a twice continuously differentiable function. The solution to \eqref{eq:target:sde} is supposed to be partially observed at times $t_0=0,\dots,t_n$ through an observation process $(Y_k)_{0\le k \le n}$ in $(\mathbb{R}^m)^{n+1}$. 
+where $(W_t)_{t\ge 0}$ is a standard Brownian motion on $\mathbb{R}^d$, $\alpha: \mathbb{R}^d\to\mathbb{R}^d$ and $\Gamma: \mathbb{R}^d\to \mathbb{R}^{d\times d}$. 
+In this paper, we focus on unbiased estimator of the unknown transition densities given by generalized Poisson estimators defined in \cite{fearnhead:papaspiliopoulos:roberts:2008}. The use of generalized Poisson estimators requires that the diffusion coefficient $\Gamma$ is constant and equals to the identity matrix. Note that, when this is not the case, there exists a class of diffusion processes that may be transformed to satisfy this assumption. This paper then focuses on reducible SDE for which there exists an invertible and infinitely differentiable function $\eta$ such that the process $\left\{Z_t = \eta(X_t)\right\}_{t\ge 0}$ satisfies the SDE  $z_0 = \eta(x_0)$ and
+\begin{equation}
+\label{eq:diff:lamperti}
+\mathrm{d}Z_t = \beta(Z_t)\mathrm{d}t + \mathrm{d}W_t\eqsp.
+\end{equation}
+By Ito's formula,  it is straightforward to show that, in the case of a reducible diffusion, the Jacobian matrix of $\eta$ satisfies
+\[
+\nabla \eta = \Gamma^{-1}\eqsp,
+\]
+and, in the case $d=1$,
+\[
+\beta:u \mapsto \frac{\alpha(\eta^{-1}(u))}{\Gamma(\eta^{-1}(u))} - \frac{\Gamma'(\eta^{-1}(u))}{2}\eqsp.
+\]
+In the case of a scalar diffusion, this Lamperti transform is given by:
+\[
+\eta:x\mapsto \int_{x_0}^x\Gamma^{-1}(u)\mathrm{d}u\eqsp.
+\]
+In the general case, \cite[Proposition~$1$]{ait-sahalia:2008} shows that when $\Gamma$ is nonsingular, the SDE is reducible if and only if, for all $1\le i,j,k\le d$,
+\begin{equation}
+\label{eq:reducibility}
+\frac{\partial\Gamma^{-1}_{i,j}}{\partial x_k} = \frac{\partial\Gamma^{-1}_{i,k}}{\partial x_j}\eqsp.
+\end{equation}
+In the case of a diagonal matrix $\Gamma$ \eqref{eq:reducibility} is equivalent to assume that $\Gamma$ is such that for each $1\le i\le d$, $\Gamma_{i,i}$ depends on $x_i$ only. \cite{ait-sahalia:2008} notes that the reducibility condition \eqref{eq:reducibility} holds also for some nondiagonal matrices $\Gamma$. This is true in particular in the case $d=2$ for stochastic volatility models where $\sigma$ is of the form:
+\[
+\Gamma(x) = \begin{pmatrix}a(x_1) & a(x_1)b(x_2)\\0&c(x_2)\end{pmatrix}\eqsp.
+\]
+In the following, it is assumed that the process $(X_t)_{t\ge 0}$ satisfies the SDE \eqref{eq:target:sde} with $\Gamma$ being the identity matrix, i.e. we consider a diffusion after the application of the Lamperti transform. In addition, designing general Poisson estimators also requires that:
+\begin{enumerate}[i)]
+\item $\alpha$ is of the form $\alpha(x) = \nabla_x A(x)$ where $A: \mathbb{R}^d \to \mathbb{R}$ is a twice continuously differentiable function ;
+\item the function $x\mapsto \left(\|\alpha(x)\|^2  + \triangle A(x)\right)/2$ is lower bounded where $\triangle$ is the Laplace operator.
+\end{enumerate}
+Assumption i) is the most restrictive \textcolor{red}{quelques exemples} while assumption ii) is satisfied in many situations \textcolor{red}{quelques exemples}. They are for instance satisfied for potential based movement models in ecology, see \cite{gloaguen:etienne:lecorff:2017}.
+
+In the case where these assumptions are not fulfilled, an alternative to generalized Poisson estimators is given by continuous importance sampling procedures for SDE, see \cite{}.
+
+The solution to \eqref{eq:target:sde} is supposed to be partially observed at times $t_0=0,\dots,t_n$ through an observation process $(Y_k)_{0\le k \le n}$ in $(\mathbb{R}^m)^{n+1}$. 
 For all $0\le k \le n$, the distribution of $Y_k$ given $X_k:= X_{t_k}$ has a density with respect to a reference measure $\lambda$ on $\mathbb{R}^m$ given by $g(X_k,\cdot) = g_k(X_k)$. 
 The distribution of $X_0$ has a density with respect to a reference measure $\mu$ on $\mathbb{R}^d$ given by $\chi$.
 For all $0\le k \le n-1$, the conditional distribution of $X_{k+1} $ given $X_{k}$ has a density $\qk(X_{k},\cdot)$ with respect to $\mu$.
@@ -259,9 +296,8 @@ q_k(x,y)=\varphi_{\Delta_k}(x,y)\exp\left\lbrace A(y)-A(x)\right\rbrace \mathbb{
 \end{align*}
 where $\mathbb{W}^{x,y,\Delta_k}$ is the law of Brownian bridge starting at $x$ at 0 and hitting $y$ at $\Delta_k$, $(\mw_t)_{0\leq t \leq \Delta_k}$ is such a Brownian bridge, $\varphi_{\Delta_k}(x,y)$ is the p.d.f. of a normal distribution with mean $x$ and variance $\Delta_k$, evaluated at $y$ and $\phi:\mathbb{R}^d\to\mathbb{R}$ is defined as:
 \[
-\phi(x) =\left(\|\alpha(x)\|^2  + \triangle A(x)\right)/2\eqsp,
+\phi(x) =\left(\|\alpha(x)\|^2  + \triangle A(x)\right)/2\eqsp.
 \]
-with $\triangle$ the Laplace operator.
 Assume that there exist random variables $\Lo_\mw$ and $\U_\mw$ such that for all $0\leq s \leq \Delta_k$, $\Lo_\mw \leq \phi(\mw_s)\leq \U_\mw$.
 Let $\kappa$ be a random variable taking values in $\mathbb{N}$ with distribution $\mu$ and $(U_j)_{1\le j\le \kappa}$ be independent uniform random variables on $[0,\Delta_k]$, and $
 \zeta_k = \left\{\kappa,\mw,U_1,\ldots,U_\kappa\right\}\eqsp$. 
@@ -465,6 +501,8 @@ The parameters are given by $$\theta =(\kappa=0.1,\sigma=0.1,\gamma=1000,\sigma^
 In that case, the $\rho_{\Delta_k}$ function defined in \eqref{eq:rho:func} can be upper bounded as a function of $y$ when $x\in \{\xi_k^1,\dots, \xi_k^N\}$, the GRand PaRIS algorithm has therefore a linear complexity. The intermediate quantity of the EM algorithm is evaluated  as for the SINE model, see Figures~\ref{fig:res:LG:EM},~\ref{fig:mult:LG:b} and~\ref{fig:mult:LG:cv}.
 
 The results for the fixed lag technique are similar to the ones presented in \cite[Figure 1]{olsson:strojby:2011} on the same model. For small lags, the variance of the estimates is small, but the estimation is highly biased. The bias rapidly decreases as the lag increases, together with a  great increase of variance.  Again, the GRand PaRIS algorithm outperforms the fixed lag smoother as it shows  a similar (vanishing) bias as the fixed lag for the largest lag and a smaller variance than the fixed lags estimates with negligible bias. 
+
+Note that in this case the Lamperti transform to obtain a diffusion with a unitary diffusion term depends on $\sigma$. The process $(X_t)_{t\ge 0}$ is a function of $\sigma$ and is not directly observed if $\sigma$ is unknown, which prevents a direct use of an EM algorithm to estimate $\sigma$. Following \cite[Section~8.2]{beskos:papaspiliopoulos:roberts:fearnhead:2006}, this may be overcome with a two-step transformation of the process $(Z_t)_{t\ge 0}$. After the Lamperti transform, the process is transformed into a diffusion bridge  is used to obtai
 
 \begin{figure}[p]
 \centering
@@ -698,6 +736,11 @@ A.~Doucet, S.~Godsill, and C.~Andrieu.
 P.~Fearnhead, O.~Papaspiliopoulos, and G~Roberts.
 \newblock Particle filters for partially observed diffusions.
 \newblock {\em J. Roy. Statist. Soc. Ser. B}, 70(4):755--777, 2008.
+
+\bibitem{gloaguen:etienne:lecorff:2017}
+P.~ Gloaguen, M.-P.~\'Etienne, and S.~Le~Corff.
+\newblock Inference procedures to estimate potential based movement models in ecology.
+\newblock {\em To appear in the {J}ournal of the {R}oyal {S}tatistical {S}ociety: {S}eries {C}}.
 
 \bibitem{godsill:doucet:west:2004}
 S.~J. Godsill, A.~Doucet, and M.~West.
