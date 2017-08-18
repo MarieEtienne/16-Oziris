@@ -75,7 +75,7 @@
 \footnotetext[2]{Laboratoire de Math\'ematiques d'Orsay, Univ. Paris-Sud, CNRS, Universit\'e Paris-Saclay.}
 
 
-\title{Efficient online Sequential Monte Carlo smoother for partially observed stochastic differential equations}
+\title{Online Sequential Monte Carlo smoother for partially observed diffusion processes}
 
 \lhead{Gloaguen et al.}
 \rhead{Particle smoother for SDE}
@@ -93,11 +93,11 @@ We prove that this estimator is consistent and its performance are illustrated u
 {\bf Keywords}: Stochastic differential equations, Smoothing, Sequential Monte Carlo Methods. 
 
 \section{Introduction}
-This paper introduces a new algorithm to solve the smoothing problem for partially observed continuous time stochastic processes.
+This paper introduces a new algorithm to solve the smoothing problem for hidden Markov models (HMMs) whose hidden state is supposed to be the solution of a stochastic differential equation (SDE). In \cite{olsson:strojby:2011}, these models are referred to as partially observed diffusion (POD) processes.
  In this setting, the hidden state process $(X_t)_{t\ge 0}$ is assumed to be a solution to a stochastic differential equation (SDE) and the only information available is given by noisy observations $(Y_{k})_{0\le k\le n}$ of the states $(X_k)_{0\le k\le  n}$ at some discrete time points $(t_k)_{0\le k\le n}$.
   The bivariate stochastic process $\{(X_{k},Y_{k})\}_{0\le k\le n}$ is a state space model such that conditional on the state sequence $(X_{k})_{0\le k\le n}$ the observations $(Y_{k})_{0\le k\le n}$ are independent and for all $0\le \ell\le n$ the conditional distribution of $Y_{\ell}$ given $\{X_{k}\}_{0\le k\le n}$ depends on $X_{\ell}$ only.
 
-Statistical inference for partially observed state sequences often requires to solve bayesian filtering and smoothing problems, i.e.\ the computation of the posterior distributions of sequences of hidden states given observations.
+Statistical inference for HMMs often requires to solve bayesian filtering and smoothing problems, i.e. the computation of the posterior distributions of sequences of hidden states given observations.
  The filtering problem refers to the estimation, for each $0\le k \le n$,  of the distributions of the hidden state $X_k$ given the observations $(Y_0,\ldots,Y_k)$. Smoothing stands for the estimation of the distributions of the sequence of states $(X_{k},\ldots,X_{p})$ given observations $(Y_{0},\ldots,Y_{\ell})$ with $0\le k\le p \le \ell \le n$. 
 These posterior distributions are crucial to compute maximum likelihood estimators of unknown parameters using the observations $(Y_0,\ldots,Y_n)$ only.
  For instance, the E-step of the EM algorithm introduced in \cite{dempster:laird:rubin:1977}  boils down to the computation of a conditional expectation of an additive functional of the hidden states given all the observations up to time $n$.
@@ -105,32 +105,33 @@ These posterior distributions are crucial to compute maximum likelihood estimato
  See \cite[Chapter $10$ and $11$]{cappe:moulines:ryden:2005}, \cite{kantas:doucet:signh:2015,lecorff:fort:2013a,lecorff:fort:2013b,doucet:poyiadjis:singh:2011}
 for further references on the use of these smoothed expectations of additive functionals  applied to maximum likelihood parameter inference in latent data models.
 
-The exact computation of these expectations is usually not possible in the case of partially observed diffusions. 
-In this paper, we propose to use Sequential Monte Carlo (SMC) methods to approximate smoothing distributions with random particles associated with importance weights.
+However, for most HMMs, the exact computation of these expectations is usually not possible, and has to be replace by approximations. Sequential Monte Carlo (SMC) methods has been a popular class of algorithms to approximate smoothing distributions with random particles associated with importance weights. 
  \cite{gordon:salmond:smith:1993,kitagawa:1996} introduced the first particle filters and smoothers for state space models by combining importance sampling steps to propagate particles with resampling steps to duplicate or discard particles according to their importance weights.
-
-Unfortunately, these methods cannot be applied directly to partially observed stochastic differential equations since some elementary quantities, such as transition densities of the hidden states, are not available explicitly.
-  Discretization procedures may be used to approximate transition densities, for instance the Euler-Maruyama method, the Ozaki discretization which proposes a linear approximation of the drift coefficient between two observations \cite{ozaki:1992,shoji:1998}, or Gaussian based approximations using Taylor expansions of the posterior mean and variance of an observation given the observation at the previous time step, \cite{kessler:1997,kessler:lindner:sorensen:2012,uchida:yoshida:2012}.
-   Other approaches based on Hermite polynomials expansion were also introduced by \cite{ait-sahalia:1999,ait-sahalia:2002,ait-sahalia:2008} and extended in several directions recently, see \cite{li:2013} and all the references on the approximation of transition densities therein.
-    However, even the most recent discretization based approximations of the transition densities induce a systematic bias of particle based approximations of posterior distributions, see for instance \cite{delmoral:jacod:protter:2001}.
-     To overcome this difficulty, \cite{fearnhead:papaspiliopoulos:roberts:2008} proposed to solve the filtering problem by combining SMC methods with an unbiased estimate of the transition densities based on the generalized Poisson estimator (GPE). 
-     In this case, only the Monte Carlo error has to be controlled as there is no Taylor expansion to approximate unknown transition densities, i.e. no discretization scheme is used.
- 
- The only solution to solve the smoothing problem for partially observed SDE using SMC methods without any discretization procedure has been proposed in \cite{olsson:strojby:2011} and extends the fixed-lag smoother of \cite{olsson:cappe:douc:moulines:2008}. 
- Using forgetting properties of the hidden chain, the algorithm improves the performance of \cite{fearnhead:papaspiliopoulos:roberts:2008} to approximate smoothing distributions but at the cost of a bias, due to the fixed lag approximation, that does not vanish as the number of particles grows to infinity.
-In the case of discrete time state space models, approximations of the smoothing distributions may also be obtained using the Forward Filtering Backward Smoothing algorithm (FFBS) and  the Forward Filtering Backward Simulation algorithm (FFBSi) developed respectively in \cite{kitagawa:1996,huerzeler:kunsch:1998,doucet:godsill:andrieu:2000} and \cite{godsill:doucet:west:2004}. 
+In the case of HMMs, approximations of the smoothing distributions may also be obtained using the Forward Filtering Backward Smoothing algorithm (FFBS) and  the Forward Filtering Backward Simulation algorithm (FFBSi) developed respectively in \cite{kitagawa:1996,huerzeler:kunsch:1998,doucet:godsill:andrieu:2000} and \cite{godsill:doucet:west:2004}. 
 Both algorithms require first a forward pass which produces a set of particles and weights approximating the sequence of filtering distributions up to time $n$. 
 Then, a backward pass is performed to compute new weights (FFBS) or sample trajectories (FFBSi) in order to approximate the smoothing distributions. Recently, \cite{olsson:westerborn:2016} proposed a new SMC algorithm, the particle-based rapid incremental smoother (PaRIS), to approximate on-the-fly (i.e.\ using the observations as they are received) smoothed expectations of additive functionals. 
 Unlike the FFBS algorithm, the complexity of this algorithm grows only linearly with the number of particles $N$ and contrary to the FFBSi algorithm, no backward pass is required.
  One of the best features of PaRIS algorithm is that it may be implemented online, using the observations $(Y_k)_{k\ge 1}$ as they are received, without any increasing storage requirements.
- The total number $n$ of observations is fixed in this paper to describe the algorithm but it could process any additional observation straightforwardly.
 
-In this paper, we extend the use of  PaRIS algorithm to partially observed SDE. 
+Unfortunately, these methods cannot be applied directly to POD processes since some elementary quantities, such as transition densities of the hidden states, are not available explicitly.
+  In the context of SDEs,  discretization procedures may be used to approximate transition densities.
+   For instance, the classical Euler-Maruyama method, the Ozaki discretization which proposes a linear approximation of the drift coefficient between two observations \cite{ozaki:1992,shoji:1998}, or Gaussian based approximations using Taylor expansions of the posterior mean and variance of an observation given the observation at the previous time step, \cite{kessler:1997,kessler:lindner:sorensen:2012,uchida:yoshida:2012}.
+   Other approaches based on Hermite polynomials expansion were also introduced by \cite{ait-sahalia:1999,ait-sahalia:2002,ait-sahalia:2008} and extended in several directions recently, see \cite{li:2013} and all the references on the approximation of transition densities therein.
+    However, even the most recent discretization based approximations of the transition densities induce a systematic bias in the approximation of the transition densities (see for instance \cite{delmoral:jacod:protter:2001}).
+    This bias approximation therefore induces a bias of particle based approximations of posterior distributions in POD processes.
+   
+To overcome this difficulty, \cite{fearnhead:papaspiliopoulos:roberts:2008} proposed to solve the filtering problem by combining SMC methods with an unbiased estimate of the transition densities based on the generalized Poisson estimator (GPE). 
+     In this case, only the Monte Carlo error has to be controlled as there is no Taylor expansion to approximate unknown transition densities, i.e. no discretization scheme is used.
+ 
+ The only solution to solve the smoothing problem for POD processes using SMC methods without any discretization procedure has been proposed in \cite{olsson:strojby:2011} and extends the fixed-lag smoother of \cite{olsson:cappe:douc:moulines:2008}. 
+ Using forgetting properties of the hidden chain, the algorithm improves the performance of \cite{fearnhead:papaspiliopoulos:roberts:2008} to approximate smoothing distributions but at the cost of a bias, this time due to the fixed lag approximation, that does not vanish as the number of particles grows to infinity.
+ 
+In this paper, we propose to use Sequential Monte Carlo (SMC) methods to obtain asymptoticaly unbiased approximations of smoothing expectations in the POD processes, by extending the use of  PaRIS algorithm to POD processes.
 The proposed algorithm allows to approximate smoothed expectations of additive functionals online, with a complexity growing only linearly with the number of particles and without any discretization procedure or Taylor expansion of the transition densities.
- The crucial and simple result (Lemma~\ref{lem:AR:unbiased}) of the application of PaRIS algorithm to SDE is that the accept reject mechanism introduced in \cite{douc:garivier:moulines:olsson:2011} ensuring the linear complexity of the procedure is still correct when the transition densities are replaced by unbiased estimates. 
+ The crucial and simple result (Lemma~\ref{lem:AR:unbiased}) of the application of PaRIS algorithm to SDE is that the acceptance rejection mechanism introduced in \cite{douc:garivier:moulines:olsson:2011} ensuring the linear complexity of the procedure is still correct when the transition densities are replaced by unbiased estimates. 
  The usual FFBS and FFBSi algorithms may not be extended this easily since they both require the computation of weights defined as ratios involving the transition densities, thus replacing these unknown quantities by unbiased estimates does not lead to unbiased estimators of the weights. 
  The linear version of the FFBSi algorithm proposed in \cite{douc:garivier:moulines:olsson:2011} could be extended in a similar way as PaRIS algorithm but it would still require a backward pass and would not be an online smoother. 
- The proposed Generalized Random version of PaRIS algorithm, hereafter named GRand PaRIS algorithm, may be applied to general hidden Markov models whose Markovian dynamics is ruled by a stochastic differential equation (one of the first two domains defined in \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006}) but also to any general state space model where the transition density of the hidden chain may be estimated unbiasedly.
+ The proposed Generalized Random version of PaRIS algorithm, hereafter named GRand PaRIS algorithm, may be applied to POD processes but also to any general state space model where the transition density of the hidden chain may be approximated using a strictly positive and unbiased estimator.
 
 Section~\ref{sec:rwparis} describes the proposed algorithm to approximate smoothed additive functionals using unbiased estimates of the transition density of the hidden states and details the application of this algorithm when the transition density may be approximated using a GPE. 
 In Section~\ref{sec:convergence}, classical convergence results for SMC smoothers are extended to the setting of this paper and illustrated with numerical experiments in Section~\ref{sec:exp}. 
@@ -181,10 +182,9 @@ In the following, it is assumed that the process $(X_t)_{t\ge 0}$ satisfies the 
 \item $\alpha$ is of the form $\alpha(x) = \nabla_x A(x)$ where $A: \mathbb{R}^d \to \mathbb{R}$ is a twice continuously differentiable function ;
 \item the function $x\mapsto \left(\|\alpha(x)\|^2  + \triangle A(x)\right)/2$ is lower bounded where $\triangle$ is the Laplace operator.
 \end{enumerate}
-Assumption i) is the most restrictive \textcolor{red}{quelques exemples} while assumption ii) is satisfied in many situations \textcolor{red}{quelques exemples}.
- They are for instance satisfied for potential based movement models in ecology, see \cite{gloaguen:etienne:lecorff:2017}.
+Assumption i) is somewhat restrictive as it requires $\alpha$ to derive from a scalar potential, however, it has natural applications in many fields, for instance in movement ecology, see \cite{gloaguen:etienne:lecorff:2017}. Assumption ii) is technical {\color{red} JAI LIMPRESSION QUE CEST TOUJOURS VRAI SI A(X) EST DEFINI SUR $R^d$}.
 
-In the case where these assumptions are not fulfilled, an alternative to generalized Poisson estimators is given by continuous importance sampling procedures for SDE, see \cite{}.
+{\color{red} In the case where these assumptions are not fulfilled, an alternative to generalized Poisson estimators is given by continuous importance sampling procedures for SDE, see \cite{}. REFERENCE A METTRE}
 
 The solution to \eqref{eq:target:sde} is supposed to be partially observed at times $t_0=0,\dots,t_n$ through an observation process $(Y_k)_{0\le k \le n}$ in $(\mathbb{R}^m)^{n+1}$. 
 For all $0\le k \le n$, the distribution of $Y_k$ given $X_k:= X_{t_k}$ has a density with respect to a reference measure $\lambda$ on $\mathbb{R}^m$ given by $g(X_k,\cdot) = g_k(X_k)$. 
@@ -371,7 +371,7 @@ In particular, if $\Lo_\mw$ is bounded below almost surely, \eqref{eq:rho:func} 
 This condition is always satisfied for models in the domains $\mathcal{D}_1$ and $\mathcal{D}_2$ defined in \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006}, i.e.\ domains for which the exact algorithms EA1 and EA2 can be used.
 
 When \eqref{assumpt:global} or \eqref{assumpt:ysupport} holds, it can be nonetheless of practical interest to choose the bound $\hat{\sigma}^k_+$ corresponding to \eqref{assumpt:local}. 
-Indeed, this might increase significantly the acceptance rate of the algorithm, and therefore reduce the number of drawings of the random variable $\zeta$, which has a much higher cost than the computation of $\rho$, as it requires simulations of Brownian Bridges. 
+Indeed, this might increase significantly the acceptance rate of the algorithm, and therefore reduce the number of drawings of the random variable $\zeta_k$, which has a much higher cost than the computation of $\rho_{\Delta_k}$, as it requires simulations of Brownian bridges. 
 Moreover, this latter option can also avoid numerical optimization if no analytical expression of $\hat{\sigma}_+^k$ is available. 
 In practice, we found this option more efficient in terms of computation time when $N$ has moderate values. 
 
