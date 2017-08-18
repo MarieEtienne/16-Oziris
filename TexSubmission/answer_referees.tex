@@ -1,0 +1,273 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amssymb}
+\usepackage{makeidx}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{amsfonts,amsmath,amssymb,amsthm}
+\usepackage{oldgerm}
+\usepackage{mathrsfs}
+\usepackage[active]{srcltx}
+\usepackage{verbatim}
+\usepackage[toc,page]{appendix}
+\usepackage{aliascnt}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage[textwidth=4cm,textsize=footnotesize]{todonotes}
+\usepackage{xargs}
+\usepackage{cellspace}
+\usepackage[Symbolsmallscale]{upgreek}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{array}
+\geometry{top=3.5cm, bottom=3.5cm, left=3.5cm , right=3.5cm}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\graphicspath{{figures/}}
+\usepackage{enumerate}
+\usepackage{xcolor}
+\usepackage{algorithm,algorithmic}  
+
+\newcommand{\x}[2]{x_{#1}^{(#2)}}
+\newcommand{\w}[2]{w_{#1}^{(#2)}}
+\newcommand{\tw}[2]{\tilde{w}_{#1}^{(#2)}}
+\newcommand{\p}[2]{\xi_{#1}^{(#2)}}
+\newcommand{\tp}[2]{\tilde{\xi}_{#1}^{(#2)}}
+\newcommand{\ta}[2]{\tau_{#1}^{(#2)}}
+\newcommand{\rmd}{\mathrm{d}}
+\newcommand{\eqsp}{\;}
+\newcommand{\1}{\mathrm{1}}
+\newcommand{\com}[1]{{\color{gray} // #1}}
+\newcommand{\mP}{\mathbb{P}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\qk}{q_{k}}
+\newcommand{\acom}[1]{\textit{\color{gray} //#1}}
+\newcommand{\Oz}{Z}%Letter for the Ozaki approximation
+\newcommand{\Jk}{J_{\alpha}^k}%Command for Jacobian of alpha
+\newcommand{\mw}{\mathsf{w}}%For bridge realisations
+\newcommand{\U}{\mathsf{U}}
+\newcommand{\Lo}{\mathsf{L}}
+%\newcommand{\qk}{q^{\Delta t_k}_{\theta}}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
+\newcommand{\hQ}{\widehat{Q}}
+\newcounter{hypA}
+\newenvironment{hypA}{\refstepcounter{hypA}\begin{itemize}
+\item[{\bf H\arabic{hypA}}]}{\end{itemize}}
+%%ENvironmment assumption
+\newcounter{defcounter}
+\setcounter{defcounter}{0}
+\newenvironment{assumpt}{%
+\addtocounter{equation}{-1}
+\refstepcounter{defcounter}
+\renewcommand\theequation{\textbf{A}\thedefcounter}
+\begin{equation}}
+{\end{equation}}
+\begin{document}
+
+\author{Pierre Gloaguen\footnotemark[1] \and Marie-Pierre Etienne\footnotemark[1] \and Sylvain Le {C}orff\footnotemark[2]}
+ 
+\footnotetext[1]{AgroParistech, UMR MIA 518, F-75231 Paris, France.}
+\footnotetext[2]{Laboratoire de Math\'ematiques d'Orsay, Univ. Paris-Sud, CNRS, Universit\'e Paris-Saclay.}
+
+
+\title{Efficient online Sequential Monte Carlo smoother for partially observed stochastic differential equations}
+
+\lhead{Gloaguen et al.}
+\rhead{Particle smoother for SDE}
+
+\maketitle
+
+The authors are grateful to the associate editor and the anonymous referees for their comments to improve the manuscript. The paper has been modified to take these remarks into account and also carefully proof read to remove remaining typos and minor mistakes. We provide below detailed answers for all comments.
+
+\subsection*{Referee 1}
+{\em I have two major comments that I think should be addressed before publishing. First of all the whole presentation is written as given a  fixed observation record $(Y_k)_{1\le k \le n}$, one of the main points of the PaRIS algorithm, which you rely on, is the ability to work with data streams of observations with a  fixed memory usage. Maybe it would be a good idea to include this in the paper.}
+
+\vspace{.3cm}
+
+As pointed by the Referee, one of the best feature of PaRIS algorithm is that it may be implemented "online", processing the observations $(Y_k)_{k\ge 1}$ as they are received, without any storage. This may be seen for instance in steps (i)-(iii) in page 6 which describe the way the intermediate quantities $(\tau_k^i)_{1\le i \le N}$ can be computed at each time step. Each time a new observation $Y_{n+1}$ is received, these quantities can be updated only using $Y_{n+1}$, $(\tau_n^i)_{1\le i \le N}$ and the particle filter at time $n$. This means that storage requirements do not increase. The update is stopped when the last observations is received to compute the approximation of the smoothed additive functional. 
+
+This remark was added after steps (i)-(iii) to highlight the online property of the extension of PaRIS algorithm (with no additional storage requirements). The introduction also insists on this property of the algorithm.
+
+In common applications (for instance in the cas of the EM algorithm),  the smoothed additive functional to be computed is known in advance, this is the reason why we chose to stop the updates for a given arbitrary time $n$, but it is now clear that the algorithm may be stopped at any time.
+
+\vspace{1cm}
+
+{\em Secondly in the algorithm presented on page 9, it says to draw $M$ samples from $\zeta_k$ while not mentioning
+what to do with these. This should be specified in the manuscript.}
+
+\vspace{.3cm}
+
+The way the unbiased estimation of $q_k(\xi^{I_k^\ell}_{k-1},\xi^\ell_k)$ was computed was indeed not clear. In (7) and at the bottom of page 6 we only stated the existence of a random variable $\zeta_k$ such that $\widehat{q}_k(\xi^{I_k^\ell}_{k-1},\xi^\ell_k;\zeta_k)$ is an unbiased estimation of $q_k(\xi^{I_k^\ell}_{k-1},\xi^\ell_k)$. 
+
+At each time step, we then sample independently $(\zeta^m_k)_{1\le m \le M}$ and define the following estimator of $q_k(\xi^{I_k^\ell}_{k-1},\xi^\ell_k)$:
+\[
+\frac{1}{M}\sum_{m=1}^M \widehat{q}_k(\xi^{I_k^\ell}_{k-1},\xi^\ell_k;\zeta^m_k)\eqsp.
+\]
+This is now detailed clearly just after (7).
+
+\vspace{1cm}
+
+
+{\em Maybe if the time continuous process was denoted by $\widetilde{X}$ or something similar the difference would be clear.}
+
+\vspace{.3cm}
+
+\textcolor{red}{Il est gentil Michel mais introduire une notation pour ca moi ca ne me plait pas. On repond au reste, je suis d'avis de lui dire merci mais non merci.}
+
+\vspace{1cm}
+
+{\em
+On page 3, you talk about not being able to extend the FFBSi algorithm to this class of models, but
+as far as I understand it the same sampling technique should be possible to draw from the approximative
+smoothing distribution.
+}
+
+\vspace{.3cm}
+
+The usual FFBSi cannot be extended easily for the same reasons as the FFBS (it relies on the approximation of the backward kernel which is a ratio as defined in (6) in our paper). But it is true that the linear version of the FFBSi may be extended in a similar way as PaRIS algorithm (while it does stil require a backward pass). The introduction was modified to make this statement clear.
+
+\vspace{1cm}
+
+{\em On page 4 line 28 $q_k$ is defined as the transition from $X_k$ to $X_{k+1}$, while on page 5 line 30 (equation
+4) it is used as the transition from $X_{k-1}$ to $X_k$, this also happens on page 10 line 35.}
+
+\vspace{.3cm}
+
+This was corrected, $q_k$ is the transition density of the law of $X_k$ given $X_{k+1}$.
+
+\vspace{1cm}
+
+{\em On page 15, line 13, I believe that $h(m)$ has sneaked its way into the equation and should be removed.}
+
+\vspace{.3cm}
+ $h(m)$ was removed in this equation. 
+
+\subsection*{Referee 2}
+
+
+\subsubsection*{Major comments}
+\begin{enumerate}
+\item \textcolor{red}{Je pense que c'est le gros morceau... La reponse a cette question recouvre en fait les questions 1/4/5/6/8 donc quasiment tout ce qu'il reste.
+On s'est focalises sur ces EDS essentiellement pour l'utilisation des estimateurs sans biais et leurs applications a des modeles en ecologie. C'est facile d'expliquer la partie gradient et d'utiliser Ait-Sahalia pour expliquer que c'est dur en non scalaire. Ensuite, je pense que le mieux c'est de bien decrire que les estimateurs de densites peuvent s'obtenir avec tous les EA et dans ce cas detailler les hypotheses proprement pour justifier notre approche. On peut aller jusqu'a l'EA3, qui sera quadratique probablement mais remplit la condition A3 donc peut etre a priori utilise. Ensuite, je pense que l'on peut mentionner que ce que l'on fait peut s'etendre a d'autres EDS avec une diffusion non unitaire grace aux tres recentes methodes d'importance sampling. La team Roberts n'a pas encore publie son algo (le fera-t-elle un jour ?) mais Kohatsu-Higa si et son algor ressemble beaucoup a l'approche Warwickienne. On a dans ce cas un estimateur sans biais, et que l'on peut simuler, sous des hypotheses plus generales. On ne change pas tout notre papier, on garde une focalisation de type Poisson mais on peut faire un paragraphe que se passe-t-il dans le cas non unitaire... PaRIS marche exactement pareil, a chacun d'utiliser son estimateur de densite prefere. What ya think ?
+Je change dans cet esprit, vous me direz ce que vous en pensez !}
+
+\vspace{.3cm}
+
+We agree with the Referee that the model was not introduced properly and that the use of generalized Poisson estimators required additional comments. This remark led to a major modification of the beginning of Section~2. The assumptions mentioned by the Referee are highlighted clearly and much more commented to explain the setting in which GPE can be used. 
+
+As some assumptions may be restrictive (specifically the gradient assumption on the drift), we also provide alternative to GPE to estimate transition densities. The only requirement to extend PaRIS algorithm is to obtain an unbiased estimator than can be evaluated explicitly to compute the importance weights. A recent class of estimators which do not use the gradient assumptions are the continuous importance sampling based methods of \cite{}. They introduce other sets of assumptions such as... 
+
+
+\item {\em When presenting equation (2), the authors should explain the importance of approximating those type of functionals.}
+
+\vspace{.3cm}
+
+The importance of these quantities is now clearly stated after equation (2). We added the usual applications to the computation of the Fisher score and the intermediate quantity of the EM algorithm. We also highlighted that it was crucial for online inference of latent data models which supports the use of the proposed online smoother.
+
+\item {\em General practical strategies to specify $\vartheta_k$, $p_k$, $\hat{\sigma}_+^k$ in the SDE context should be
+discussed.}
+
+\vspace{.3cm}
+
+Choices that can be made for  $\vartheta_k$ and $p_{k-1}$ are discussed after (4) and the definition of $\phi_k^N$. The specific approximation of the fully adapted particle filter is also illustrated in the numerical section. \textcolor{red}{Pour le sigma Pierre tu as peut-etre plus d'elements. On peut bien sur parler des conditions de l'EA mais je pense qu'une intuition pratique est plus percutante ici.}
+
+\item {\em Conditions (A1)-(A3) should be carefully discussed. How restrictive are they? For
+example, what if $\phi(\omega_s)$ (or $L_\omega$) is not bounded below? Is there any general solution
+in this case?}
+
+\vspace{.3cm}
+
+\item
+\item
+\item
+\item
+\item {\em Can anything be said about the bias of the proposed estimator for finite $N$? Is it
+only due to the form of  $\Lambda_k^N$ ?}
+
+\vspace{.3cm}
+
+The bias of forward backward based particle smoothers due to $\Lambda_k^N$ (i.e. to the particle approximations) was analyzed in \cite{delmoral:doucet:singh:2010}. In the case of additive functional as in (2), the bias of the forward only version of the FFBS algorithm is shown to be upper bounded by a term of order $n/N$ for strongly mixing hidden Markov models.  
+
+
+\item {\em What can be said about a CLT for the proposed estimator?}
+\textcolor{red}{On peut le faire, pas tres dur, mais ca va allonger les choses et sans message tres clair sur la variance asymptotique a mon avis. Voila une suggestion de reponse...}
+
+\vspace{.3cm}
+
+A CLT was derived for the original version of PaRIS algorithm as the number $N$ of particles grows to infinity. A CLT may also derived for our extension as it is a noisy version of the original method. However, even if its proof is not too involved it still require additional assumptions and technicalities. And the asymptotic variance remains hard to analyze (for instance to choose the parameters in comparison to other smoothing methods). Analyzing the variance of particle smoothers (FFBS, FFBSi, PaRIS, two-filer) is at the core of ongoing works and we believe that comparing the variance would be more suitable and interesting than just providing a CLT with no rules to choose between methods. We are also working on the estimation of such asymptotic variances which is a complex problem out of the scope of this paper.
+
+\item {\em It is worth mentioning that, for the log-growth model, $X$ is a function of $\sigma$ and what
+are the consequences of that in a context where $\sigma$ is an unknown parameter.}
+
+\vspace{.3cm}
+
+Even if there is no actual implementation of the EM algorithm in the paper for the log-growth model, we agree that providing some insights on the way it could be used may be very useful. We added a paragraph at the end of the log-growth section following the work of [4] explaining how the process can be transformed to estimate $\sigma$ using an EM algorithm although $X$ is a function of $\sigma$. \textcolor{red}{Pas si simple, la transformation en deux etapes de Beskos et al ne fonctionne pas comme le processus X n'est pas directement observe...}
+
+\item {\em I quite like the choice of $Q(\theta;\theta)$ in the examples. It would be very interesting to
+have an implementation of the actual EM algorithm for parameter estimation in the
+examples provided, using GRand Paris on the E step.}
+
+\vspace{.3cm}
+
+The numerical section now contains a complete implementation of a generalized EM algorithm for the SINE model which highlights clearly the performance of the proposed PaRIS algorithm.  
+\end{enumerate}
+
+
+
+\subsubsection*{Minor comments}
+\begin{enumerate}
+\item{\em page 3, line 36: The authors should clearly state that the proposed methodology
+does not rely on time discretisation approximations.}
+
+\vspace{.3cm}
+
+This is now explicitly written in the introduction.
+
+\item{\em page 5, line 21: computing $\longrightarrow$ computed.}
+
+\vspace{.3cm}
+
+This typo was corrected.
+
+\item {\em page 8, line 52: I suggest "... $L_w$ is bounded below almost surely, ..."}
+
+\vspace{.3cm}
+
+This was changed as suggested.
+
+\item {\em page 11, line 10: does the fixed lag algorithm have the same cost for all lag values?
+What is the computational time of one run of GRand PaRIS for the examples presented?}
+
+\vspace{.3cm}
+
+\textcolor{red}{M. Gloaguen, your call !}
+
+\item {\em page 16, line 49: For the proof to be valid, the induction result needs to be established for $k\ge 0$.}
+
+\vspace{.3cm}
+
+\end{enumerate}
+
+\bibliographystyle{plain}
+\begin{thebibliography}{10}
+
+\bibitem{delmoral:doucet:singh:2010}
+P.~{D}el {M}oral, {A}.~{D}oucet, and {S}.{S}.~{S}ingh.
+\newblock A backward particle intepretation of {F}eynman-{K}ac formulae.
+\newblock {\em {ESAIM:~M2AN}}, 44:947--975, 2010.
+
+\bibitem{olsson:westerborn:2016}
+J.~Olsson and J.~Westerborn.
+\newblock Efficient particle-based online smoothing in general hidden {M}arkov
+  models: the {PaRIS} algorithm.
+\newblock {\em ArXiv:1412.7550}, 2016.
+
+
+\end{thebibliography}
+
+\end{document}
