@@ -78,7 +78,7 @@
 \title{Online Sequential Monte Carlo smoother for partially observed diffusion processes}
 
 \lhead{Gloaguen et al.}
-\rhead{Particle smoother for SDE}
+\rhead{Particle smoother for POD processes}
 
 \maketitle
 
@@ -93,8 +93,8 @@ We prove that this estimator is consistent and its performance are illustrated u
 {\bf Keywords}: Stochastic differential equations, Smoothing, Sequential Monte Carlo Methods. 
 
 \section{Introduction}
-This paper introduces a new algorithm to solve the smoothing problem for hidden Markov models (HMMs) whose hidden state is supposed to be the solution of a stochastic differential equation (SDE). In \cite{olsson:strojby:2011}, these models are referred to as partially observed diffusion (POD) processes.
- In this setting, the hidden state process $(X_t)_{t\ge 0}$ is assumed to be a solution to a stochastic differential equation (SDE) and the only information available is given by noisy observations $(Y_{k})_{0\le k\le n}$ of the states $(X_k)_{0\le k\le  n}$ at some discrete time points $(t_k)_{0\le k\le n}$.
+This paper introduces a new algorithm to solve the smoothing problem for hidden Markov models (HMMs) whose hidden state is supposed to be the solution to a stochastic differential equation (SDE). In \cite{olsson:strojby:2011}, these models are referred to as partially observed diffusion (POD) processes.
+ In this setting, the hidden state process $(X_t)_{t\ge 0}$ is assumed to be a solution to a SDE and the only information available is given by noisy observations $(Y_{k})_{0\le k\le n}$ of the states $(X_k)_{0\le k\le  n}$ at some discrete time points $(t_k)_{0\le k\le n}$.
   The bivariate stochastic process $\{(X_{k},Y_{k})\}_{0\le k\le n}$ is a state space model such that conditional on the state sequence $(X_{k})_{0\le k\le n}$ the observations $(Y_{k})_{0\le k\le n}$ are independent and for all $0\le \ell\le n$ the conditional distribution of $Y_{\ell}$ given $\{X_{k}\}_{0\le k\le n}$ depends on $X_{\ell}$ only.
 
 Statistical inference for HMMs often requires to solve bayesian filtering and smoothing problems, i.e. the computation of the posterior distributions of sequences of hidden states given observations.
@@ -128,7 +128,7 @@ To overcome this difficulty, \cite{fearnhead:papaspiliopoulos:roberts:2008} prop
  
 In this paper, we propose to use Sequential Monte Carlo (SMC) methods to obtain asymptoticaly unbiased approximations of smoothing expectations in the POD processes, by extending the use of  PaRIS algorithm to POD processes.
 The proposed algorithm allows to approximate smoothed expectations of additive functionals online, with a complexity growing only linearly with the number of particles and without any discretization procedure or Taylor expansion of the transition densities.
- The crucial and simple result (Lemma~\ref{lem:AR:unbiased}) of the application of PaRIS algorithm to SDE is that the acceptance rejection mechanism introduced in \cite{douc:garivier:moulines:olsson:2011} ensuring the linear complexity of the procedure is still correct when the transition densities are replaced by unbiased estimates. 
+ The crucial and simple result (Lemma~\ref{lem:AR:unbiased}) of the application of PaRIS algorithm to POD processes is that the acceptance rejection mechanism introduced in \cite{douc:garivier:moulines:olsson:2011} ensuring the linear complexity of the procedure is still correct when the transition densities are replaced by unbiased estimates. 
  The usual FFBS and FFBSi algorithms may not be extended this easily since they both require the computation of weights defined as ratios involving the transition densities, thus replacing these unknown quantities by unbiased estimates does not lead to unbiased estimators of the weights. 
  The linear version of the FFBSi algorithm proposed in \cite{douc:garivier:moulines:olsson:2011} could be extended in a similar way as PaRIS algorithm but it would still require a backward pass and would not be an online smoother. 
  The proposed Generalized Random version of PaRIS algorithm, hereafter named GRand PaRIS algorithm, may be applied to POD processes but also to any general state space model where the transition density of the hidden chain may be approximated using a strictly positive and unbiased estimator.
@@ -235,7 +235,7 @@ The expectation $\phi_{k}[h]$ is approximated by
 \phi^N_{k}[h] := \frac{1}{\Omega_k^N} \sum_{\ell=1}^N \omega_k^{\ell} h \left(\xi^{\ell}_k \right)\eqsp,\quad\Omega_k^N:= \sum_{\ell=1}^N \omega_k^{\ell}\eqsp.
 \]
 The most simple choice for $p_{k-1}$ and $\vartheta_k$ is the bootstrap filter proposed by \cite{gordon:salmond:smith:1993} which sets $p_{k-1} = q_{k-1}$ and for all $x\in\mathbb{R}^d$, $\vartheta(x) = 1$.
- In the case of partially observed SDE $q_{k-1}$ is unknown but it can be replaced by any approximation to sample the particles as any choice of $p_{k-1}$ can be made.
+ In the case of POD processes $q_{k-1}$ is unknown but it can be replaced by any approximation to sample the particles as any choice of $p_{k-1}$ can be made.
   The approximation can be obtained using a discretization scheme such as Euler method or a Poisson based approximation as detailed below.
    A more appealing choice is the fully adapted particle filter which sets for all $x,x'\in\mathbb{R}^d$, $p_{k-1}(x,x') \propto q_{k-1}(x,x')g_k(x')$ and for all $x\in\mathbb{R}^d$, $\vartheta(x) = \int q_{k-1}(x,x')g_k(x')\mu(\rmd x')$.
    Here again $q_{k-1}$ has to be replaced by an approximation. In Section~\ref{sec:exp}, it is replaced by the Gaussian approximation provided by a Euler scheme which leads to a Gaussian proposal density $p_{k-1}$ as the observation model is linear and Gaussian. 
@@ -301,7 +301,7 @@ In the case where $\qk$ is unknown, the filtering weights in \eqref{eq:importanc
 \widehat{\omega}^{\ell}_k := \frac{\widehat{q}_{k-1}(\xi_{k-1}^{I^{\ell}_k},\xi^{\ell}_k;\zeta_{k-1})g_k(\xi^{\ell}_k)}{\vartheta_k(\xi^{I^{\ell}_k}_{k-1}) p_{k-1} (\xi_{k-1}^{I^{\ell}_k},\xi^{\ell}_k)}\eqsp.
 \end{equation}
 In Algorithm~\ref{alg:Ozaki:PaRIS}, $M$ independent copies $(\zeta^m_{k-1})_{1\le m \le M}$ of $\zeta_{k-1}$ are sampled and the empirical mean of the associated estimates of the transition density are used to compute $\widehat{\omega}^{\ell}_k$ instead of a single realization. 
-Therefore, to obtain a generalized random version of PaRIS algorithm, we only need to be able to sample from the discrete probability distribution $\Lambda_k^N(i,\cdot)$ in the case of SDE based HMM.
+Therefore, to obtain a generalized random version of PaRIS algorithm, we only need to be able to sample from the discrete probability distribution $\Lambda_k^N(i,\cdot)$ in the case of POD processes.
 
 Consider the following assumption: for all  $0\leq k\leq n-1$, there exists a random variable $\hat{\sigma}^k_+$ measurable with respect to $\mathcal{G}_{k+1}^N$ such that,
 \begin{assumpt}
@@ -615,7 +615,7 @@ Distribution of the empirical absolute relative bias.}
 This paper presents a new online SMC smoother for partially observed differential equations.
  This algorithm relies on an acceptance-rejection procedure inspired from the recent PaRIS algorithm.
  The main result of the article for practical applications is that the mechanism of this procedure remains valid when the transition density is approximated by a an unbiased positive estimator.
-  The proposed procedure therefore extend the PaRIS algorithm to HMM whose Markov transition density is unknown and can be approximated without bias. The GRand PaRIS algorithm outperforms the existing fixed lag smoother for SDE of \cite{olsson:strojby:2011}, as it does not introduce an intrinsic and non vanishing bias.
+  The proposed procedure therefore extend the PaRIS algorithm to HMM whose Markov transition density is unknown and can be approximated without bias. The GRand PaRIS algorithm outperforms the existing fixed lag smoother for POD processes of \cite{olsson:strojby:2011}, as it does not introduce an intrinsic and non vanishing bias.
    In addition, numerical simulations highlight a better variance using data from two different models.
    It can be implemented for the class of models $\mathcal{D}_1$ and $\mathcal{D}_2$ defined in \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006} with a linear complexity in $N$. 
 
