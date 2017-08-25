@@ -522,7 +522,7 @@ The dotted line shows the reference value, computed using the GRand PaRIS algori
 \paragraph{Generalized EM procedure}
 The performance of our algorithm is also assessed in the case where $\theta$ and the variance $\sigma^2_\text{obs}$ are unknown and estimated using a generalized EM algorithm. 
 The study is done using a data set with $n = 200$ observations simulated with $\mu=0$ an d $ \sigma^2_\text{obs} = 1$. The Grand PaRIS algorithm is used to perform the E step, with the same settings as before for $N$, $\tilde{N}$ and $M$.
-As their is no closed form solution to compute the M step of the EM algorithm and propose new parameter estimates, we use a Generalized EM procedure: given the current estimation $\theta^{(k)} := (\mu^{(k)}, \sigma_{\text{obs}}^{(k)}$, the function $\mathcal{Q}(\cdot, \theta^{(k)})$ is approximated for $50$ new candidates $\theta_1, \dots, \theta_{50} $ chosen by the user. The new estimate is set as
+As their is no closed form solution to compute the M step of the EM algorithm and propose new parameter estimates, we use a Generalized EM procedure: given the current estimation $\theta^{(k)} := \left(\mu^{(k)}, \sigma_{\text{obs}}^{(k)} \right)$, the function $\mathcal{Q}(\cdot, \theta^{(k)})$ is approximated for $50$ new candidates $\theta_1, \dots, \theta_{50} $ chosen by the user. The new estimate is set as
 \[
 \theta^{(k + 1)} = \text{argmax}_i\mathcal{Q}(\theta_i, \theta^{(k)})\eqsp .
 \]
