@@ -1,4 +1,4 @@
-\documentclass[12pt]{article}
+  \documentclass[12pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage{amssymb}
 \usepackage{makeidx}
@@ -146,9 +146,9 @@ Let $(X_t)_{t\ge 0}$ be defined as a weak solution to the following SDE in $\mat
 X_0 = x_0\quad\mbox{and}\quad \rmd X_t = \alpha(X_t)\rmd t + \Gamma(X_t)\rmd W_t\eqsp,
 \end{equation}
 where $(W_t)_{t\ge 0}$ is a standard Brownian motion on $\mathbb{R}^d$, $\alpha: \mathbb{R}^d\to\mathbb{R}^d$ and $\Gamma: \mathbb{R}^d\to \mathbb{R}^{d\times d}$. 
-In this paper, we focus on unbiased estimator of the unknown transition densities given by generalized Poisson estimators defined in \cite{fearnhead:papaspiliopoulos:roberts:2008}.
- The use of generalized Poisson estimators requires that the diffusion coefficient $\Gamma$ is constant and equals to the identity matrix.
-  Note that, when this is not the case, there exists a class of diffusion processes that may be transformed to satisfy this assumption. 
+The algorithm proposed in this paper requires an  unbiased estimator of the unknown transition densities and we propose to use  generalized Poisson estimators defined in \cite{fearnhead:papaspiliopoulos:roberts:2008}.
+ The use of generalized Poisson estimators entails that the diffusion coefficient $\Gamma$ is constant and equals to the identity matrix.
+  Note that, when this is not the case, there exists a class of diffusion processes that may be transformed using Lamperti transformation to satisfy this assumption. 
   This paper then focuses on reducible SDE for which there exists an invertible and infinitely differentiable function $\eta$ such that the process $\left\{Z_t = \eta(X_t)\right\}_{t\ge 0}$ satisfies the SDE  $z_0 = \eta(x_0)$ and
 \begin{equation}
 \label{eq:diff:lamperti}
@@ -160,7 +160,7 @@ By Ito's formula,  it is straightforward to show that, in the case of a reducibl
 \]
 and, in the case $d=1$,
 \[
-\beta:u \mapsto \frac{\alpha(\eta^{-1}(u))}{\Gamma(\eta^{-1}(u))} - \frac{\Gamma'(\eta^{-1}(u))}{2}\eqsp.
+\beta:u \mapsto \frac{\alpha(\eta^{-1}(u))}{\Gamma(\eta^{-1}(u))} - \frac{\Gamma'(\eta^{-1}(u))}{2}\eqsp.	
 \]
 In the case of a scalar diffusion, this Lamperti transform is given by:
 \[
@@ -182,12 +182,12 @@ In the following, it is assumed that the process $(X_t)_{t\ge 0}$ satisfies the 
 \item $\alpha$ is of the form $\alpha(x) = \nabla_x A(x)$ where $A: \mathbb{R}^d \to \mathbb{R}$ is a twice continuously differentiable function ;
 \item the function $x\mapsto \left(\|\alpha(x)\|^2  + \triangle A(x)\right)/2$ is lower bounded where $\triangle$ is the Laplace operator.
 \end{enumerate}
-Assumption i) is somewhat restrictive as it requires $\alpha$ to derive from a scalar potential, however, it has natural applications in many fields, for instance in movement ecology, see \cite{gloaguen:etienne:lecorff:2017}. Assumption ii) is technical {\color{red} JAI LIMPRESSION QUE CEST TOUJOURS VRAI SI A(X) EST DEFINI SUR $R^d$}.
+Assumption i) is somewhat restrictive as it requires $\alpha$ to derive from a scalar potential, however, it has natural applications in many fields, for instance in movement ecology, see \cite{gloaguen:etienne:lecorff:2017}. Assumption ii) is technical {\color{red} JAI LIMPRESSION QUE CEST TOUJOURS VRAI SI A(X) EST DEFINI SUR $R^d$}.{\color{blue} pkoi  $\triangle A(x)$ serait il borné inférieurement ?}
 
 {\color{red} In the case where these assumptions are not fulfilled, an alternative to generalized Poisson estimators is given by continuous importance sampling procedures for SDE, see \cite{}. REFERENCE A METTRE}
 
 The solution to \eqref{eq:target:sde} is supposed to be partially observed at times $t_0=0,\dots,t_n$ through an observation process $(Y_k)_{0\le k \le n}$ in $(\mathbb{R}^m)^{n+1}$. 
-For all $0\le k \le n$, the distribution of $Y_k$ given $X_k:= X_{t_k}$ has a density with respect to a reference measure $\lambda$ on $\mathbb{R}^m$ given by $g(X_k,\cdot) = g_k(X_k)$. 
+For all $0\le k \le n$, the distribution of $Y_k$ given $X_k$, $X_k$ being a short noation for $X_{t_k}$, has a density with respect to a reference measure $\lambda$ on $\mathbb{R}^m$ given by $g(X_k,\cdot)$. For the sake of silmplicity, we will use the classical short notation $g_k(X_k)$ instead of  $g(X_k,\cdot)$. 
 The distribution of $X_0$ has a density with respect to a reference measure $\mu$ on $\mathbb{R}^d$ given by $\chi$.
 For all $0\le k \le n-1$, the conditional distribution of $X_{k+1} $ given $X_{k}$ has a density $\qk(X_{k},\cdot)$ with respect to $\mu$.
  
@@ -195,7 +195,7 @@ Let $0 \leq k \leq k' \leq n$, the joint smoothing distributions of the hidden s
 \[
 \phi_{k:k'|n}[h] = \mathbb{E}\left[h(X_k,\ldots,X_{k'})\middle|Y_{0:n}\right]\eqsp.
 \]
-For all $0\le k\le n$, $\phi_{k} = \phi_{k:k|k}$ denote the filtering distributions. The aim of this section is to detail the extension of PaRIS algorithm to approximate expectations of the form
+For all $0\le k\le n$, $\phi_{k} = \phi_{k:k|k}$ denotes the filtering distributions. The aim of this section is to detail the extension of PaRIS algorithm to approximate expectations of the form
 \begin{equation}
 \label{def:addfunc}
 \phi_{0:n\vert n}[H_{n}] = \mathbb{E}\left[H_n(X_{0:n})\middle|Y_{0:n}\right] \text{ where } H_n=\sum_{k=0}^{n-1}h_k(X_k,X_{k+1})\eqsp,
@@ -237,7 +237,7 @@ The expectation $\phi_{k}[h]$ is approximated by
 The most simple choice for $p_{k-1}$ and $\vartheta_k$ is the bootstrap filter proposed by \cite{gordon:salmond:smith:1993} which sets $p_{k-1} = q_{k-1}$ and for all $x\in\mathbb{R}^d$, $\vartheta(x) = 1$.
  In the case of POD processes $q_{k-1}$ is unknown but it can be replaced by any approximation to sample the particles as any choice of $p_{k-1}$ can be made.
   The approximation can be obtained using a discretization scheme such as Euler method or a Poisson based approximation as detailed below.
-   A more appealing choice is the fully adapted particle filter which sets for all $x,x'\in\mathbb{R}^d$, $p_{k-1}(x,x') \propto q_{k-1}(x,x')g_k(x')$ and for all $x\in\mathbb{R}^d$, $\vartheta(x) = \int q_{k-1}(x,x')g_k(x')\mu(\rmd x')$.
+   A more appealing choice is the fully adapted particle filter which sets for all $x,x'\in\mathbb{R}^d$, $p_{k-1}(x,x') \propto q_{k-1}(x,x')g_k(x')$ and for all $x\in\mathbb{R}^d$, $\vartheta(x) = \int q_{k-1}(x,x')g_k(x')\mu(\rmd x')$. {\color{blue} C'est si clair que $\vartheta$ est calculable pratiquement ?}
    Here again $q_{k-1}$ has to be replaced by an approximation. In Section~\ref{sec:exp}, it is replaced by the Gaussian approximation provided by a Euler scheme which leads to a Gaussian proposal density $p_{k-1}$ as the observation model is linear and Gaussian. 
 
 
