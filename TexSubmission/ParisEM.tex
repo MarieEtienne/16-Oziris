@@ -542,7 +542,7 @@ Figures~\ref{fig:SINE:theta} and~\ref{fig:SINE:sigma} illustrate the performance
 \begin{figure}[p]
 \centering
 \includegraphics[scale=0.5]{figure_sigma2}
-\caption{{\em SINE model - EM}. Estimation of $\sigma^2$.}
+\caption{{\em SINE model - EM}. Estimation of $\sigma_\text{obs}$.}
 \label{fig:SINE:sigma}
 \end{figure}
 
@@ -554,7 +554,7 @@ Following \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006} and \cite{olsson
 \end{equation}
 In order to use the exact algorithms of \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006} and the GPE of \cite{fearnhead:papaspiliopoulos:roberts:2008}, we consider  \eqref{eq:LG:SDE} after the Lamperti transform, i.e., the process defined by $X_t=\eta(Z_t)$, with $\eta(z) := -\log (z)/\sigma$,  which satisfies the following SDE:
 \begin{equation}
-\rmd X_t = \overbrace{\left( \frac{\sigma}{2} -  \frac{\kappa}{\sigma} + \frac{\kappa}{\gamma\sigma}\exp\left(-\sigma X_t\right)\right)}^{:=\alpha(X_t)}\rmd t +\rmd W_t,~~X_0=x_0=\eta(z_0).\label{eq:Lamp:LG}
+\rmd X_t = \overbrace{\left( \frac{\sigma}{2} -  \frac{\kappa}{\sigma} + \frac{\kappa}{\gamma\sigma}\exp\left(-\sigma X_t\right)\right)}^{:=\alpha(X_t)}\rmd t +\rmd W_t,~~X_0=x_0=\eta(z_0)\eqsp.\label{eq:Lamp:LG}
 \end{equation}
 In this case, the conditions of the Exact Algorithm~2 defined in \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006} are satisfied, as for any $m \in \mathbb{R}$ there exists $\mathsf{U}_m$ such that for all $x\ge m$, $\psi(x):=\alpha^2(x)+\alpha'(x) \leq \mathsf{U}_m$. Moreover, $\psi$ is lower bounded uniformly by  $\mathsf{L}$. 
 Then, GPE estimators may be computed by simulating the minimum of a Brownian bridge, and simulating Bessel bridges conditionally to this minimum, as proposed by \cite{beskos:papaspiliopoulos:roberts:fearnhead:2006}.
