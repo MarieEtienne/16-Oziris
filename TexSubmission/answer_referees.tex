@@ -65,6 +65,7 @@
 \addtocounter{equation}{-1}
 \refstepcounter{defcounter}
 \renewcommand\theequation{\textbf{A}\thedefcounter}
+\usepackage{float}
 \begin{equation}}
 {\end{equation}}
 \begin{document}
@@ -154,7 +155,15 @@ This was corrected, $q_k$ is the transition density of the law of $X_k$ given $X
 \subsubsection*{Major comments}
 \begin{enumerate}
 \item {\em 
-The authors should clearly characterise the class of processes for which the proposedmethodology can be applied. In particular, three issues should be addressed whenpresenting the process in (1). First, condition $\alpha(x) = \nabla_x A(x)$ should be emphasisedwith its validity discussed in the univariate and multivariate cases. Second, it shouldbe said that processes with general diffusion coefficients may be considered as longas a suitable transformation to lead to a unit coefficient is available. This shouldalso be discussed in the univariate and multivariate cases. Third, it could mentionthat $\phi$ (which depends on $\alpha$) should be bounded below in the state space of X. Itwould also be nice to give an insight as to why all these conditions are necessary.
+The authors should clearly characterise the class of processes for which the proposed
+methodology can be applied. In particular, three issues should be addressed when
+presenting the process in (1). First, condition $\alpha(x) = \nabla_x A(x)$ should be emphasised
+with its validity discussed in the univariate and multivariate cases. Second, it should
+be said that processes with general diffusion coefficients may be considered as long
+as a suitable transformation to lead to a unit coefficient is available. This should
+also be discussed in the univariate and multivariate cases. Third, it could mention
+that $\phi$ (which depends on $\alpha$) should be bounded below in the state space of X. It
+would also be nice to give an insight as to why all these conditions are necessary.
 }
 
 \vspace{.3cm}
@@ -175,7 +184,7 @@ discussed.}
 
 \vspace{.3cm}
 
-Choices that can be made for  $\vartheta_k$ and $p_{k-1}$ are discussed after (4) and the definition of $\phi_k^N$. The specific approximation of the fully adapted particle filter is also illustrated in the numerical section. \textcolor{red}{Pour le sigma Pierre tu as peut-etre plus d'elements. On peut bien sur parler des conditions de l'EA mais je pense qu'une intuition pratique est plus percutante ici.}
+Choices that can be made for  $\vartheta_k$ and $p_{k-1}$ are discussed after (4) and the definition of $\phi_k^N$. The specific approximation of the fully adapted particle filter is also illustrated in the numerical section. The $\widehat{\sigma}_+^k$ is an upperbound that must be computed depending on which of the assumptions (A1)-(A3) is satisfied, it is not, in this sens a user's choice. However, as discussed at the end of page 8, it can be better, even if (A1) is satistified, to choose the bound defined by (A3). The first one would (in general) require numerical optimization and provide a general bound (potentially far from the one obtained with the set of particles). The other would require $N^2$ computations ($N$ being the number of particles), but provides the optimal bound for the acceptance reject algorithm of Lemma 1. In addition to the existing paragraph, this is more explicitely discussed now in the numerical section, specially for the SINE model.  
 
 \item {\em Conditions (A1)-(A3) should be carefully discussed. How restrictive are they? For
 example, what if $\phi(\omega_s)$ (or $L_\omega$) is not bounded below? Is there any general solution
@@ -185,21 +194,53 @@ in this case?}
 
 Assumptions (A1)-(A3) are discussed at the end of Section~3. As soon as $\phi(\omega_s)$ (or $L_\omega$) is bounded below, (A3) is satisfied  for instance with the GPE based on the  EA3 procedure  which allows to use our algorithm with GPEs to approximate the transition densities. When $\phi(\omega_s)$ is not bounded below, the accept reject procedure at the core of the exact algorithms cannot be used which indicates that alternative to GPEs must be used to approximate the transition densities. We suggest in Section~2 the use of continuous importance sampling estimators which require other sets of assumptions. We did not comment assumptions (A1)-(A3) for these methods as we focus on GPEs in the paper. It is important to note that we stress that any unbiased estimator is a candidate to be used in our algorithm and that the way assumptions (A1)-(A3) are checked depends on the specific choice made by the user.
 
-\item {\em The authors should discuss how to obtain $L_w$ and $U_w$, and the efficiency of theiralgorithm in terms of these bounds. In particular, they should reference the layeredBB construction - Beskos et al. (2008). Also, they can take advantage of the factorisation (into two terms) in (9) to perform the reject-accept step of the algorithmin Lemma 1 using two coins - note that the first term does not depend on BB pointsso a fail in the first coin would make the simulation of the BB points unnecessary.}
+\item {\em The authors should discuss how to obtain $L_w$ and $U_w$, and the efficiency of their
+algorithm in terms of these bounds. In particular, they should reference the layered
+BB construction - Beskos et al. (2008). Also, they can take advantage of the factorisation (into two terms) in (9) to perform the reject-accept step of the algorithm
+in Lemma 1 using two coins - note that the first term does not depend on BB points
+so a fail in the first coin would make the simulation of the BB points unnecessary.}
 
 \vspace{.3cm}
 
-\item {\em It is worth mentioning that (A3) is also satisfied for the EA3 class of diffusions. SeeBeskos et al. (2008).}
+\item {\em It is worth mentioning that (A3) is also satisfied for the EA3 class of diffusions. See
+Beskos et al. (2008).}
 
 \vspace{.3cm}
 
 This is now mentioned at the end of Section~3.
 
-\item {\em Concerning the paragraph starting in page 8 and ending in page 9. Can the authorsprovide some analytical result about when that strategy is better as a function of therejection sampling global accep. prob. and the cost to sample (layered) Brownianbridges?}
+\item {\em Concerning the paragraph starting in page 8 and ending in page 9. Can the authors
+provide some analytical result about when that strategy is better as a function of the
+rejection sampling global accep. prob. and the cost to sample (layered) Brownian
+bridges?}
 
 \vspace{.3cm}
 
-\textcolor{red}{Je propose de ne pas mettre de resultat analytique pour ne pas alourdir la chose (surtout que c'est tres dependant du modele et du GPE utilise). On peut par contre donner quelques resultats numeriques, tu as garde les couts de calcul Pierre ?}
+This important problem is model dependent. Indeed, if assumption $(A1)$ is satisfied, the user has to
+For each $k$, to perform the rejection sampling, the user has to either
+\begin{enumerate}
+\item Find $\widehat{\sigma}_+^k$ by numerical optimization in the (A1) and (A2) case, and set for every particle $i$, $\widehat{\sigma}_+^{k, i } = \widehat{\sigma}_+^k$.
+\item Or, for each particle $i$, find a $\widehat{\sigma}_+^{k, i } = \mathrm{sup}_{j,\zeta}\;\widehat{q}_k(\xi^j_k,\xi^i_{k+1},\zeta)$, in the (A3) case.
+\end{enumerate}
+For each $i$, the corresponding bound will be used to perform Lemma 1.\\
+The first bound is uniform and do not depend on the particles sampled, therefore can be used for every particle $i$.  However, the resulting bound  can be "large"(with regards to the simulated set of particles) for the AR algorithm of Lemma 1.
+The second bound requires $N$ computations per particle (therefore $N^2$ computations). However, it is clear that this second bound gives the optimal bound for Lemma 1.\\
+Actually, the first bound is more likely to be "too large" when the time step is large. Furthermore, in that case, a rejection in Lemma 1 is more costly as it would require sampling another Brownian bridge skeleton (which would be large due to the large time step).\\
+Overall, it seems difficult to have analytical result about which $\widehat{\sigma}_+^k$ to choose, as it depends both on the number of particles and the sampling time step, and that the bound given by (A3) is a random variable.\\
+However, we did an empirical study on the SINE model, that satisfies A1 and A3. Results are presented in Figure \ref{Figure}.
+
+ As expected from what is said above, for a large time step, even for a large number of particles, the bound given by A3, despite its quadratic cost, leads to less computationnal time than the uniform bound A1. 
+ On the other hand, for a small time step, the uniform bound of A1 is good enough, and it's better to choose this bound instead of the optimal bound A3.
+\begin{figure}[H]
+\centering
+\begin{tabular}{cc}
+$\Delta = 0.5$ & $\Delta = 2$\\
+\includegraphics[width = 0.4\textwidth]{Times_Delta05}&
+\includegraphics[width = 0.4\textwidth]{Times_Delta2}
+\end{tabular}
+\caption{Empirical distribution of required time (in logarithmic scale of milliseconds) for the acceptation of a candidate in the acceptance rejection algorithm of Lemma 1, depending on which bound is chosen. A1 is when the uniform bound is chosen, (see the paper), A3 is when the particle based bound is chosen. One can see that the best choice depends on the number of particles (as expected) but also on the time step. A3 gives the optimal bound, but a larger computationnal cost.}\label{Figure}
+\end{figure}
+This is now mentionned (without this empirical study) in the numerical experiments section (in the SINE model subsection).  We believe that it might be confusing to insist too much on this point by adding this study.
 
 \item {\em Item 3 above should include a discussion regarding assumptions H1 and H2.}
 
@@ -267,7 +308,9 @@ What is the computational time of one run of GRand PaRIS for the examples presen
 
 \vspace{.3cm}
 
-\textcolor{red}{M. Gloaguen, your call !}
+The only cost difference for two lags $\delta_1 < \delta_2$ is the memory space to keep tracks of particles between times $t+\delta_1$ and $t+\delta_2$ (basically, a $N*(\delta_2 - \delta_1)$ matrix). Therefore the computationnal time is identical for two different lags.\\
+On a personnal laptop  (i7-6600U CPU @ 2.60GHz), for the parameters given in the paper, it took around 25 seconds for each E step. As mentionned in the paper, all the comparisons are made for a same amount of computation time (that is why there is more particles used in the fixed lag techniques). 
+This is now clarified in the paper.
 
 \item {\em page 16, line 49: For the proof to be valid, the induction result needs to be established for $k\ge 0$.}
 
